@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. A teacher can toggle their page between Active and Draft from the dashboard; visiting a Draft page shows a graceful "not available" state rather than a 404
   5. All timestamps are stored as `timestamptz`, the teacher record has an IANA timezone field, and the Next.js project uses `proxy.ts` (not `middleware.ts`) with async params and cookies throughout
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
 - [ ] 01-01: Project scaffolding — Next.js 16, Tailwind v4, shadcn/ui, Supabase, environment, proxy.ts, Supabase client setup (browser + server + proxy)
@@ -61,7 +61,7 @@ Plans:
   4. The teacher can accept or decline pending booking requests from their dashboard
   5. The booking state machine (`requested → pending → confirmed → completed → cancelled`) is enforced with DB-level CHECK constraints — no booking can skip or reverse states
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
 - [ ] 02-01: Booking request form — parent-facing Client Component on /[slug], time slot selection, guest submission (no account), atomic booking creation via supabase.rpc()
@@ -85,7 +85,7 @@ Plans:
   4. The teacher receives follow-up reminder emails at 24hr and 48hr if they have not yet connected Stripe after receiving a booking request
   5. When the teacher marks a session complete, payment is automatically captured with a 7% application fee applied via Stripe Connect; both parties receive appropriate completion/review notifications
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
 - [ ] 03-01: Stripe Connect Express onboarding flow — connect link generation, both webhook endpoints (platform + connected-account), account.updated handler, stripe_charges_enabled gating
@@ -108,7 +108,7 @@ Plans:
   3. A parent can rebook a session with the same teacher (pre-filled with previous teacher, subject, and default time preference) without re-entering all details
   4. Both teacher and parent receive a 24-hour reminder email before each scheduled session
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
 - [ ] 04-01: Direct booking flow — Stripe Elements on booking form, payment authorization at time of booking, conditional routing (direct vs. deferred) based on teacher's stripe_charges_enabled
@@ -130,7 +130,7 @@ Plans:
   3. A parent receives a review prompt email after their session is marked complete and can leave a 1–5 star rating and optional text review by following the email link
   4. Submitted reviews appear on the teacher's public profile page, visible to any visitor
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
 - [ ] 05-01: Teacher dashboard — DASH-01/03/04, upcoming sessions view, earnings display, student list (RSC shell with client islands)
@@ -145,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/5 | Not started | - |
+| 1. Foundation | 0/5 | Planning complete | - |
 | 2. Booking Requests | 0/3 | Not started | - |
 | 3. Stripe Connect + Deferred Payment | 0/3 | Not started | - |
 | 4. Direct Booking + Parent Account | 0/2 | Not started | - |
