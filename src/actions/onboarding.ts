@@ -22,12 +22,26 @@ export async function saveWizardStep(
 
   const supabase = await createClient()
 
+  // slug is NOT NULL — auto-generate from full_name on first insert (step 1)
+  let extraFields: Record<string, string> = {}
+  if (step === 1 && data.full_name) {
+    const { data: existing } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (!existing) {
+      extraFields.slug = await findUniqueSlug(data.full_name, supabase)
+    }
+  }
+
   const { error } = await supabase
     .from('teachers')
     .upsert(
       {
         user_id: userId,
         wizard_step: step,
+        ...extraFields,
         ...data,
       },
       { onConflict: 'user_id' }
