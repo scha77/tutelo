@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-foundation/01-03-PLAN.md
-last_updated: "2026-03-04T14:09:23.792Z"
+stopped_at: Completed 01-foundation/01-02-PLAN.md
+last_updated: "2026-03-04T17:17:47.344Z"
 last_activity: "2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 7
 ---
 
@@ -51,6 +51,7 @@ Progress: [█░░░░░░░░░] 7%
 
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 3 | 2 tasks | 2 files |
+| Phase 01-foundation P02 | 45 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: availability TIME columns interpreted relative to teachers.timezone (IANA string) — correct pattern for recurring weekly slots
 - [Phase 01-foundation]: bookings_anon_insert uses WITH CHECK (true) — deliberately permissive for Phase 2 guest booking; Phase 2 will tighten
 - [Phase 01-foundation]: bookings.teacher_id has no ON DELETE CASCADE — preserves booking history audit trail if teacher deleted
+- [Phase 01-02]: middleware.ts required as Next.js 16.1.6 entry point — proxy.ts is invoked from middleware.ts, not used directly as middleware filename
+- [Phase 01-02]: OAuth callback wraps teachers table query in try/catch defaulting to /onboarding — resilient until Plan 01-03 creates the schema
+- [Phase 01-02]: LoginForm uses two-mode (signin/signup) toggle rather than separate pages — reduces nav complexity
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T14:09:23.790Z
-Stopped at: Completed 01-foundation/01-03-PLAN.md
+Last session: 2026-03-04T17:17:47.342Z
+Stopped at: Completed 01-foundation/01-02-PLAN.md
 Resume file: None
