@@ -22,7 +22,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { claims } } = await supabase.auth.getClaims()
+  const { data } = await supabase.auth.getClaims()
+  const claims = data?.claims ?? null
 
   const isProtected =
     request.nextUrl.pathname.startsWith('/dashboard') ||
