@@ -57,7 +57,7 @@ export async function publishProfile(
   // Validate full data against schema
   const parsed = FullOnboardingSchema.safeParse(data)
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? 'Validation failed' }
+    return { error: parsed.error.issues[0]?.message ?? 'Validation failed' }
   }
 
   const { availability, ...teacherFields } = parsed.data
