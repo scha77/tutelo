@@ -177,76 +177,85 @@
 
 ## Traceability
 
-*Populated during roadmap creation.*
+*Populated during roadmap creation — 2026-03-03.*
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| ONBOARD-01 | — | Pending |
-| ONBOARD-02 | — | Pending |
-| ONBOARD-03 | — | Pending |
-| ONBOARD-04 | — | Pending |
-| ONBOARD-05 | — | Pending |
-| ONBOARD-06 | — | Pending |
-| ONBOARD-07 | — | Pending |
-| PAGE-01 | — | Pending |
-| PAGE-02 | — | Pending |
-| PAGE-03 | — | Pending |
-| PAGE-04 | — | Pending |
-| PAGE-05 | — | Pending |
-| PAGE-06 | — | Pending |
-| PAGE-07 | — | Pending |
-| PAGE-08 | — | Pending |
-| PAGE-09 | — | Pending |
-| PAGE-10 | — | Pending |
-| CUSTOM-01 | — | Pending |
-| CUSTOM-02 | — | Pending |
-| CUSTOM-03 | — | Pending |
-| CUSTOM-04 | — | Pending |
-| AVAIL-01 | — | Pending |
-| AVAIL-02 | — | Pending |
-| AVAIL-03 | — | Pending |
-| VIS-01 | — | Pending |
-| VIS-02 | — | Pending |
-| BOOK-01 | — | Pending |
-| BOOK-02 | — | Pending |
-| BOOK-03 | — | Pending |
-| BOOK-04 | — | Pending |
-| BOOK-05 | — | Pending |
-| BOOK-06 | — | Pending |
-| STRIPE-01 | — | Pending |
-| STRIPE-02 | — | Pending |
-| STRIPE-03 | — | Pending |
-| STRIPE-04 | — | Pending |
-| STRIPE-05 | — | Pending |
-| STRIPE-06 | — | Pending |
-| STRIPE-07 | — | Pending |
-| NOTIF-01 | — | Pending |
-| NOTIF-02 | — | Pending |
-| NOTIF-03 | — | Pending |
-| NOTIF-04 | — | Pending |
-| NOTIF-05 | — | Pending |
-| NOTIF-06 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| DASH-04 | — | Pending |
-| DASH-05 | — | Pending |
-| DASH-06 | — | Pending |
-| PARENT-01 | — | Pending |
-| PARENT-02 | — | Pending |
-| PARENT-03 | — | Pending |
-| REVIEW-01 | — | Pending |
-| REVIEW-02 | — | Pending |
-| REVIEW-03 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| ONBOARD-01 | Phase 1 | Pending |
+| ONBOARD-02 | Phase 1 | Pending |
+| ONBOARD-03 | Phase 1 | Pending |
+| ONBOARD-04 | Phase 1 | Pending |
+| ONBOARD-05 | Phase 1 | Pending |
+| ONBOARD-06 | Phase 1 | Pending |
+| ONBOARD-07 | Phase 1 | Pending |
+| PAGE-01 | Phase 1 | Pending |
+| PAGE-02 | Phase 1 | Pending |
+| PAGE-03 | Phase 1 | Pending |
+| PAGE-04 | Phase 1 | Pending |
+| PAGE-05 | Phase 1 | Pending |
+| PAGE-06 | Phase 1 | Pending |
+| PAGE-07 | Phase 1 | Pending |
+| PAGE-08 | Phase 1 | Pending |
+| PAGE-09 | Phase 1 | Pending |
+| PAGE-10 | Phase 1 | Pending |
+| CUSTOM-01 | Phase 1 | Pending |
+| CUSTOM-02 | Phase 1 | Pending |
+| CUSTOM-03 | Phase 1 | Pending |
+| CUSTOM-04 | Phase 1 | Pending |
+| AVAIL-01 | Phase 1 | Pending |
+| AVAIL-02 | Phase 1 | Pending |
+| AVAIL-03 | Phase 1 | Pending |
+| VIS-01 | Phase 1 | Pending |
+| VIS-02 | Phase 1 | Pending |
+| DASH-06 | Phase 1 | Pending |
+| BOOK-01 | Phase 2 | Pending |
+| BOOK-02 | Phase 2 | Pending |
+| BOOK-03 | Phase 2 | Pending |
+| BOOK-04 | Phase 2 | Pending |
+| BOOK-06 | Phase 2 | Pending |
+| STRIPE-01 | Phase 2 | Pending |
+| STRIPE-02 | Phase 2 | Pending |
+| NOTIF-01 | Phase 2 | Pending |
+| DASH-02 | Phase 2 | Pending |
+| STRIPE-03 | Phase 3 | Pending |
+| STRIPE-04 | Phase 3 | Pending |
+| STRIPE-05 | Phase 3 | Pending |
+| STRIPE-06 | Phase 3 | Pending |
+| STRIPE-07 | Phase 3 | Pending |
+| NOTIF-02 | Phase 3 | Pending |
+| NOTIF-03 | Phase 3 | Pending |
+| NOTIF-05 | Phase 3 | Pending |
+| NOTIF-06 | Phase 3 | Pending |
+| BOOK-05 | Phase 4 | Pending |
+| PARENT-01 | Phase 4 | Pending |
+| PARENT-02 | Phase 4 | Pending |
+| PARENT-03 | Phase 4 | Pending |
+| NOTIF-04 | Phase 4 | Pending |
+| DASH-01 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+| REVIEW-01 | Phase 5 | Pending |
+| REVIEW-02 | Phase 5 | Pending |
+| REVIEW-03 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 57 total
-- Mapped to phases: 0 (populated by roadmap)
-- Unmapped: 57 ⚠️ (expected — roadmap not yet created)
+- v1 requirements: 59 total (count corrected from initial 57 — verified against actual requirement list)
+- Mapped to phases: 59
+- Unmapped: 0
+
+| Phase | Requirements | Count |
+|-------|-------------|-------|
+| Phase 1: Foundation | AUTH-01/02, ONBOARD-01–07, PAGE-01–10, CUSTOM-01–04, AVAIL-01–03, VIS-01/02, DASH-06 | 29 |
+| Phase 2: Booking Requests | BOOK-01–04, BOOK-06, STRIPE-01/02, NOTIF-01, DASH-02 | 9 |
+| Phase 3: Stripe Connect + Deferred Payment | STRIPE-03–07, NOTIF-02/03/05/06 | 9 |
+| Phase 4: Direct Booking + Parent Account | BOOK-05, PARENT-01–03, NOTIF-04 | 5 |
+| Phase 5: Dashboard + Reviews | DASH-01/03/04/05, REVIEW-01–03 | 7 |
+| **Total** | | **59** |
 
 ---
 
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation (traceability populated)*
