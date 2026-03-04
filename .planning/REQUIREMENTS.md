@@ -14,44 +14,44 @@
 
 ### Onboarding
 
-- [ ] **ONBOARD-01**: Teacher completes setup wizard (name, school, city/state, years experience, optional profile photo) with no payment required to publish
-- [ ] **ONBOARD-02**: Teacher selects tutoring subjects (multi-select: Math, Reading/ELA, Science, etc.)
-- [ ] **ONBOARD-03**: Teacher selects grade range(s) they teach (multi-select: K-2, 3-5, 6-8, 9-12)
-- [ ] **ONBOARD-04**: Teacher sets their IANA timezone (required, used for availability storage and viewer conversion)
-- [ ] **ONBOARD-05**: Teacher sets weekly availability via visual calendar (defaults to weekday evenings + weekends; teacher adjusts)
-- [ ] **ONBOARD-06**: Teacher sets hourly rate with local benchmark range shown ("most teachers in your area charge $X–Y/hr")
-- [ ] **ONBOARD-07**: Teacher receives a shareable public URL (`tutelo.app/[slug]`) immediately on publish — no Stripe required
+- [x] **ONBOARD-01**: Teacher completes setup wizard (name, school, city/state, years experience, optional profile photo) with no payment required to publish
+- [x] **ONBOARD-02**: Teacher selects tutoring subjects (multi-select: Math, Reading/ELA, Science, etc.)
+- [x] **ONBOARD-03**: Teacher selects grade range(s) they teach (multi-select: K-2, 3-5, 6-8, 9-12)
+- [x] **ONBOARD-04**: Teacher sets their IANA timezone (required, used for availability storage and viewer conversion)
+- [x] **ONBOARD-05**: Teacher sets weekly availability via visual calendar (defaults to weekday evenings + weekends; teacher adjusts)
+- [x] **ONBOARD-06**: Teacher sets hourly rate with local benchmark range shown ("most teachers in your area charge $X–Y/hr")
+- [x] **ONBOARD-07**: Teacher receives a shareable public URL (`tutelo.app/[slug]`) immediately on publish — no Stripe required
 
 ### Teacher Landing Page
 
-- [ ] **PAGE-01**: Auto-generated public page at teacher's slug URL (`tutelo.app/[slug]`)
-- [ ] **PAGE-02**: Page displays: name, profile photo (or initials avatar), school name, city/state
-- [ ] **PAGE-03**: Page displays: credential bar (verified teacher badge, years experience, subjects, grade levels)
-- [ ] **PAGE-04**: Page displays: auto-generated bio if teacher skips writing one
-- [ ] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
-- [ ] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
-- [ ] **PAGE-07**: Page applies teacher's chosen accent color / theme throughout
-- [ ] **PAGE-08**: Page displays teacher's custom headline / tagline below their name (if set)
-- [ ] **PAGE-09**: Page displays teacher's banner image at the top (if uploaded)
-- [ ] **PAGE-10**: Page displays teacher's social / contact links (if set)
+- [x] **PAGE-01**: Auto-generated public page at teacher's slug URL (`tutelo.app/[slug]`)
+- [x] **PAGE-02**: Page displays: name, profile photo (or initials avatar), school name, city/state
+- [x] **PAGE-03**: Page displays: credential bar (verified teacher badge, years experience, subjects, grade levels)
+- [x] **PAGE-04**: Page displays: auto-generated bio if teacher skips writing one
+- [x] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
+- [x] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
+- [x] **PAGE-07**: Page applies teacher's chosen accent color / theme throughout
+- [x] **PAGE-08**: Page displays teacher's custom headline / tagline below their name (if set)
+- [x] **PAGE-09**: Page displays teacher's banner image at the top (if uploaded)
+- [x] **PAGE-10**: Page displays teacher's social / contact links (if set)
 
 ### Page Customization
 
-- [ ] **CUSTOM-01**: Teacher can select an accent color / theme from a preset palette (5–6 colors) from their dashboard
-- [ ] **CUSTOM-02**: Teacher can add a custom headline / tagline (short one-liner displayed below their name)
-- [ ] **CUSTOM-03**: Teacher can add social / contact links (Instagram, school email, personal website — all optional)
-- [ ] **CUSTOM-04**: Teacher can upload a banner image for the top of their landing page
+- [x] **CUSTOM-01**: Teacher can select an accent color / theme from a preset palette (5–6 colors) from their dashboard
+- [x] **CUSTOM-02**: Teacher can add a custom headline / tagline (short one-liner displayed below their name)
+- [x] **CUSTOM-03**: Teacher can add social / contact links (Instagram, school email, personal website — all optional)
+- [x] **CUSTOM-04**: Teacher can upload a banner image for the top of their landing page
 
 ### Availability
 
-- [ ] **AVAIL-01**: Teacher can view and edit their weekly availability from their dashboard
-- [ ] **AVAIL-02**: Available time slots are displayed on the public landing page
-- [ ] **AVAIL-03**: Public landing page auto-detects the viewer's browser timezone and displays available times converted from the teacher's set timezone
+- [x] **AVAIL-01**: Teacher can view and edit their weekly availability from their dashboard
+- [x] **AVAIL-02**: Available time slots are displayed on the public landing page
+- [x] **AVAIL-03**: Public landing page auto-detects the viewer's browser timezone and displays available times converted from the teacher's set timezone
 
 ### Page Visibility
 
-- [ ] **VIS-01**: Teacher can toggle their public page between "Active" (publicly visible) and "Draft / Hidden" (hidden from public) at any time without losing configured data
-- [ ] **VIS-02**: Visiting a hidden page returns a graceful "not available" state (not a 404)
+- [x] **VIS-01**: Teacher can toggle their public page between "Active" (publicly visible) and "Draft / Hidden" (hidden from public) at any time without losing configured data
+- [x] **VIS-02**: Visiting a hidden page returns a graceful "not available" state (not a 404)
 
 ### Booking System
 
@@ -88,7 +88,7 @@
 - [ ] **DASH-03**: Teacher can view earnings (completed sessions and total payout)
 - [ ] **DASH-04**: Teacher can view their student list (name, subject, sessions completed)
 - [ ] **DASH-05**: Teacher can mark a session as complete
-- [ ] **DASH-06**: Teacher can toggle page Active / Draft from the dashboard (see VIS-01)
+- [x] **DASH-06**: Teacher can toggle page Active / Draft from the dashboard (see VIS-01)
 
 ### Parent Account
 
@@ -183,33 +183,33 @@
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Pending |
 | AUTH-02 | Phase 1 | Pending |
-| ONBOARD-01 | Phase 1 | Pending |
-| ONBOARD-02 | Phase 1 | Pending |
-| ONBOARD-03 | Phase 1 | Pending |
-| ONBOARD-04 | Phase 1 | Pending |
-| ONBOARD-05 | Phase 1 | Pending |
-| ONBOARD-06 | Phase 1 | Pending |
-| ONBOARD-07 | Phase 1 | Pending |
-| PAGE-01 | Phase 1 | Pending |
-| PAGE-02 | Phase 1 | Pending |
-| PAGE-03 | Phase 1 | Pending |
-| PAGE-04 | Phase 1 | Pending |
-| PAGE-05 | Phase 1 | Pending |
-| PAGE-06 | Phase 1 | Pending |
-| PAGE-07 | Phase 1 | Pending |
-| PAGE-08 | Phase 1 | Pending |
-| PAGE-09 | Phase 1 | Pending |
-| PAGE-10 | Phase 1 | Pending |
-| CUSTOM-01 | Phase 1 | Pending |
-| CUSTOM-02 | Phase 1 | Pending |
-| CUSTOM-03 | Phase 1 | Pending |
-| CUSTOM-04 | Phase 1 | Pending |
-| AVAIL-01 | Phase 1 | Pending |
-| AVAIL-02 | Phase 1 | Pending |
-| AVAIL-03 | Phase 1 | Pending |
-| VIS-01 | Phase 1 | Pending |
-| VIS-02 | Phase 1 | Pending |
-| DASH-06 | Phase 1 | Pending |
+| ONBOARD-01 | Phase 1 | Complete |
+| ONBOARD-02 | Phase 1 | Complete |
+| ONBOARD-03 | Phase 1 | Complete |
+| ONBOARD-04 | Phase 1 | Complete |
+| ONBOARD-05 | Phase 1 | Complete |
+| ONBOARD-06 | Phase 1 | Complete |
+| ONBOARD-07 | Phase 1 | Complete |
+| PAGE-01 | Phase 1 | Complete |
+| PAGE-02 | Phase 1 | Complete |
+| PAGE-03 | Phase 1 | Complete |
+| PAGE-04 | Phase 1 | Complete |
+| PAGE-05 | Phase 1 | Complete |
+| PAGE-06 | Phase 1 | Complete |
+| PAGE-07 | Phase 1 | Complete |
+| PAGE-08 | Phase 1 | Complete |
+| PAGE-09 | Phase 1 | Complete |
+| PAGE-10 | Phase 1 | Complete |
+| CUSTOM-01 | Phase 1 | Complete |
+| CUSTOM-02 | Phase 1 | Complete |
+| CUSTOM-03 | Phase 1 | Complete |
+| CUSTOM-04 | Phase 1 | Complete |
+| AVAIL-01 | Phase 1 | Complete |
+| AVAIL-02 | Phase 1 | Complete |
+| AVAIL-03 | Phase 1 | Complete |
+| VIS-01 | Phase 1 | Complete |
+| VIS-02 | Phase 1 | Complete |
+| DASH-06 | Phase 1 | Complete |
 | BOOK-01 | Phase 2 | Pending |
 | BOOK-02 | Phase 2 | Pending |
 | BOOK-03 | Phase 2 | Pending |
