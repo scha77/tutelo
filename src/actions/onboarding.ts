@@ -22,32 +22,36 @@ export async function saveWizardStep(
 
   const supabase = await createClient()
 
-  // slug is NOT NULL — auto-generate from full_name on first insert (step 1)
-  let extraFields: Record<string, string> = {}
-  if (step === 1 && data.full_name) {
-    const { data: existing } = await supabase
+  // Check if teacher row already exists
+  const { data: existing } = await supabase
+    .from('teachers')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!existing) {
+    // First save (step 1) — INSERT requires all NOT NULL columns without defaults
+    // Auto-generate slug from full_name since it's required
+    const slug = data.full_name
+      ? await findUniqueSlug(data.full_name, supabase)
+      : 'teacher'
+    const { error } = await supabase.from('teachers').insert({
+      user_id: userId,
+      slug,
+      full_name: data.full_name ?? '',
+      wizard_step: step,
+      ...data,
+    })
+    if (error) return { error: error.message }
+  } else {
+    // Row exists — safe to UPDATE only the provided columns
+    const { error } = await supabase
       .from('teachers')
-      .select('id')
+      .update({ wizard_step: step, ...data })
       .eq('user_id', userId)
-      .maybeSingle()
-    if (!existing) {
-      extraFields.slug = await findUniqueSlug(data.full_name, supabase)
-    }
+    if (error) return { error: error.message }
   }
 
-  const { error } = await supabase
-    .from('teachers')
-    .upsert(
-      {
-        user_id: userId,
-        wizard_step: step,
-        ...extraFields,
-        ...data,
-      },
-      { onConflict: 'user_id' }
-    )
-
-  if (error) return { error: error.message }
   return {}
 }
 
