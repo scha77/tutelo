@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-foundation/01-02-PLAN.md
-last_updated: "2026-03-04T17:17:47.344Z"
+stopped_at: Completed 01-foundation/01-04-PLAN.md
+last_updated: "2026-03-04T18:30:25.483Z"
 last_activity: "2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 7
 ---
 
@@ -52,6 +52,7 @@ Progress: [█░░░░░░░░░] 7%
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 3 | 2 tasks | 2 files |
 | Phase 01-foundation P02 | 45 | 3 tasks | 8 files |
+| Phase 01-foundation P04 | 60 | 6 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 01-02]: middleware.ts required as Next.js 16.1.6 entry point — proxy.ts is invoked from middleware.ts, not used directly as middleware filename
 - [Phase 01-02]: OAuth callback wraps teachers table query in try/catch defaulting to /onboarding — resilient until Plan 01-03 creates the schema
 - [Phase 01-02]: LoginForm uses two-mode (signin/signup) toggle rather than separate pages — reduces nav complexity
+- [Phase 01-foundation]: [01-04]: Insert-then-update instead of upsert for partial wizard saves — avoids NOT NULL violations on unfilled columns
+- [Phase 01-foundation]: [01-04]: Auto-slug inserted on signIn (first teacher row creation), not Step 3 — ensures slug exists early for collision resolution
+- [Phase 01-foundation]: [01-04]: teachers.user_id UNIQUE constraint required for insert-then-update wizard save pattern
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -104,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T17:17:47.342Z
-Stopped at: Completed 01-foundation/01-02-PLAN.md
+Last session: 2026-03-04T18:30:25.481Z
+Stopped at: Completed 01-foundation/01-04-PLAN.md
 Resume file: None
