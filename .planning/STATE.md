@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-04T02:19:24.682Z"
-last_activity: 2026-03-03 — Roadmap created (5 phases, 59 requirements mapped)
+status: in-progress
+stopped_at: "Completed 01-foundation/01-01-PLAN.md"
+last_updated: "2026-03-04T14:03:00Z"
+last_activity: "2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 15
+  completed_plans: 1
+  percent: 7
 ---
 
 # Project State
@@ -26,27 +26,27 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 1 of 5 (Foundation)
-Plan: 0 of 5 in current phase
-Status: Ready to plan
-Last activity: 2026-03-03 — Roadmap created (5 phases, 59 requirements mapped)
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 7%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 1
+- Average duration: 6 min
+- Total execution time: 6 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1/5 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: —
+- Last 5 plans: 01-01 (6 min)
 - Trend: —
 
 *Updated after each plan completion*
@@ -62,6 +62,10 @@ Recent decisions affecting current work:
 - [Roadmap]: Booking request model before teacher connects Stripe — parent submits request without payment; teacher activates in response to urgency
 - [Roadmap]: Page customization (CUSTOM-*) grouped with Phase 1 — part of the onboarding/profile layer, not a separate phase
 - [Roadmap]: DASH-06 (Active/Draft toggle) assigned to Phase 1 — intrinsically tied to VIS-01 page visibility
+- [01-01]: proxy.ts uses getClaims() with data?.claims ?? null — handles nullable union type in TypeScript strict mode
+- [01-01]: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY not ANON_KEY — post-Nov 2025 Supabase projects use new key names
+- [01-01]: Wave 0 test stubs use it.todo() not it.skip — produces green vitest run without false confidence
+- [01-01]: sonner used for toasts (shadcn/ui v4 deprecated old toast component in favor of sonner)
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -92,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T02:19:24.668Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation/01-CONTEXT.md
+Last session: 2026-03-04T14:03:00Z
+Stopped at: Completed 01-foundation/01-01-PLAN.md
+Resume file: .planning/phases/01-foundation/01-02-PLAN.md

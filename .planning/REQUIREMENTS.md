@@ -9,8 +9,8 @@
 
 ### Auth
 
-- [ ] **AUTH-01**: Teacher or parent can sign up with email + password or Google SSO
-- [ ] **AUTH-02**: User session persists across browser refresh
+- [x] **AUTH-01**: Teacher or parent can sign up with email + password or Google SSO
+- [x] **AUTH-02**: User session persists across browser refresh
 
 ### Onboarding
 
