@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 export function BookNowCTA() {
   function handleClick() {
-    document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (

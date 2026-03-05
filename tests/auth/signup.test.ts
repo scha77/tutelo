@@ -13,12 +13,18 @@ vi.mock('next/navigation', () => ({
 // Mock Supabase server client
 const mockSignUp = vi.fn()
 const mockSignInWithPassword = vi.fn()
+const mockMaybeSingle = vi.fn()
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
       signUp: mockSignUp,
       signInWithPassword: mockSignInWithPassword,
     },
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: mockMaybeSingle,
+    }),
   }),
 }))
 
@@ -66,7 +72,11 @@ describe('auth signup', () => {
   describe('signIn Server Action', () => {
     it('successful sign in redirects to /dashboard', async () => {
       // Arrange
-      mockSignInWithPassword.mockResolvedValue({ error: null })
+      mockSignInWithPassword.mockResolvedValue({
+        error: null,
+        data: { user: { id: 'mock-user-id' } },
+      })
+      mockMaybeSingle.mockResolvedValue({ data: { is_published: true } })
       const { signIn } = await import('@/actions/auth')
       const formData = new FormData()
       formData.set('email', 'teacher@example.com')

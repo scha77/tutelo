@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
 import { BookingCalendar } from '@/components/profile/BookingCalendar'
+import { BookNowCTA } from '@/components/profile/BookNowCTA'
 
 // VIS-02: Graceful draft state — NOT a 404
 function DraftPage() {
@@ -111,6 +112,7 @@ export default async function TeacherProfilePage({
         email={teacher.social_email}
         website={teacher.social_website}
       />
+      <BookNowCTA />
     </main>
   )
 }

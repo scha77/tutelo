@@ -6,6 +6,7 @@ interface CredentialsBarProps {
     subjects: string[]
     grade_levels: string[]
     years_experience: number | null
+    hourly_rate: number | null
     city: string | null
     state: string | null
   }
@@ -57,6 +58,14 @@ export function CredentialsBar({ teacher }: CredentialsBarProps) {
               {grade}
             </Badge>
           ))}
+
+          {/* Hourly rate */}
+          {teacher.hourly_rate != null && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <span className="font-medium">${teacher.hourly_rate}/hr</span>
+            </>
+          )}
         </div>
       </div>
     </div>
