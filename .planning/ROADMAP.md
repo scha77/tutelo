@@ -42,7 +42,7 @@ Plans:
 - [ ] 01-02: Auth — Supabase Auth with Google SSO + email/password, session persistence, route protection for /dashboard and /onboarding
 - [ ] 01-03: Database schema — teachers, availability, bookings (state machine stub), reviews tables with RLS, all timestamptz, IANA timezone column, booking unique constraint
 - [ ] 01-04: Teacher onboarding wizard — multi-step form (React Hook Form + Zod), slug generation, photo upload (Supabase Storage), publish with no Stripe required
-- [ ] 01-05: Public profile page — /[slug] RSC, all PAGE-* display requirements, availability timezone conversion, page visibility enforcement
+- [x] 01-05: Public profile page — /[slug] RSC, all PAGE-* display requirements, availability timezone conversion, page visibility enforcement
 
 ---
 
@@ -145,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 4/5 | In Progress|  |
+| 1. Foundation | 5/5 | Checkpoint — awaiting human verify | 2026-03-05 |
 | 2. Booking Requests | 0/3 | Not started | - |
 | 3. Stripe Connect + Deferred Payment | 0/3 | Not started | - |
 | 4. Direct Booking + Parent Account | 0/2 | Not started | - |

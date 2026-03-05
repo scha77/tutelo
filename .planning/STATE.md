@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-foundation/01-04-PLAN.md
-last_updated: "2026-03-04T18:30:25.483Z"
-last_activity: "2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped"
+stopped_at: Checkpoint 01-foundation/01-05-PLAN.md — awaiting human verification
+last_updated: "2026-03-05T09:20:00.000Z"
+last_activity: "2026-03-05 — Plan 01-05 tasks complete: public profile page + dashboard built"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
   completed_plans: 4
-  percent: 7
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 1 of 5 (Foundation)
-Plan: 1 of 5 in current phase
-Status: In progress
-Last activity: 2026-03-04 — Plan 01-01 complete: Next.js 16 foundation bootstrapped
+Plan: 5 of 5 in current phase
+Status: Checkpoint — awaiting human verification of public profile page + dashboard
+Last activity: 2026-03-05 — Plan 01-05 tasks complete: /[slug] profile page + dashboard shell built
 
-Progress: [█░░░░░░░░░] 7%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -78,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: [01-04]: Insert-then-update instead of upsert for partial wizard saves — avoids NOT NULL violations on unfilled columns
 - [Phase 01-foundation]: [01-04]: Auto-slug inserted on signIn (first teacher row creation), not Step 3 — ensures slug exists early for collision resolution
 - [Phase 01-foundation]: [01-04]: teachers.user_id UNIQUE constraint required for insert-then-update wizard save pattern
+- [Phase 01-foundation]: [01-05]: Fixed reference date (2025-01-13) in timezone conversion avoids DST flakiness in tests
+- [Phase 01-foundation]: [01-05]: isDraftPage extracted to profile.ts for unit testability without RSC server context
+- [Phase 01-foundation]: [01-05]: Dashboard is desktop-first for MVP — Sidebar hidden on mobile, responsive is Phase 2+ enhancement
+- [Phase 01-foundation]: [01-05]: CSS custom property --accent on &lt;main&gt; element enables page-wide accent color theming without prop drilling
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -98,7 +102,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Fix pre-existing test failure in tests/auth/signup.test.ts (introduced in 01-04 signIn refactor, out of scope for 01-05)
 
 ### Blockers/Concerns
 
@@ -108,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04T18:30:25.481Z
-Stopped at: Completed 01-foundation/01-04-PLAN.md
+Last session: 2026-03-05T09:20:00.000Z
+Stopped at: Checkpoint in 01-foundation/01-05-PLAN.md — human verification of /[slug] page + /dashboard required
 Resume file: None
