@@ -40,12 +40,15 @@ function convertSlot(
   const month = String(referenceDay.getMonth() + 1).padStart(2, '0')
   const day = String(referenceDay.getDate()).padStart(2, '0')
 
+  const startTime = slot.start_time.slice(0, 5) // DB returns "HH:MM:SS", need "HH:MM"
+  const endTime = slot.end_time.slice(0, 5)
+
   const startDate = toDate(
-    `${year}-${month}-${day}T${slot.start_time}:00`,
+    `${year}-${month}-${day}T${startTime}:00`,
     { timeZone: fromTimezone }
   )
   const endDate = toDate(
-    `${year}-${month}-${day}T${slot.end_time}:00`,
+    `${year}-${month}-${day}T${endTime}:00`,
     { timeZone: fromTimezone }
   )
 

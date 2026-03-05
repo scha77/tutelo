@@ -4,8 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
-import { AvailabilityGrid } from '@/components/profile/AvailabilityGrid'
-import { BookNowCTA } from '@/components/profile/BookNowCTA'
+import { BookingCalendar } from '@/components/profile/BookingCalendar'
 
 // VIS-02: Graceful draft state — NOT a 404
 function DraftPage() {
@@ -101,16 +100,17 @@ export default async function TeacherProfilePage({
       <HeroSection teacher={teacher} />
       <CredentialsBar teacher={teacher} />
       <AboutSection teacher={teacher} />
-      <AvailabilityGrid
+      <BookingCalendar
         slots={teacher.availability ?? []}
         teacherTimezone={teacher.timezone}
+        teacherName={teacher.full_name}
+        accentColor={teacher.accent_color}
       />
       <SocialLinks
         instagram={teacher.social_instagram}
         email={teacher.social_email}
         website={teacher.social_website}
       />
-      <BookNowCTA />
     </main>
   )
 }
