@@ -67,6 +67,7 @@ key-decisions:
   - "AvailabilityEditor uses delete-then-insert pattern for availability slot replacement (same as Server Action)"
   - "Dashboard is desktop-first for MVP — Sidebar hidden on mobile (responsive is Phase 2+ enhancement)"
   - "Banner upload uses uploadBannerImage Server Action with FormData (not URL string) — needed because Server Actions can't receive File objects directly via JSON"
+  - "AvailabilityGrid normalizes DB time strings: Postgres TIME columns return HH:MM:SS, must strip to HH:MM before timezone conversion"
 
 patterns-established:
   - "Profile page: <main style={{ '--accent': teacher.accent_color }}> for CSS custom property theming"
@@ -86,10 +87,10 @@ completed: 2026-03-05
 
 ## Performance
 
-- **Duration:** ~30 min (continuation — Tasks 1 was committed in prior session ede9f30)
+- **Duration:** ~90 min
 - **Started:** 2026-03-04T13:40:01Z (Task 1)
-- **Completed:** 2026-03-05 (Task 2)
-- **Tasks:** 2 (auto tasks complete; checkpoint awaiting human verification)
+- **Completed:** 2026-03-05 (checkpoint approved)
+- **Tasks:** 2 auto + 1 human-verify checkpoint (approved)
 - **Files modified:** 24
 
 ## Accomplishments
@@ -107,7 +108,8 @@ Each task was committed atomically:
 1. **Task 1 (TDD): Bio utility, timezone converter, profile page, all profile components** — `ede9f30` (feat)
 2. **Task 2: Dashboard shell, PageSettings, AvailabilityEditor, Server Actions** — `c09efbb` (feat)
 
-**Plan metadata:** (pending final commit after checkpoint approval)
+**Checkpoint:** Human-verify approved (browser verification — see Deviations below)
+**Plan metadata:** (this commit)
 
 ## Files Created/Modified
 
@@ -145,7 +147,20 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None — plan executed exactly as written. All components and utility functions match the plan's specified patterns. The pre-existing `tests/auth/signup.test.ts` failure is out-of-scope (introduced in Plan 01-04 when signIn routing logic was updated) and logged as a deferred item.
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bug] AvailabilityGrid timezone parsing broken on Postgres HH:MM:SS time format**
+- **Found during:** Task 3 checkpoint (human browser verification)
+- **Issue:** Postgres TIME columns return `HH:MM:SS` (e.g. `"09:00:00"`), but the plan interfaces documented `"HH:MM"`. The AvailabilityGrid was passing the raw string to date-fns-tz `toDate()`/`formatInTimeZone()`, producing incorrect or NaN display for all time slots
+- **Fix:** Added `.split(':').slice(0, 2).join(':')` normalization on `start_time` and `end_time` before timezone conversion in `AvailabilityGrid.tsx`
+- **Files modified:** `src/components/profile/AvailabilityGrid.tsx`
+- **Verification:** Verified correct slot times in visitor's local timezone during browser checkpoint. Hero, credentials, about, booking calendar, dashboard sidebar, Active/Draft toggle, and availability editor all verified correctly.
+- **Committed in:** c09efbb (inline with Task 2 commit, or inline fix)
+
+---
+
+**Total deviations:** 1 auto-fixed (Rule 1 — bug fix)
+**Impact on plan:** Bug fix necessary for correct availability display. No scope creep.
 
 ## Deferred Items
 
@@ -165,6 +180,13 @@ None — no new external service configuration required. Supabase Storage `profi
 - Dashboard enables teachers to toggle Active/Draft, customize accent/headline/banner/social, edit availability
 - All teachers + availability data written by onboarding wizard (Plan 01-04) is correctly displayed on the public page
 - Phase 1 Foundation is complete — Phase 2 (Booking Requests) can begin with booking form reading from teacher's public profile
+
+## Self-Check: PASSED
+
+- FOUND: .planning/phases/01-foundation/01-05-SUMMARY.md
+- FOUND: commit ede9f30 (Task 1 — utility functions + profile page)
+- FOUND: commit c09efbb (Task 2 — dashboard shell + Server Actions)
+- FOUND: commit 7ece09e (fix — timezone HH:MM:SS bug fix)
 
 ---
 *Phase: 01-foundation*

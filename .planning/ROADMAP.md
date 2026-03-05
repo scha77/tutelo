@@ -12,7 +12,7 @@ Tutelo ships in five phases that follow the dependency chain of the product itse
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Auth, teacher onboarding wizard, public profile page, availability, page visibility
+- [x] **Phase 1: Foundation** - Auth, teacher onboarding wizard, public profile page, availability, page visibility
 - [ ] **Phase 2: Booking Requests** - Pre-payment booking loop, state machine, teacher accept/decline, booking notifications
 - [ ] **Phase 3: Stripe Connect + Deferred Payment** - Revenue path, deferred Stripe onboarding, payment authorization + capture, webhook infrastructure
 - [ ] **Phase 4: Direct Booking + Parent Account** - Stripe-connected teacher direct booking flow, parent account, session reminders
@@ -39,9 +39,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01: Project scaffolding — Next.js 16, Tailwind v4, shadcn/ui, Supabase, environment, proxy.ts, Supabase client setup (browser + server + proxy)
-- [ ] 01-02: Auth — Supabase Auth with Google SSO + email/password, session persistence, route protection for /dashboard and /onboarding
-- [ ] 01-03: Database schema — teachers, availability, bookings (state machine stub), reviews tables with RLS, all timestamptz, IANA timezone column, booking unique constraint
-- [ ] 01-04: Teacher onboarding wizard — multi-step form (React Hook Form + Zod), slug generation, photo upload (Supabase Storage), publish with no Stripe required
+- [x] 01-02: Auth — Supabase Auth with Google SSO + email/password, session persistence, route protection for /dashboard and /onboarding
+- [x] 01-03: Database schema — teachers, availability, bookings (state machine stub), reviews tables with RLS, all timestamptz, IANA timezone column, booking unique constraint
+- [x] 01-04: Teacher onboarding wizard — multi-step form (React Hook Form + Zod), slug generation, photo upload (Supabase Storage), publish with no Stripe required
 - [x] 01-05: Public profile page — /[slug] RSC, all PAGE-* display requirements, availability timezone conversion, page visibility enforcement
 
 ---
@@ -145,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 5/5 | Checkpoint — awaiting human verify | 2026-03-05 |
+| 1. Foundation | 5/5 | Complete   | 2026-03-05 |
 | 2. Booking Requests | 0/3 | Not started | - |
 | 3. Stripe Connect + Deferred Payment | 0/3 | Not started | - |
 | 4. Direct Booking + Parent Account | 0/2 | Not started | - |
