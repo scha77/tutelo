@@ -61,12 +61,12 @@ Plans:
   4. The teacher can accept or decline pending booking requests from their dashboard
   5. The booking state machine (`requested → pending → confirmed → completed → cancelled`) is enforced with DB-level CHECK constraints — no booking can skip or reverse states
 
-**Plans**: 5 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Booking request form — parent-facing Client Component on /[slug], time slot selection, guest submission (no account), atomic booking creation via supabase.rpc()
-- [ ] 02-02: Booking state machine — DB constraints, status transitions, teacher accept/decline dashboard UI (DASH-02)
-- [ ] 02-03: Booking request email notifications — Resend + react-email, "money waiting" trigger (NOTIF-01, STRIPE-02), teacher notification on first request
+- [ ] 02-01-PLAN.md — DB migration (create_booking fn + tighten RLS), Zod schema, Server Actions, BookingCalendar update with subjects/success/error states
+- [ ] 02-02-PLAN.md — Dashboard requests page, RequestCard accept/decline, Sidebar Requests nav + badge, layout Stripe warning banner
+- [ ] 02-03-PLAN.md — Resend install, MoneyWaitingEmail + BookingNotificationEmail templates, sendBookingEmail wired to submitBookingRequest
 
 ---
 
