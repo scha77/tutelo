@@ -13,7 +13,7 @@ Tutelo ships in five phases that follow the dependency chain of the product itse
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Auth, teacher onboarding wizard, public profile page, availability, page visibility
-- [ ] **Phase 2: Booking Requests** - Pre-payment booking loop, state machine, teacher accept/decline, booking notifications
+- [x] **Phase 2: Booking Requests** - Pre-payment booking loop, state machine, teacher accept/decline, booking notifications (completed 2026-03-06)
 - [ ] **Phase 3: Stripe Connect + Deferred Payment** - Revenue path, deferred Stripe onboarding, payment authorization + capture, webhook infrastructure
 - [ ] **Phase 4: Direct Booking + Parent Account** - Stripe-connected teacher direct booking flow, parent account, session reminders
 - [ ] **Phase 5: Dashboard + Reviews** - Teacher dashboard (sessions, earnings, students), review collection, review display
@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-05 |
-| 2. Booking Requests | 2/3 | In Progress|  |
+| 2. Booking Requests | 3/3 | Complete   | 2026-03-06 |
 | 3. Stripe Connect + Deferred Payment | 0/3 | Not started | - |
 | 4. Direct Booking + Parent Account | 0/2 | Not started | - |
 | 5. Dashboard + Reviews | 0/2 | Not started | - |

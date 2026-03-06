@@ -62,7 +62,7 @@ completed: "2026-03-06"
 - **Duration:** 3 min
 - **Started:** 2026-03-06T04:09:11Z
 - **Completed:** 2026-03-06T04:12:XX Z
-- **Tasks:** 2 of 3 complete (Task 3 is human-verify checkpoint — awaiting approval)
+- **Tasks:** 3 of 3 complete (Task 3 human-verify checkpoint approved)
 - **Files modified:** 8
 
 ## Accomplishments
@@ -77,7 +77,7 @@ completed: "2026-03-06"
 
 1. **Task 1: Dashboard requests page + RequestCard component** - `ea1854c` (feat)
 2. **Task 2: Sidebar + layout updates** - `c4cfa92` (feat)
-3. **Task 3: Human verify — end-to-end booking loop** - Awaiting checkpoint approval
+3. **Task 3: Human verify — end-to-end booking loop** - APPROVED (full booking loop verified in browser)
 
 ## Files Created/Modified
 
@@ -116,10 +116,24 @@ completed: "2026-03-06"
 - **Files modified:** src/lib/email.ts (external modification)
 - **Verification:** TypeScript clean; tests pass
 
+**3. [Post-checkpoint] Sidebar badge redesigned from red to green pulsing dot**
+- **Found during:** Human-verify checkpoint (Task 3 — user-requested improvement)
+- **Issue:** The red badge on the Requests nav item was visually heavy and read as an error state rather than a positive "new activity" signal.
+- **Fix:** Replaced red `bg-destructive` count badge with: (a) small green `animate-pulse` dot overlaying the Inbox icon, and (b) green `bg-green-500` count badge. Both convey "new booking" warmly rather than urgently.
+- **Files modified:** `src/components/dashboard/Sidebar.tsx`
+- **Committed in:** User-applied after checkpoint approval (on main)
+
+**4. [Post-checkpoint] Stripe banner now shows whenever stripe_charges_enabled is false**
+- **Found during:** Human-verify checkpoint (Task 3 — user-requested improvement)
+- **Issue:** Plan spec only showed the banner when `pendingCount > 0 && !stripe_charges_enabled`. Teachers who haven't connected Stripe but have no pending requests see no prompt to activate payments.
+- **Fix:** Banner now renders whenever `!stripe_charges_enabled` with two message variants: urgent "You have N pending request(s)! Connect Stripe to confirm them." when pending > 0, and general "Connect Stripe to start accepting payments from parents." when no pending requests.
+- **Files modified:** `src/app/(dashboard)/dashboard/layout.tsx`
+- **Committed in:** User-applied after checkpoint approval (on main)
+
 ---
 
-**Total deviations:** 2 (1 blocking auto-fix, 1 informational note)
-**Impact on plan:** Auto-fix was necessary to unblock tests. Email module landing early is a net positive for Plan 02-03.
+**Total deviations:** 4 (1 blocking auto-fix, 1 informational note, 2 post-checkpoint UX improvements)
+**Impact on plan:** Auto-fix was necessary to unblock tests. Email module landing early is a net positive for Plan 02-03. Post-checkpoint changes are incremental UX improvements on existing plan artifacts.
 
 ## Issues Encountered
 
@@ -134,7 +148,7 @@ None — no external service configuration required for this plan's UI changes. 
 - Booking request UI complete: teachers can see, accept, and decline requests
 - Stripe warning banner wired to /dashboard/connect-stripe (placeholder link ready for Phase 3)
 - email.ts is production-ready once RESEND_API_KEY + email templates are configured (Plan 02-03)
-- Human checkpoint (Task 3) must be approved before marking plan complete
+- Human checkpoint (Task 3) approved — full booking loop verified end-to-end
 
 ## Self-Check: PASSED
 

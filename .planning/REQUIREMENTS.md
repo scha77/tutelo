@@ -60,7 +60,7 @@
 - [x] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
 - [x] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
 - [ ] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
-- [ ] **BOOK-06**: Teacher can accept or decline booking requests from their dashboard
+- [x] **BOOK-06**: Teacher can accept or decline booking requests from their dashboard
 
 ### Payments (Stripe Connect)
 
@@ -84,7 +84,7 @@
 ### Teacher Dashboard
 
 - [ ] **DASH-01**: Teacher can view upcoming sessions
-- [ ] **DASH-02**: Teacher can view and action pending booking requests (accept / decline)
+- [x] **DASH-02**: Teacher can view and action pending booking requests (accept / decline)
 - [ ] **DASH-03**: Teacher can view earnings (completed sessions and total payout)
 - [ ] **DASH-04**: Teacher can view their student list (name, subject, sessions completed)
 - [ ] **DASH-05**: Teacher can mark a session as complete
@@ -214,11 +214,11 @@
 | BOOK-02 | Phase 2 | Complete |
 | BOOK-03 | Phase 2 | Complete |
 | BOOK-04 | Phase 2 | Complete |
-| BOOK-06 | Phase 2 | Pending |
+| BOOK-06 | Phase 2 | Complete |
 | STRIPE-01 | Phase 2 | Complete |
 | STRIPE-02 | Phase 2 | Complete |
 | NOTIF-01 | Phase 2 | Complete |
-| DASH-02 | Phase 2 | Pending |
+| DASH-02 | Phase 2 | Complete |
 | STRIPE-03 | Phase 3 | Pending |
 | STRIPE-04 | Phase 3 | Pending |
 | STRIPE-05 | Phase 3 | Pending |
