@@ -36,16 +36,14 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
   }
 
   // Fire email notification — do not await so booking confirmation is not delayed.
-  // Dynamic import so missing email module does not crash booking creation.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // sendBookingEmail is a no-op stub in src/lib/email.ts until Plan 02-03 wires up Resend.
   try {
-    // @ts-expect-error — email module created in Plan 02-03; intentionally missing now
     const { sendBookingEmail } = await import('@/lib/email')
     sendBookingEmail(parsed.data.teacherId, result.booking_id!, parsed.data).catch(
       console.error
     )
   } catch {
-    // email module not yet created — silent fail for MVP
+    // Defensive catch — silent fail if email module errors
   }
 
   revalidatePath('/[slug]', 'page')
