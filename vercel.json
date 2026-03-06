@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/auto-cancel",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/stripe-reminders",
+      "schedule": "30 * * * *"
+    }
+  ]
+}
