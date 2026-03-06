@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-02-PLAN.md — Deferred payment flow
-last_updated: "2026-03-06T17:35:05.279Z"
+stopped_at: Completed 03-03-PLAN.md — Mark Complete + Email Templates + Booking Confirmed
+last_updated: "2026-03-06T17:44:01.120Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 100
 ---
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 02-booking-requests P03 | 4 | 2 tasks | 7 files |
 | Phase 03-stripe-connect-deferred-payment P01 | 3 | 3 tasks | 5 files |
 | Phase 03-stripe-connect-deferred-payment P02 | 4 | 3 tasks | 11 files |
+| Phase 03-stripe-connect-deferred-payment P03 | 6 | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - [Phase 03-stripe-connect-deferred-payment]: sendCheckoutLinkEmail uses plain text (not react-email) for parent checkout URL — simpler, avoids rendering overhead for a transactional link email
 - [Phase 03-stripe-connect-deferred-payment]: checkout.session.completed idempotency: .eq(status, requested) guard prevents double-confirm on Stripe webhook re-delivery
 - [Phase 03-stripe-connect-deferred-payment]: Auto-cancel idempotency: row-level status guard prevents double-cancel AND double-email on cron re-run
+- [Phase 03-stripe-connect-deferred-payment]: supabaseAdmin used in all three email functions — not createClient() — because these are called from webhook handlers with no user session
+- [Phase 03-stripe-connect-deferred-payment]: fire-and-forget sendSessionCompleteEmail in markSessionComplete — avoids blocking payment capture response on email delivery latency
+- [Phase 03-stripe-connect-deferred-payment]: review URL stub /review?booking=bookingId in SessionCompleteEmail — link embedded so parent has it once Phase 5 ships the actual review flow
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -130,6 +134,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-06T17:35:05.277Z
-Stopped at: Completed 03-02-PLAN.md — Deferred payment flow
+Last session: 2026-03-06T17:44:01.115Z
+Stopped at: Completed 03-03-PLAN.md — Mark Complete + Email Templates + Booking Confirmed
 Resume file: None

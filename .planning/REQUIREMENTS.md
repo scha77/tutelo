@@ -69,17 +69,17 @@
 - [x] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
 - [x] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
 - [x] **STRIPE-05**: Payment is authorized (not captured) at booking time using `capture_method: manual`
-- [ ] **STRIPE-06**: Teacher marking a session as complete triggers automatic payment capture
-- [ ] **STRIPE-07**: Platform applies a 7% application fee on every captured payment via Stripe Connect
+- [x] **STRIPE-06**: Teacher marking a session as complete triggers automatic payment capture
+- [x] **STRIPE-07**: Platform applies a 7% application fee on every captured payment via Stripe Connect
 
 ### Email Notifications
 
 - [x] **NOTIF-01**: Teacher receives email when a booking request is submitted
 - [x] **NOTIF-02**: Teacher receives follow-up emails (at 24hr and 48hr) if Stripe has not been connected after a booking request arrives
-- [ ] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
+- [x] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
 - [ ] **NOTIF-04**: Both teacher and parent receive a 24-hour reminder before each scheduled session
-- [ ] **NOTIF-05**: Both teacher and parent receive a cancellation notification
-- [ ] **NOTIF-06**: Parent receives a session-complete email with a review prompt
+- [x] **NOTIF-05**: Both teacher and parent receive a cancellation notification
+- [x] **NOTIF-06**: Parent receives a session-complete email with a review prompt
 
 ### Teacher Dashboard
 
@@ -222,12 +222,12 @@
 | STRIPE-03 | Phase 3 | Complete |
 | STRIPE-04 | Phase 3 | Complete |
 | STRIPE-05 | Phase 3 | Complete |
-| STRIPE-06 | Phase 3 | Pending |
-| STRIPE-07 | Phase 3 | Pending |
+| STRIPE-06 | Phase 3 | Complete |
+| STRIPE-07 | Phase 3 | Complete |
 | NOTIF-02 | Phase 3 | Complete |
-| NOTIF-03 | Phase 3 | Pending |
-| NOTIF-05 | Phase 3 | Pending |
-| NOTIF-06 | Phase 3 | Pending |
+| NOTIF-03 | Phase 3 | Complete |
+| NOTIF-05 | Phase 3 | Complete |
+| NOTIF-06 | Phase 3 | Complete |
 | BOOK-05 | Phase 4 | Pending |
 | PARENT-01 | Phase 4 | Pending |
 | PARENT-02 | Phase 4 | Pending |
