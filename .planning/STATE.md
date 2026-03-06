@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-06T14:28:17.878Z"
+stopped_at: Completed 03-01-PLAN.md — Stripe Connect infrastructure
+last_updated: "2026-03-06T17:28:24.461Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
   percent: 100
 ---
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 01-foundation P05 | 90 | 2 tasks | 24 files |
 | Phase 02-booking-requests P01 | 4 | 3 tasks | 8 files |
 | Phase 02-booking-requests P03 | 4 | 2 tasks | 7 files |
+| Phase 03-stripe-connect-deferred-payment P01 | 3 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 02-booking-requests]: vi.mock('@/lib/email') in test file prevents Vite import analysis error for dynamic import in bookings.ts
 - [Phase 02-booking-requests]: vi.hoisted() + class-based MockResend required for Vitest ESM mocking of new Resend() — vi.fn().mockImplementation() is not a constructor in Vitest's SSR transform
 - [Phase 02-booking-requests]: Module-level const resend = new Resend() works with class-based mock — no lazy-init needed for testability
+- [Phase 03-stripe-connect-deferred-payment]: connectStripe returns Promise<void> — form action type contract; unauthenticated cases redirect('/login') instead of returning error objects
+- [Phase 03-stripe-connect-deferred-payment]: Idempotency guard in account.updated webhook: checks !stripe_charges_enabled before update to prevent duplicate processing on repeated delivery
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -123,6 +126,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-06T14:28:17.866Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-stripe-connect-deferred-payment/03-CONTEXT.md
+Last session: 2026-03-06T17:28:24.459Z
+Stopped at: Completed 03-01-PLAN.md — Stripe Connect infrastructure
+Resume file: None

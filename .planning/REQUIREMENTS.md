@@ -66,7 +66,7 @@
 
 - [x] **STRIPE-01**: Teacher is NOT required to connect Stripe to publish their page or receive booking requests
 - [x] **STRIPE-02**: Teacher receives "money waiting" notification (email + in-app) when first booking request arrives, with a direct CTA to connect Stripe
-- [ ] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
+- [x] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
 - [ ] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
 - [ ] **STRIPE-05**: Payment is authorized (not captured) at booking time using `capture_method: manual`
 - [ ] **STRIPE-06**: Teacher marking a session as complete triggers automatic payment capture
@@ -219,7 +219,7 @@
 | STRIPE-02 | Phase 2 | Complete |
 | NOTIF-01 | Phase 2 | Complete |
 | DASH-02 | Phase 2 | Complete |
-| STRIPE-03 | Phase 3 | Pending |
+| STRIPE-03 | Phase 3 | Complete |
 | STRIPE-04 | Phase 3 | Pending |
 | STRIPE-05 | Phase 3 | Pending |
 | STRIPE-06 | Phase 3 | Pending |
