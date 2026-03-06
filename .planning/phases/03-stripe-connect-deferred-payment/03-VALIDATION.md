@@ -39,14 +39,14 @@ created: 2026-03-06
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 3-01-01 | 01 | 0 | STRIPE-03 | unit | `npx vitest run tests/stripe/connect-stripe.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-01-02 | 01 | 0 | STRIPE-05 | unit | `npx vitest run tests/stripe/checkout-session.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-01-03 | 01 | 0 | STRIPE-06 | unit | `npx vitest run tests/stripe/mark-complete.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-01-04 | 01 | 0 | STRIPE-07 | unit | `npx vitest run tests/stripe/mark-complete.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-02-01 | 02 | 0 | STRIPE-04 | unit | `npx vitest run tests/stripe/auto-cancel.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-02-02 | 02 | 0 | NOTIF-02 | unit | `npx vitest run tests/stripe/reminders-cron.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-03-01 | 03 | 0 | NOTIF-03 | unit | `npx vitest run tests/stripe/email-confirmation.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-03-02 | 03 | 0 | NOTIF-05 | unit | `npx vitest run tests/stripe/email-cancellation.test.ts -x` | ❌ W0 | ⬜ pending |
-| 3-03-03 | 03 | 0 | NOTIF-06 | unit | `npx vitest run tests/stripe/email-complete.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-02-01 | 02 | 0 | STRIPE-05 | unit | `npx vitest run tests/stripe/checkout-session.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-03-01 | 03 | 0 | STRIPE-06 | unit | `npx vitest run tests/stripe/mark-complete.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-03-02 | 03 | 0 | STRIPE-07 | unit | `npx vitest run tests/stripe/mark-complete.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-02-02 | 02 | 0 | STRIPE-04 | unit | `npx vitest run tests/stripe/auto-cancel.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-02-03 | 02 | 0 | NOTIF-02 | unit | `npx vitest run tests/stripe/reminders-cron.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-03-03 | 03 | 0 | NOTIF-03 | unit | `npx vitest run tests/stripe/email-confirmation.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-03-04 | 03 | 0 | NOTIF-05 | unit | `npx vitest run tests/stripe/email-cancellation.test.ts -x` | ❌ W0 | ⬜ pending |
+| 3-03-05 | 03 | 0 | NOTIF-06 | unit | `npx vitest run tests/stripe/email-complete.test.ts -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
