@@ -55,16 +55,16 @@
 
 ### Booking System
 
-- [ ] **BOOK-01**: Parent can submit a booking request (no payment) by selecting a time slot, entering student name, subject, optional note, and email — no parent account required
-- [ ] **BOOK-02**: Parent sees a pending confirmation screen after request submission
-- [ ] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
-- [ ] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
+- [x] **BOOK-01**: Parent can submit a booking request (no payment) by selecting a time slot, entering student name, subject, optional note, and email — no parent account required
+- [x] **BOOK-02**: Parent sees a pending confirmation screen after request submission
+- [x] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
+- [x] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
 - [ ] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
 - [ ] **BOOK-06**: Teacher can accept or decline booking requests from their dashboard
 
 ### Payments (Stripe Connect)
 
-- [ ] **STRIPE-01**: Teacher is NOT required to connect Stripe to publish their page or receive booking requests
+- [x] **STRIPE-01**: Teacher is NOT required to connect Stripe to publish their page or receive booking requests
 - [ ] **STRIPE-02**: Teacher receives "money waiting" notification (email + in-app) when first booking request arrives, with a direct CTA to connect Stripe
 - [ ] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
 - [ ] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
@@ -210,12 +210,12 @@
 | VIS-01 | Phase 1 | Complete |
 | VIS-02 | Phase 1 | Complete |
 | DASH-06 | Phase 1 | Complete |
-| BOOK-01 | Phase 2 | Pending |
-| BOOK-02 | Phase 2 | Pending |
-| BOOK-03 | Phase 2 | Pending |
-| BOOK-04 | Phase 2 | Pending |
+| BOOK-01 | Phase 2 | Complete |
+| BOOK-02 | Phase 2 | Complete |
+| BOOK-03 | Phase 2 | Complete |
+| BOOK-04 | Phase 2 | Complete |
 | BOOK-06 | Phase 2 | Pending |
-| STRIPE-01 | Phase 2 | Pending |
+| STRIPE-01 | Phase 2 | Complete |
 | STRIPE-02 | Phase 2 | Pending |
 | NOTIF-01 | Phase 2 | Pending |
 | DASH-02 | Phase 2 | Pending |
