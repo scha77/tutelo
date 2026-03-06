@@ -69,20 +69,22 @@ function getSlotsForDate(
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
+  const now = new Date()
 
   return matching
-    .map((slot) => {
+    .flatMap((slot) => {
       const startRaw = slot.start_time.slice(0, 5)
       const endRaw = slot.end_time.slice(0, 5)
       const startDate = toDate(`${year}-${month}-${day}T${startRaw}:00`, { timeZone: teacherTimezone })
+      if (startDate <= now) return [] // filter out past slots
       const endDate = toDate(`${year}-${month}-${day}T${endRaw}:00`, { timeZone: teacherTimezone })
-      return {
+      return [{
         slotId: slot.id,
         startDisplay: formatInTimeZone(startDate, visitorTimezone, 'h:mm a'),
         endDisplay: formatInTimeZone(endDate, visitorTimezone, 'h:mm a'),
         startRaw,
         endRaw,
-      }
+      }]
     })
     .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
 }
@@ -210,7 +212,20 @@ export function BookingCalendar({
   }
 
   const firstName = teacherName.split(' ')[0]
-  const timezoneLabel = visitorTimezone.replace(/_/g, ' ')
+  const timezoneLabel = useMemo(() => {
+    try {
+      const region = visitorTimezone.split('/')[0]
+      const abbr = new Intl.DateTimeFormat('en', {
+        timeZone: visitorTimezone,
+        timeZoneName: 'short',
+      })
+        .formatToParts(new Date())
+        .find((p) => p.type === 'timeZoneName')?.value ?? visitorTimezone
+      return `${region} - ${abbr}`
+    } catch {
+      return visitorTimezone.replace(/_/g, ' ')
+    }
+  }, [visitorTimezone])
 
   if (slots.length === 0) {
     return (
@@ -224,7 +239,7 @@ export function BookingCalendar({
   }
 
   return (
-    <section id="booking" className="mx-auto max-w-4xl px-4 py-8">
+    <section id="booking" className="mx-auto max-w-3xl px-4 py-8">
       <h2 className="text-2xl font-semibold mb-1">Book a Session</h2>
       <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Globe className="h-4 w-4 shrink-0" />

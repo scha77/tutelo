@@ -69,10 +69,15 @@ export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps
                       : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
                   )}
                 >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="relative flex-shrink-0">
+                    <Icon className="h-4 w-4" />
+                    {href === '/dashboard/requests' && pendingCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 ring-1 ring-background animate-pulse" />
+                    )}
+                  </span>
                   {label}
                   {href === '/dashboard/requests' && pendingCount > 0 && (
-                    <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold text-white">
+                    <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1.5 text-[11px] font-semibold text-white">
                       {pendingCount}
                     </span>
                   )}

@@ -37,7 +37,6 @@ export default async function DashboardLayout({
     .eq('status', 'requested')
 
   const pending = pendingCount ?? 0
-  const showStripeBanner = pending > 0 && !teacher.stripe_charges_enabled
 
   return (
     <div className="flex min-h-screen">
@@ -47,11 +46,12 @@ export default async function DashboardLayout({
         pendingCount={pending}
       />
       <main className="flex-1 overflow-auto">
-        {showStripeBanner && (
+        {!teacher.stripe_charges_enabled && (
           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
             <p className="text-sm text-amber-800 font-medium">
-              You have {pending} pending request{pending !== 1 ? 's' : ''}!{' '}
-              Connect Stripe to confirm {pending === 1 ? 'it' : 'them'}.
+              {pending > 0
+                ? `You have ${pending} pending request${pending !== 1 ? 's' : ''}! Connect Stripe to confirm ${pending === 1 ? 'it' : 'them'}.`
+                : 'Connect Stripe to start accepting payments from parents.'}
             </p>
             <a
               href="/dashboard/connect-stripe"
