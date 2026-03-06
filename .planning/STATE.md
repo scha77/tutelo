@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 02-booking-requests/02-01-PLAN.md
-last_updated: "2026-03-06T04:07:59.956Z"
+stopped_at: "Checkpoint 02-02 Task 3: human-verify end-to-end booking loop"
+last_updated: "2026-03-06T04:14:19.940Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 100
 ---
 
@@ -87,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: [01-05]: Postgres TIME columns return HH:MM:SS format — normalize to HH:MM before timezone conversion in any component consuming availability slots
 - [Phase 02-booking-requests]: Zod v4 requires RFC 4122-compliant UUIDs in tests (550e8400-e29b-41d4-a716-446655440000 pattern)
 - [Phase 02-booking-requests]: Dynamic import of email module with @ts-expect-error to defer Plan 02-03 dependency
+- [Phase 02-booking-requests]: Badge uses href comparison ('/dashboard/requests') not label string for coupling safety
+- [Phase 02-booking-requests]: Layout-level Stripe banner is conditional block in layout (not separate component) — per CONTEXT.md locked decision
+- [Phase 02-booking-requests]: vi.mock('@/lib/email') in test file prevents Vite import analysis error for dynamic import in bookings.ts
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -117,6 +120,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-06T04:07:59.954Z
-Stopped at: Completed 02-booking-requests/02-01-PLAN.md
+Last session: 2026-03-06T04:14:17.989Z
+Stopped at: Checkpoint 02-02 Task 3: human-verify end-to-end booking loop
 Resume file: None

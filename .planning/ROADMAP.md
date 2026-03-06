@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-05 |
-| 2. Booking Requests | 0/3 | Not started | - |
+| 2. Booking Requests | 2/3 | In Progress|  |
 | 3. Stripe Connect + Deferred Payment | 0/3 | Not started | - |
 | 4. Direct Booking + Parent Account | 0/2 | Not started | - |
 | 5. Dashboard + Reviews | 0/2 | Not started | - |
