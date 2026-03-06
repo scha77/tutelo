@@ -22,6 +22,11 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }))
 
+// Mock supabaseAdmin — needed because email.ts now imports it for webhook-context functions
+vi.mock('@/lib/supabase/service', () => ({
+  supabaseAdmin: { from: vi.fn() },
+}))
+
 const mockBookingData: BookingRequestData = {
   teacherId: '550e8400-e29b-41d4-a716-446655440000',
   studentName: 'Emma',
