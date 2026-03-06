@@ -1,0 +1,114 @@
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Hr,
+  Html,
+  Preview,
+  Section,
+  Text,
+} from '@react-email/components'
+
+interface BookingNotificationEmailProps {
+  teacherFirstName: string
+  studentName: string
+  subject: string
+  bookingDate: string // YYYY-MM-DD
+  startTime: string // HH:MM
+  parentEmail: string
+  dashboardUrl: string
+}
+
+export function BookingNotificationEmail({
+  teacherFirstName,
+  studentName,
+  subject,
+  bookingDate,
+  startTime,
+  parentEmail,
+  dashboardUrl,
+}: BookingNotificationEmailProps) {
+  // Adding T12:00:00 prevents timezone-shift on date parsing
+  const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return (
+    <Html>
+      <Head />
+      <Preview>New booking request from {studentName}&apos;s parent</Preview>
+      <Body
+        style={{
+          fontFamily: 'sans-serif',
+          backgroundColor: '#f9fafb',
+          margin: 0,
+          padding: '40px 0',
+        }}
+      >
+        <Container
+          style={{
+            maxWidth: '520px',
+            margin: '0 auto',
+            padding: '32px 24px',
+            backgroundColor: '#ffffff',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb',
+          }}
+        >
+          <Text style={{ fontSize: '16px', color: '#111827', marginBottom: '8px' }}>
+            Hi {teacherFirstName},
+          </Text>
+          <Text style={{ fontSize: '16px', color: '#111827' }}>
+            A new booking request has arrived. Log in to your dashboard to accept or decline.
+          </Text>
+          <Section
+            style={{
+              backgroundColor: '#f3f4f6',
+              borderRadius: '6px',
+              padding: '16px',
+              margin: '20px 0',
+            }}
+          >
+            <Text style={{ margin: '4px 0', color: '#374151', fontSize: '14px' }}>
+              <strong>Student:</strong> {studentName}
+            </Text>
+            <Text style={{ margin: '4px 0', color: '#374151', fontSize: '14px' }}>
+              <strong>Subject:</strong> {subject}
+            </Text>
+            <Text style={{ margin: '4px 0', color: '#374151', fontSize: '14px' }}>
+              <strong>Requested:</strong> {formattedDate} at {startTime}
+            </Text>
+            <Text style={{ margin: '4px 0', color: '#374151', fontSize: '14px' }}>
+              <strong>Parent email:</strong> {parentEmail}
+            </Text>
+          </Section>
+          <Section style={{ textAlign: 'center', margin: '28px 0' }}>
+            <Button
+              href={dashboardUrl}
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                padding: '12px 28px',
+                borderRadius: '6px',
+                fontSize: '15px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              View Requests →
+            </Button>
+          </Section>
+          <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
+          <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
+            Tutelo · tutelo.app · You&apos;re receiving this because a parent booked through your
+            Tutelo page.
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}

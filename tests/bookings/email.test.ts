@@ -1,14 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
-// Mock resend before importing email module
-vi.mock('resend', () => ({
-  Resend: vi.fn(() => ({
-    emails: {
-      send: vi.fn().mockResolvedValue({ id: 'test-email-id' }),
-    },
-  })),
-}))
+// vi.hoisted ensures the mock variable is available before module imports are hoisted
+const { sendEmailMock } = vi.hoisted(() => {
+  const sendEmailMock = vi.fn().mockResolvedValue({ id: 'test-email-id' })
+  return { sendEmailMock }
+})
+
+// Mock resend — use a class constructor pattern so `new Resend()` works
+vi.mock('resend', () => {
+  class MockResend {
+    emails = { send: sendEmailMock }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(_apiKey?: string) {}
+  }
+  return { Resend: MockResend }
+})
 
 // Mock Supabase server client
 vi.mock('@/lib/supabase/server', () => ({
@@ -26,16 +33,10 @@ const mockBookingData: BookingRequestData = {
 }
 
 describe('sendBookingEmail', () => {
-  let sendEmailMock: ReturnType<typeof vi.fn>
   let mockSupabaseSelect: ReturnType<typeof vi.fn>
 
   beforeEach(async () => {
-    vi.clearAllMocks()
-
-    // Get the mocked Resend instance's send function
-    const { Resend } = await import('resend')
-    const resendInstance = new (Resend as ReturnType<typeof vi.fn>)()
-    sendEmailMock = resendInstance.emails.send
+    sendEmailMock.mockClear()
 
     // Set up Supabase mock chaining: .from().select().eq().single()
     const { createClient } = await import('@/lib/supabase/server')
