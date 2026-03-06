@@ -2,15 +2,21 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, FileText, Calendar, Settings } from 'lucide-react'
+import { ExternalLink, Inbox, FileText, Calendar, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
   teacherName: string
   teacherSlug: string
+  pendingCount: number
 }
 
 const navItems = [
+  {
+    href: '/dashboard/requests',
+    label: 'Requests',
+    icon: Inbox,
+  },
   {
     href: '/dashboard/page',
     label: 'Page',
@@ -28,7 +34,7 @@ const navItems = [
   },
 ]
 
-export function Sidebar({ teacherName, teacherSlug }: SidebarProps) {
+export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -65,6 +71,11 @@ export function Sidebar({ teacherName, teacherSlug }: SidebarProps) {
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   {label}
+                  {href === '/dashboard/requests' && pendingCount > 0 && (
+                    <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold text-white">
+                      {pendingCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             )

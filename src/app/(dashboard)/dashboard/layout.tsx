@@ -17,10 +17,10 @@ export default async function DashboardLayout({
 
   const userId = claimsData.claims.sub
 
-  // Fetch teacher row for the logged-in user
+  // Fetch teacher row for the logged-in user (includes stripe_charges_enabled for banner)
   const { data: teacher } = await supabase
     .from('teachers')
-    .select('id, full_name, slug, is_published')
+    .select('id, full_name, slug, is_published, stripe_charges_enabled')
     .eq('user_id', userId)
     .maybeSingle()
 
@@ -29,10 +29,38 @@ export default async function DashboardLayout({
     redirect('/onboarding')
   }
 
+  // Count pending booking requests for badge + banner
+  const { count: pendingCount } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('teacher_id', teacher.id)
+    .eq('status', 'requested')
+
+  const pending = pendingCount ?? 0
+  const showStripeBanner = pending > 0 && !teacher.stripe_charges_enabled
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar teacherName={teacher.full_name} teacherSlug={teacher.slug} />
+      <Sidebar
+        teacherName={teacher.full_name}
+        teacherSlug={teacher.slug}
+        pendingCount={pending}
+      />
       <main className="flex-1 overflow-auto">
+        {showStripeBanner && (
+          <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-amber-800 font-medium">
+              You have {pending} pending request{pending !== 1 ? 's' : ''}!{' '}
+              Connect Stripe to confirm {pending === 1 ? 'it' : 'them'}.
+            </p>
+            <a
+              href="/dashboard/connect-stripe"
+              className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-700 transition-colors"
+            >
+              Activate Payments →
+            </a>
+          </div>
+        )}
         {children}
       </main>
     </div>
