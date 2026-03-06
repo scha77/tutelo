@@ -12,7 +12,7 @@ import { sendCancellationEmail } from '@/lib/email'
  *
  * Idempotency: The update is gated on .eq('status', 'requested') — a second run
  * finds 0 rows to update because status was already changed to 'cancelled'.
- * Cancellation email is only sent when the row update succeeds (count > 0).
+ * Cancellation email is only sent when the row update succeeds (updated.length > 0).
  *
  * Auth: Requires Authorization: Bearer {CRON_SECRET} header (set by Vercel cron).
  */
@@ -43,14 +43,16 @@ export async function GET(request: NextRequest) {
 
     if (!teacher?.stripe_charges_enabled) {
       // Idempotent update — .eq('status', 'requested') prevents double-cancel on re-run
-      const { count } = await supabaseAdmin
+      const { data: updated } = await supabaseAdmin
         .from('bookings')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
         .eq('id', booking.id)
         .eq('status', 'requested')
+        .select('id')
 
-      if (count && count > 0) {
-        // Only email if update actually changed a row — prevents duplicate emails on re-run
+      if (updated && updated.length > 0) {
+        // Only email if update actually changed a row — updated is [] on re-run because
+        // .eq('status', 'requested') no longer matches the already-cancelled booking
         await sendCancellationEmail(booking.id).catch(console.error)
         cancelled++
       }
