@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-03-PLAN.md — Mark Complete + Email Templates + Booking Confirmed
-last_updated: "2026-03-06T17:44:01.120Z"
+stopped_at: Completed 03-04-PLAN.md — Auto-Cancel Email Dispatch Bug Fix
+last_updated: "2026-03-06T19:47:18.465Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 03-stripe-connect-deferred-payment P01 | 3 | 3 tasks | 5 files |
 | Phase 03-stripe-connect-deferred-payment P02 | 4 | 3 tasks | 11 files |
 | Phase 03-stripe-connect-deferred-payment P03 | 6 | 3 tasks | 14 files |
+| Phase 03-stripe-connect-deferred-payment P04 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,7 @@ Recent decisions affecting current work:
 - [Phase 03-stripe-connect-deferred-payment]: supabaseAdmin used in all three email functions — not createClient() — because these are called from webhook handlers with no user session
 - [Phase 03-stripe-connect-deferred-payment]: fire-and-forget sendSessionCompleteEmail in markSessionComplete — avoids blocking payment capture response on email delivery latency
 - [Phase 03-stripe-connect-deferred-payment]: review URL stub /review?booking=bookingId in SessionCompleteEmail — link embedded so parent has it once Phase 5 ships the actual review flow
+- [Phase 03-stripe-connect-deferred-payment]: Chain .select('id') on Supabase JS v2 .update() calls to get affected rows — count is always null without explicit count preference header
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -134,6 +136,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-06T17:44:01.115Z
-Stopped at: Completed 03-03-PLAN.md — Mark Complete + Email Templates + Booking Confirmed
+Last session: 2026-03-06T19:47:18.463Z
+Stopped at: Completed 03-04-PLAN.md — Auto-Cancel Email Dispatch Bug Fix
 Resume file: None
