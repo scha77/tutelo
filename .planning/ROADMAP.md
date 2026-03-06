@@ -85,12 +85,12 @@ Plans:
   4. The teacher receives follow-up reminder emails at 24hr and 48hr if they have not yet connected Stripe after receiving a booking request
   5. When the teacher marks a session complete, payment is automatically captured with a 7% application fee applied via Stripe Connect; both parties receive appropriate completion/review notifications
 
-**Plans**: 5 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Stripe Connect Express onboarding flow — connect link generation, both webhook endpoints (platform + connected-account), account.updated handler, stripe_charges_enabled gating
-- [ ] 03-02: Deferred payment flow — PaymentIntent creation on Stripe activation, 48hr auto-cancel cron, parent payment confirmation (STRIPE-04, STRIPE-05)
-- [ ] 03-03: Payment capture + completion emails — teacher marks session complete (STRIPE-06, STRIPE-07), Resend notifications (NOTIF-02, NOTIF-03, NOTIF-05, NOTIF-06)
+- [ ] 03-01-PLAN.md — Stripe Connect Express onboarding (/dashboard/connect-stripe, connectStripe Server Action, platform webhook + connected-account webhook stub)
+- [ ] 03-02-PLAN.md — Deferred payment flow (Checkout session creation on account.updated, checkout.session.completed handler, 48hr auto-cancel cron, 24hr/48hr reminder emails, vercel.json)
+- [ ] 03-03-PLAN.md — Payment capture + all email notifications (markSessionComplete with 7% fee, Confirmed section on requests page, /booking-confirmed page, 3 email templates)
 
 ---
 
