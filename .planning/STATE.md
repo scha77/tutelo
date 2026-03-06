@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: "Checkpoint 02-02 Task 3: human-verify end-to-end booking loop"
-last_updated: "2026-03-06T04:14:19.940Z"
+stopped_at: Completed 02-booking-requests/02-03-PLAN.md
+last_updated: "2026-03-06T04:15:13.185Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 01-foundation P04 | 60 | 6 tasks | 12 files |
 | Phase 01-foundation P05 | 90 | 2 tasks | 24 files |
 | Phase 02-booking-requests P01 | 4 | 3 tasks | 8 files |
+| Phase 02-booking-requests P03 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase 02-booking-requests]: Badge uses href comparison ('/dashboard/requests') not label string for coupling safety
 - [Phase 02-booking-requests]: Layout-level Stripe banner is conditional block in layout (not separate component) — per CONTEXT.md locked decision
 - [Phase 02-booking-requests]: vi.mock('@/lib/email') in test file prevents Vite import analysis error for dynamic import in bookings.ts
+- [Phase 02-booking-requests]: vi.hoisted() + class-based MockResend required for Vitest ESM mocking of new Resend() — vi.fn().mockImplementation() is not a constructor in Vitest's SSR transform
+- [Phase 02-booking-requests]: Module-level const resend = new Resend() works with class-based mock — no lazy-init needed for testability
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -120,6 +123,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-06T04:14:17.989Z
-Stopped at: Checkpoint 02-02 Task 3: human-verify end-to-end booking loop
+Last session: 2026-03-06T04:15:13.183Z
+Stopped at: Completed 02-booking-requests/02-03-PLAN.md
 Resume file: None
