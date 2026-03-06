@@ -6,6 +6,7 @@ import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
 import { BookingCalendar } from '@/components/profile/BookingCalendar'
 import { BookNowCTA } from '@/components/profile/BookNowCTA'
+import { submitBookingRequest } from '@/actions/bookings'
 
 // VIS-02: Graceful draft state — NOT a 404
 function DraftPage() {
@@ -106,6 +107,9 @@ export default async function TeacherProfilePage({
         teacherTimezone={teacher.timezone}
         teacherName={teacher.full_name}
         accentColor={teacher.accent_color}
+        subjects={teacher.subjects ?? []}
+        teacherId={teacher.id}
+        submitAction={submitBookingRequest}
       />
       <SocialLinks
         instagram={teacher.social_instagram}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Globe } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Globe, CheckCircle2 } from 'lucide-react'
 import { formatInTimeZone, toDate } from 'date-fns-tz'
 import {
   addMonths,
@@ -16,11 +16,18 @@ import {
   startOfToday,
   format,
 } from 'date-fns'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import type { BookingResult } from '@/actions/bookings'
 
 interface AvailabilitySlot {
   id: string
@@ -34,7 +41,8 @@ interface TimeSlot {
   slotId: string
   startDisplay: string
   endDisplay: string
-  startRaw: string // "HH:MM" for sorting
+  startRaw: string // "HH:MM" — teacher-timezone time for DB storage
+  endRaw: string   // "HH:MM" — teacher-timezone time for DB storage
 }
 
 interface BookingCalendarProps {
@@ -42,6 +50,9 @@ interface BookingCalendarProps {
   teacherTimezone: string
   teacherName: string
   accentColor: string
+  subjects: string[]
+  teacherId: string
+  submitAction: (data: unknown) => Promise<BookingResult>
 }
 
 const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -70,6 +81,7 @@ function getSlotsForDate(
         startDisplay: formatInTimeZone(startDate, visitorTimezone, 'h:mm a'),
         endDisplay: formatInTimeZone(endDate, visitorTimezone, 'h:mm a'),
         startRaw,
+        endRaw,
       }
     })
     .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
@@ -80,14 +92,29 @@ export function BookingCalendar({
   teacherTimezone,
   teacherName,
   accentColor,
+  subjects,
+  teacherId,
+  submitAction,
 }: BookingCalendarProps) {
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [step, setStep] = useState<'calendar' | 'form'>('calendar')
-  const [form, setForm] = useState({ name: '', email: '', notes: '' })
+  const [step, setStep] = useState<'calendar' | 'form' | 'success' | 'error'>('calendar')
+  const [form, setForm] = useState({
+    name: '',
+    subject: subjects.length === 1 ? subjects[0] : '',
+    email: '',
+    notes: '',
+  })
   const [submitting, setSubmitting] = useState(false)
+  const [bookingConfirmation, setBookingConfirmation] = useState<{
+    date: string
+    time: string
+    subject: string
+    email: string
+  } | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const visitorTimezone = useMemo(() => {
     try {
@@ -137,19 +164,49 @@ export function BookingCalendar({
     setSelectedSlot(null)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    // Phase 2 will wire this to the booking request API
-    await new Promise((r) => setTimeout(r, 600))
-    setSubmitting(false)
-    toast.success("Request sent! You'll hear back shortly.", {
-      description: `${teacherName} will confirm your session soon.`,
-    })
+  function handleBookAnother() {
     setStep('calendar')
     setSelectedDate(null)
     setSelectedSlot(null)
-    setForm({ name: '', email: '', notes: '' })
+    setForm({
+      name: '',
+      subject: subjects.length === 1 ? subjects[0] : '',
+      email: '',
+      notes: '',
+    })
+    setBookingConfirmation(null)
+    setErrorMessage(null)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    const result = await submitAction({
+      teacherId,
+      studentName: form.name,
+      subject: form.subject,
+      email: form.email,
+      notes: form.notes || undefined,
+      bookingDate: format(selectedDate!, 'yyyy-MM-dd'), // local calendar date, no UTC shift
+      startTime: selectedSlot!.startRaw,   // teacher-timezone raw time, NOT display time
+      endTime: selectedSlot!.endRaw,
+    })
+    setSubmitting(false)
+    if (result.success) {
+      setBookingConfirmation({
+        date: format(selectedDate!, 'EEEE, MMMM d'),
+        time: selectedSlot!.startDisplay,
+        subject: form.subject,
+        email: form.email,
+      })
+      setStep('success')
+    } else if (result.error === 'slot_taken') {
+      setErrorMessage('This time slot was just booked. Please choose another.')
+      setStep('error')
+    } else {
+      setErrorMessage('Something went wrong. Please try again.')
+      setStep('error')
+    }
   }
 
   const firstName = teacherName.split(' ')[0]
@@ -178,7 +235,49 @@ export function BookingCalendar({
       </div>
 
       <div className="border rounded-xl overflow-hidden shadow-sm">
-        {step === 'calendar' ? (
+        {step === 'success' && bookingConfirmation ? (
+          /* ── Success state ── */
+          <div className="p-8 flex flex-col items-center text-center space-y-4 max-w-md mx-auto">
+            <CheckCircle2
+              className="h-12 w-12"
+              style={{ color: accentColor }}
+            />
+            <h3 className="text-xl font-semibold">Session requested!</h3>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">
+                {bookingConfirmation.date} at {bookingConfirmation.time}
+              </p>
+              <p>{bookingConfirmation.subject}</p>
+              <p className="mt-2">
+                We&apos;ll email{' '}
+                <span className="font-medium text-foreground">
+                  {bookingConfirmation.email}
+                </span>{' '}
+                when confirmed.
+              </p>
+            </div>
+            <button
+              onClick={handleBookAnother}
+              className="mt-2 text-sm underline underline-offset-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Book another time
+            </button>
+          </div>
+        ) : step === 'error' ? (
+          /* ── Error state ── */
+          <div className="p-8 flex flex-col items-center text-center space-y-4 max-w-md mx-auto">
+            <p className="text-sm text-destructive font-medium">{errorMessage}</p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setErrorMessage(null)
+                setStep('calendar')
+              }}
+            >
+              ← Back to calendar
+            </Button>
+          </div>
+        ) : step === 'calendar' ? (
           <div className="flex flex-col md:flex-row">
             {/* ── Calendar ── */}
             <div className={`flex-1 p-6 ${selectedDate ? 'md:border-r' : ''}`}>
@@ -305,19 +404,46 @@ export function BookingCalendar({
               </div>
             </div>
 
-            {/* Form */}
+            {/* Form — field order: Student's name → Subject (if visible) → Email → Notes */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5 max-w-md">
+              {/* Student's name */}
               <div className="space-y-1.5">
-                <Label htmlFor="name">Your Name</Label>
+                <Label htmlFor="name">Student&apos;s name</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   required
-                  placeholder="Jane Smith"
+                  placeholder="Alex Johnson"
                 />
               </div>
 
+              {/* Subject — shown only when teacher has multiple subjects */}
+              {subjects.length > 1 && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Select
+                    value={form.subject}
+                    onValueChange={(value) =>
+                      setForm((f) => ({ ...f, subject: value }))
+                    }
+                    required
+                  >
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -330,6 +456,7 @@ export function BookingCalendar({
                 />
               </div>
 
+              {/* Notes — optional */}
               <div className="space-y-1.5">
                 <Label htmlFor="notes">
                   Notes for {firstName}{' '}
@@ -339,7 +466,7 @@ export function BookingCalendar({
                   id="notes"
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder="What would you like to work on? Any subjects, grade level, or goals to share…"
+                  placeholder={`Let ${firstName} know what grade level, what they're struggling with, and what you'd most like to focus on in the first session.`}
                   className="min-h-[100px]"
                 />
               </div>
@@ -347,7 +474,7 @@ export function BookingCalendar({
               <Button
                 type="submit"
                 size="lg"
-                disabled={submitting}
+                disabled={submitting || (subjects.length > 1 && !form.subject)}
                 className="w-full font-semibold"
                 style={{ backgroundColor: accentColor, color: 'white' }}
               >
