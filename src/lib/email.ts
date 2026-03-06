@@ -1,9 +1,13 @@
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/service'
 import { MoneyWaitingEmail } from '@/emails/MoneyWaitingEmail'
 import { BookingNotificationEmail } from '@/emails/BookingNotificationEmail'
 import { FollowUpEmail } from '@/emails/FollowUpEmail'
 import { UrgentFollowUpEmail } from '@/emails/UrgentFollowUpEmail'
+import { BookingConfirmationEmail } from '@/emails/BookingConfirmationEmail'
+import { CancellationEmail } from '@/emails/CancellationEmail'
+import { SessionCompleteEmail } from '@/emails/SessionCompleteEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -111,7 +115,115 @@ export async function sendUrgentFollowUpEmail(
   })
 }
 
-// Stub for Plan 03 — implemented there
-export async function sendCancellationEmail(_bookingId: string): Promise<void> {
-  console.log(`[email] sendCancellationEmail stub — implemented in Plan 03`)
+export async function sendBookingConfirmationEmail(bookingId: string): Promise<void> {
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email, student_name, subject, booking_date, start_time, teachers(full_name, social_email)')
+    .eq('id', bookingId)
+    .single()
+  if (!data) return
+
+  const teacher = data.teachers as unknown as { full_name: string; social_email: string | null }
+  const teacherFirstName = teacher.full_name.split(' ')[0]
+  const from = 'Tutelo <noreply@tutelo.app>'
+
+  // Email parent
+  await resend.emails.send({
+    from,
+    to: data.parent_email,
+    subject: `Booking confirmed — ${data.student_name}'s session with ${teacher.full_name}`,
+    react: BookingConfirmationEmail({
+      recipientFirstName: 'there', // Parent name not collected at MVP
+      studentName: data.student_name,
+      subject: data.subject,
+      bookingDate: data.booking_date,
+      startTime: data.start_time,
+      teacherName: teacher.full_name,
+      isTeacher: false,
+    }),
+  })
+
+  // Email teacher (if social_email set)
+  if (teacher.social_email) {
+    await resend.emails.send({
+      from,
+      to: teacher.social_email,
+      subject: `Booking confirmed — ${data.student_name} has paid`,
+      react: BookingConfirmationEmail({
+        recipientFirstName: teacherFirstName,
+        studentName: data.student_name,
+        subject: data.subject,
+        bookingDate: data.booking_date,
+        startTime: data.start_time,
+        teacherName: teacher.full_name,
+        isTeacher: true,
+      }),
+    })
+  }
+}
+
+export async function sendCancellationEmail(bookingId: string): Promise<void> {
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email, student_name, booking_date, start_time, teachers(full_name, social_email)')
+    .eq('id', bookingId)
+    .single()
+  if (!data) return
+
+  const teacher = data.teachers as unknown as { full_name: string; social_email: string | null }
+  const teacherFirstName = teacher.full_name.split(' ')[0]
+  const from = 'Tutelo <noreply@tutelo.app>'
+
+  await resend.emails.send({
+    from,
+    to: data.parent_email,
+    subject: `Your booking for ${data.student_name} has been cancelled`,
+    react: CancellationEmail({
+      recipientFirstName: 'there',
+      studentName: data.student_name,
+      bookingDate: data.booking_date,
+      startTime: data.start_time,
+      isTeacher: false,
+    }),
+  })
+
+  if (teacher.social_email) {
+    await resend.emails.send({
+      from,
+      to: teacher.social_email,
+      subject: `Booking for ${data.student_name} was cancelled`,
+      react: CancellationEmail({
+        recipientFirstName: teacherFirstName,
+        studentName: data.student_name,
+        bookingDate: data.booking_date,
+        startTime: data.start_time,
+        isTeacher: true,
+      }),
+    })
+  }
+}
+
+export async function sendSessionCompleteEmail(bookingId: string): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email, student_name, teachers(full_name)')
+    .eq('id', bookingId)
+    .single()
+  if (!data) return
+
+  const teacher = data.teachers as unknown as { full_name: string }
+  const reviewUrl = `${appUrl}/review?booking=${bookingId}`
+
+  await resend.emails.send({
+    from: 'Tutelo <noreply@tutelo.app>',
+    to: data.parent_email,
+    subject: `How was ${data.student_name}'s session with ${teacher.full_name}?`,
+    react: SessionCompleteEmail({
+      parentFirstName: 'there',
+      studentName: data.student_name,
+      teacherName: teacher.full_name,
+      reviewUrl,
+    }),
+  })
 }

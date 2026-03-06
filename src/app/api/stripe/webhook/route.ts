@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
-import { sendCheckoutLinkEmail } from '@/lib/email'
+import { sendCheckoutLinkEmail, sendBookingConfirmationEmail } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
         console.error(`[stripe/webhook] Failed to confirm booking ${bookingId}:`, error)
       } else {
         console.log(`[stripe/webhook] Booking ${bookingId} confirmed — payment intent: ${session.payment_intent}`)
-        // TODO(Plan 03): sendBookingConfirmationEmail() — notifies teacher and parent of confirmed session
+        await sendBookingConfirmationEmail(bookingId).catch(console.error)
       }
       break
     }
