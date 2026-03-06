@@ -2,6 +2,8 @@ import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { MoneyWaitingEmail } from '@/emails/MoneyWaitingEmail'
 import { BookingNotificationEmail } from '@/emails/BookingNotificationEmail'
+import { FollowUpEmail } from '@/emails/FollowUpEmail'
+import { UrgentFollowUpEmail } from '@/emails/UrgentFollowUpEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -61,4 +63,55 @@ export async function sendBookingEmail(
       }),
     })
   }
+}
+
+export async function sendCheckoutLinkEmail(
+  parentEmail: string,
+  studentName: string,
+  checkoutUrl: string
+): Promise<void> {
+  await resend.emails.send({
+    from: 'Tutelo <noreply@tutelo.app>',
+    to: parentEmail,
+    subject: `You're booked! Complete payment to confirm your session`,
+    text: `Hi! Your tutoring session for ${studentName} is almost confirmed. Click the link below to complete your payment:\n\n${checkoutUrl}\n\nThis link is unique to your booking — do not share it. Once payment is complete your session is locked in.\n\nTutelo · tutelo.app`,
+  })
+}
+
+export async function sendFollowUpEmail(
+  teacherEmail: string,
+  teacherFirstName: string,
+  studentName: string,
+  parentEmail: string,
+  bookingDate: string,
+  connectStripeUrl: string
+): Promise<void> {
+  await resend.emails.send({
+    from: 'Tutelo <noreply@tutelo.app>',
+    to: teacherEmail,
+    subject: `Reminder: ${parentEmail} is still waiting for you`,
+    react: FollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, connectStripeUrl }),
+  })
+}
+
+export async function sendUrgentFollowUpEmail(
+  teacherEmail: string,
+  teacherFirstName: string,
+  studentName: string,
+  parentEmail: string,
+  bookingDate: string,
+  cancelDeadline: string,
+  connectStripeUrl: string
+): Promise<void> {
+  await resend.emails.send({
+    from: 'Tutelo <noreply@tutelo.app>',
+    to: teacherEmail,
+    subject: `Last chance — this booking cancels at ${cancelDeadline}`,
+    react: UrgentFollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, cancelDeadline, connectStripeUrl }),
+  })
+}
+
+// Stub for Plan 03 — implemented there
+export async function sendCancellationEmail(_bookingId: string): Promise<void> {
+  console.log(`[email] sendCancellationEmail stub — implemented in Plan 03`)
 }
