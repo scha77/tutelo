@@ -109,11 +109,13 @@ Plans:
   3. A parent can rebook a session with the same teacher (pre-filled with previous teacher, subject, and default time preference) without re-entering all details
   4. Both teacher and parent receive a 24-hour reminder email before each scheduled session
 
-**Plans**: 5 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: Direct booking flow — Stripe Elements on booking form, payment authorization at time of booking, conditional routing (direct vs. deferred) based on teacher's stripe_charges_enabled
-- [ ] 04-02: Parent account — PARENT-01/02/03, parent session view, rebook shortcut, 24hr reminder email (NOTIF-04)
+- [ ] 04-01-PLAN.md — DB migration (reminder_sent_at column + index) + Wave 0 test scaffolds (7 stub files)
+- [ ] 04-02-PLAN.md — Direct booking flow: create-intent API route, InlineAuthForm, PaymentStep, BookingCalendar extension (auth + payment steps), webhook extension (payment_intent.amount_capturable_updated), [slug]/page.tsx prop (BOOK-05, PARENT-01)
+- [ ] 04-03-PLAN.md — Parent account: /account page, middleware /account protection, login ?redirect= param, rebook URL param pre-fill in BookingCalendar (PARENT-02, PARENT-03)
+- [ ] 04-04-PLAN.md — 24hr session reminders: SessionReminderEmail, sendSessionReminderEmail, /api/cron/session-reminders, vercel.json cron (NOTIF-04)
 
 ---
 
@@ -149,5 +151,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation | 5/5 | Complete   | 2026-03-05 |
 | 2. Booking Requests | 3/3 | Complete   | 2026-03-06 |
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
-| 4. Direct Booking + Parent Account | 0/2 | Not started | - |
+| 4. Direct Booking + Parent Account | 0/4 | Not started | - |
 | 5. Dashboard + Reviews | 0/2 | Not started | - |
