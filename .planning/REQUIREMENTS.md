@@ -59,7 +59,7 @@
 - [x] **BOOK-02**: Parent sees a pending confirmation screen after request submission
 - [x] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
 - [x] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
-- [ ] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
+- [x] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
 - [x] **BOOK-06**: Teacher can accept or decline booking requests from their dashboard
 
 ### Payments (Stripe Connect)
@@ -77,7 +77,7 @@
 - [x] **NOTIF-01**: Teacher receives email when a booking request is submitted
 - [x] **NOTIF-02**: Teacher receives follow-up emails (at 24hr and 48hr) if Stripe has not been connected after a booking request arrives
 - [x] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
-- [ ] **NOTIF-04**: Both teacher and parent receive a 24-hour reminder before each scheduled session
+- [x] **NOTIF-04**: Both teacher and parent receive a 24-hour reminder before each scheduled session
 - [x] **NOTIF-05**: Both teacher and parent receive a cancellation notification
 - [x] **NOTIF-06**: Parent receives a session-complete email with a review prompt
 
@@ -92,9 +92,9 @@
 
 ### Parent Account
 
-- [ ] **PARENT-01**: Parent can create an account (email + password or Google SSO)
-- [ ] **PARENT-02**: Parent can view booking history and upcoming sessions
-- [ ] **PARENT-03**: Parent can rebook a session with the same teacher
+- [x] **PARENT-01**: Parent can create an account (email + password or Google SSO)
+- [x] **PARENT-02**: Parent can view booking history and upcoming sessions
+- [x] **PARENT-03**: Parent can rebook a session with the same teacher
 
 ### Reviews
 
@@ -228,11 +228,11 @@
 | NOTIF-03 | Phase 3 | Complete |
 | NOTIF-05 | Phase 3 | Complete |
 | NOTIF-06 | Phase 3 | Complete |
-| BOOK-05 | Phase 4 | Pending |
-| PARENT-01 | Phase 4 | Pending |
-| PARENT-02 | Phase 4 | Pending |
-| PARENT-03 | Phase 4 | Pending |
-| NOTIF-04 | Phase 4 | Pending |
+| BOOK-05 | Phase 4 | Complete |
+| PARENT-01 | Phase 4 | Complete |
+| PARENT-02 | Phase 4 | Complete |
+| PARENT-03 | Phase 4 | Complete |
+| NOTIF-04 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Pending |
 | DASH-03 | Phase 5 | Pending |
 | DASH-04 | Phase 5 | Pending |
