@@ -8,6 +8,7 @@ import { UrgentFollowUpEmail } from '@/emails/UrgentFollowUpEmail'
 import { BookingConfirmationEmail } from '@/emails/BookingConfirmationEmail'
 import { CancellationEmail } from '@/emails/CancellationEmail'
 import { SessionCompleteEmail } from '@/emails/SessionCompleteEmail'
+import { SessionReminderEmail } from '@/emails/SessionReminderEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -197,6 +198,53 @@ export async function sendCancellationEmail(bookingId: string): Promise<void> {
         studentName: data.student_name,
         bookingDate: data.booking_date,
         startTime: data.start_time,
+        isTeacher: true,
+      }),
+    })
+  }
+}
+
+export async function sendSessionReminderEmail(bookingId: string): Promise<void> {
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email, student_name, subject, booking_date, start_time, teachers(full_name, social_email)')
+    .eq('id', bookingId)
+    .single()
+  if (!data) return
+
+  const teacher = data.teachers as unknown as { full_name: string; social_email: string | null }
+  const teacherFirstName = teacher.full_name.split(' ')[0]
+  const from = 'Tutelo <noreply@tutelo.app>'
+
+  // Email parent
+  await resend.emails.send({
+    from,
+    to: data.parent_email,
+    subject: `Reminder: ${data.student_name}'s session with ${teacher.full_name} is tomorrow`,
+    react: SessionReminderEmail({
+      recipientFirstName: 'there',
+      studentName: data.student_name,
+      subject: data.subject,
+      bookingDate: data.booking_date,
+      startTime: data.start_time.slice(0, 5),
+      teacherName: teacher.full_name,
+      isTeacher: false,
+    }),
+  })
+
+  // Email teacher (only if social_email is set)
+  if (teacher.social_email) {
+    await resend.emails.send({
+      from,
+      to: teacher.social_email,
+      subject: `Reminder: Your session with ${data.student_name} is tomorrow`,
+      react: SessionReminderEmail({
+        recipientFirstName: teacherFirstName,
+        studentName: data.student_name,
+        subject: data.subject,
+        bookingDate: data.booking_date,
+        startTime: data.start_time.slice(0, 5),
+        teacherName: teacher.full_name,
         isTeacher: true,
       }),
     })
