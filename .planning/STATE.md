@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-08T15:15:59.532Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-03-08T15:20:50.969Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 13
+  completed_plans: 14
   percent: 100
 ---
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 03-stripe-connect-deferred-payment P03 | 6 | 3 tasks | 14 files |
 | Phase 03-stripe-connect-deferred-payment P04 | 5 | 1 tasks | 1 files |
 | Phase 04-direct-booking-parent-account P01 | 3 | 2 tasks | 8 files |
+| Phase 04-direct-booking-parent-account P04 | 15 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase 04-direct-booking-parent-account]: reminder_sent_at NULL = unsent semantics over boolean flag — enables timestamp auditing and native IS NULL filtering in cron query
 - [Phase 04-direct-booking-parent-account]: Partial index on bookings scoped to confirmed + reminder_sent_at IS NULL — keeps index small, only confirmed unsent rows indexed
 - [Phase 04-direct-booking-parent-account]: Wave-0 scaffold pattern: migration + it.todo() test stubs first, Wave-2 plans implement in parallel without schema or test file gaps
+- [Phase 04-direct-booking-parent-account]: Cron at 9 AM UTC for session reminders covers both US coasts for same-day tomorrow date boundary
+- [Phase 04-direct-booking-parent-account]: reminder_sent_at IS NULL idempotency sentinel: conditional update prevents duplicate emails on cron re-run
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -140,6 +143,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-08T15:15:59.530Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-08T15:20:50.967Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
