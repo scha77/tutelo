@@ -152,6 +152,34 @@ export async function POST(req: Request) {
       break
     }
 
+    case 'payment_intent.amount_capturable_updated': {
+      const pi = event.data.object as Stripe.PaymentIntent
+      const bookingId = pi.metadata?.booking_id
+      if (!bookingId) {
+        console.warn('[stripe/webhook] payment_intent.amount_capturable_updated missing booking_id')
+        break
+      }
+      // Idempotency: .eq('status', 'requested') prevents double-confirm on re-delivery
+      const { data: updated } = await supabaseAdmin
+        .from('bookings')
+        .update({
+          status: 'confirmed',
+          stripe_payment_intent: pi.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bookingId)
+        .eq('status', 'requested')
+        .select('id')
+
+      if (updated && updated.length > 0) {
+        // Pass accountUrl so parent-facing confirmation email includes /account link (PARENT-02)
+        const accountUrl = `${appUrl}/account`
+        await sendBookingConfirmationEmail(bookingId, { accountUrl }).catch(console.error)
+        console.log(`[stripe/webhook] Direct booking ${bookingId} confirmed via payment_intent.amount_capturable_updated`)
+      }
+      break
+    }
+
     default:
       // Ignore unknown events — always return 200 to prevent Stripe retries
       break

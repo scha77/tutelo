@@ -110,6 +110,8 @@ export default async function TeacherProfilePage({
         subjects={teacher.subjects ?? []}
         teacherId={teacher.id}
         submitAction={submitBookingRequest}
+        stripeConnected={teacher.stripe_charges_enabled ?? false}
+        teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
       />
       <SocialLinks
         instagram={teacher.social_instagram}

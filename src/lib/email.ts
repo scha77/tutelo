@@ -116,7 +116,10 @@ export async function sendUrgentFollowUpEmail(
   })
 }
 
-export async function sendBookingConfirmationEmail(bookingId: string): Promise<void> {
+export async function sendBookingConfirmationEmail(
+  bookingId: string,
+  options?: { accountUrl?: string }
+): Promise<void> {
   const { data } = await supabaseAdmin
     .from('bookings')
     .select('parent_email, student_name, subject, booking_date, start_time, teachers(full_name, social_email)')
@@ -128,7 +131,7 @@ export async function sendBookingConfirmationEmail(bookingId: string): Promise<v
   const teacherFirstName = teacher.full_name.split(' ')[0]
   const from = 'Tutelo <noreply@tutelo.app>'
 
-  // Email parent
+  // Email parent — pass accountUrl so they can find session history at /account (PARENT-02)
   await resend.emails.send({
     from,
     to: data.parent_email,
@@ -141,6 +144,7 @@ export async function sendBookingConfirmationEmail(bookingId: string): Promise<v
       startTime: data.start_time,
       teacherName: teacher.full_name,
       isTeacher: false,
+      accountUrl: options?.accountUrl, // Only passed for parent-facing email
     }),
   })
 

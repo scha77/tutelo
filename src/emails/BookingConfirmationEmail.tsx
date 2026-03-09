@@ -4,6 +4,7 @@ import {
   Head,
   Hr,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -17,6 +18,7 @@ interface BookingConfirmationEmailProps {
   startTime: string // HH:MM or HH:MM:SS
   teacherName: string
   isTeacher: boolean
+  accountUrl?: string // When provided, render a "View your sessions" link for parent recipients
 }
 
 export function BookingConfirmationEmail({
@@ -27,6 +29,7 @@ export function BookingConfirmationEmail({
   startTime,
   teacherName,
   isTeacher,
+  accountUrl,
 }: BookingConfirmationEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -107,6 +110,19 @@ export function BookingConfirmationEmail({
             <Text style={{ fontSize: '15px', color: '#111827' }}>
               You&apos;ll get a reminder 24 hours before your session.
             </Text>
+          )}
+
+          {accountUrl && (
+            <Section style={{ margin: '16px 0' }}>
+              <Text style={{ fontSize: '15px', color: '#111827', marginBottom: '4px' }}>
+                You can view and manage your upcoming sessions at any time:
+              </Text>
+              <Text style={{ fontSize: '15px', color: '#111827', margin: 0 }}>
+                <Link href={accountUrl} style={{ color: '#2563eb' }}>
+                  View my sessions
+                </Link>
+              </Text>
+            </Section>
           )}
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />

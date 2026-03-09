@@ -27,6 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { InlineAuthForm } from '@/components/auth/InlineAuthForm'
+import { PaymentStep } from '@/components/profile/PaymentStep'
+import { createClient } from '@/lib/supabase/client'
 import type { BookingResult } from '@/actions/bookings'
 
 interface AvailabilitySlot {
@@ -53,6 +56,9 @@ interface BookingCalendarProps {
   subjects: string[]
   teacherId: string
   submitAction: (data: unknown) => Promise<BookingResult>
+  // Direct booking path (Phase 4):
+  stripeConnected: boolean        // true = direct booking path; false = deferred (no change)
+  teacherStripeAccountId?: string // passed through to create-intent fetch
 }
 
 const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -97,12 +103,13 @@ export function BookingCalendar({
   subjects,
   teacherId,
   submitAction,
+  stripeConnected,
 }: BookingCalendarProps) {
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [step, setStep] = useState<'calendar' | 'form' | 'success' | 'error'>('calendar')
+  const [step, setStep] = useState<'calendar' | 'form' | 'success' | 'error' | 'auth' | 'payment'>('calendar')
   const [form, setForm] = useState({
     name: '',
     subject: subjects.length === 1 ? subjects[0] : '',
@@ -117,6 +124,12 @@ export function BookingCalendar({
     email: string
   } | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  // Direct booking payment state
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [creatingIntent, setCreatingIntent] = useState(false)
+
+  const supabase = createClient()
 
   const visitorTimezone = useMemo(() => {
     try {
@@ -178,36 +191,84 @@ export function BookingCalendar({
     })
     setBookingConfirmation(null)
     setErrorMessage(null)
+    setClientSecret(null)
+    setPaymentError(null)
+  }
+
+  async function createPaymentIntent() {
+    setCreatingIntent(true)
+    const res = await fetch('/api/direct-booking/create-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        teacherId,
+        bookingDate: format(selectedDate!, 'yyyy-MM-dd'),
+        startTime: selectedSlot!.startRaw,
+        endTime: selectedSlot!.endRaw,
+        studentName: form.name,
+        subject: form.subject,
+        notes: form.notes || undefined,
+      }),
+    })
+    setCreatingIntent(false)
+    if (!res.ok) {
+      setErrorMessage('Could not initialize payment. Please try again.')
+      setStep('error')
+      return
+    }
+    const { clientSecret: secret } = await res.json()
+    setClientSecret(secret)
+    setStep('payment')
+  }
+
+  async function handleAuthSuccess() {
+    await createPaymentIntent()
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
-    const result = await submitAction({
-      teacherId,
-      studentName: form.name,
-      subject: form.subject,
-      email: form.email,
-      notes: form.notes || undefined,
-      bookingDate: format(selectedDate!, 'yyyy-MM-dd'), // local calendar date, no UTC shift
-      startTime: selectedSlot!.startRaw,   // teacher-timezone raw time, NOT display time
-      endTime: selectedSlot!.endRaw,
-    })
-    setSubmitting(false)
-    if (result.success) {
-      setBookingConfirmation({
-        date: format(selectedDate!, 'EEEE, MMMM d'),
-        time: selectedSlot!.startDisplay,
+
+    if (!stripeConnected) {
+      // Deferred path (Phase 3) — unchanged behavior
+      setSubmitting(true)
+      const result = await submitAction({
+        teacherId,
+        studentName: form.name,
         subject: form.subject,
         email: form.email,
+        notes: form.notes || undefined,
+        bookingDate: format(selectedDate!, 'yyyy-MM-dd'), // local calendar date, no UTC shift
+        startTime: selectedSlot!.startRaw,   // teacher-timezone raw time, NOT display time
+        endTime: selectedSlot!.endRaw,
       })
-      setStep('success')
-    } else if (result.error === 'slot_taken') {
-      setErrorMessage('This time slot was just booked. Please choose another.')
-      setStep('error')
+      setSubmitting(false)
+      if (result.success) {
+        setBookingConfirmation({
+          date: format(selectedDate!, 'EEEE, MMMM d'),
+          time: selectedSlot!.startDisplay,
+          subject: form.subject,
+          email: form.email,
+        })
+        setStep('success')
+      } else if (result.error === 'slot_taken') {
+        setErrorMessage('This time slot was just booked. Please choose another.')
+        setStep('error')
+      } else {
+        setErrorMessage('Something went wrong. Please try again.')
+        setStep('error')
+      }
+      return
+    }
+
+    // Direct booking path (stripeConnected = true)
+    // Check if user is already authenticated
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      // Not authenticated — show inline auth step
+      setStep('auth')
     } else {
-      setErrorMessage('Something went wrong. Please try again.')
-      setStep('error')
+      // Already authenticated — go straight to payment
+      await createPaymentIntent()
     }
   }
 
@@ -257,19 +318,23 @@ export function BookingCalendar({
               className="h-12 w-12"
               style={{ color: accentColor }}
             />
-            <h3 className="text-xl font-semibold">Session requested!</h3>
+            <h3 className="text-xl font-semibold">
+              {stripeConnected ? 'Session confirmed!' : 'Session requested!'}
+            </h3>
             <div className="space-y-1 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">
                 {bookingConfirmation.date} at {bookingConfirmation.time}
               </p>
               <p>{bookingConfirmation.subject}</p>
-              <p className="mt-2">
-                We&apos;ll email{' '}
-                <span className="font-medium text-foreground">
-                  {bookingConfirmation.email}
-                </span>{' '}
-                when confirmed.
-              </p>
+              {!stripeConnected && (
+                <p className="mt-2">
+                  We&apos;ll email{' '}
+                  <span className="font-medium text-foreground">
+                    {bookingConfirmation.email}
+                  </span>{' '}
+                  when confirmed.
+                </p>
+              )}
             </div>
             <button
               onClick={handleBookAnother}
@@ -291,6 +356,68 @@ export function BookingCalendar({
             >
               ← Back to calendar
             </Button>
+          </div>
+        ) : step === 'auth' ? (
+          /* ── Auth step (direct booking only) ── */
+          <div>
+            <div className="flex items-center gap-3 border-b px-6 py-4">
+              <button
+                onClick={() => setStep('form')}
+                className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                aria-label="Back to form"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="text-sm text-muted-foreground leading-tight">
+                <span className="font-medium text-foreground">
+                  {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
+                </span>
+                {selectedSlot && (
+                  <span>
+                    {' '}
+                    &middot; {selectedSlot.startDisplay} – {selectedSlot.endDisplay}
+                  </span>
+                )}
+              </div>
+            </div>
+            <InlineAuthForm onAuthSuccess={handleAuthSuccess} accentColor={accentColor} />
+          </div>
+        ) : step === 'payment' && clientSecret ? (
+          /* ── Payment step (direct booking only) ── */
+          <div>
+            <div className="flex items-center gap-3 border-b px-6 py-4">
+              <div className="text-sm text-muted-foreground leading-tight">
+                <span className="font-medium text-foreground">
+                  {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
+                </span>
+                {selectedSlot && (
+                  <span>
+                    {' '}
+                    &middot; {selectedSlot.startDisplay} – {selectedSlot.endDisplay}
+                  </span>
+                )}
+              </div>
+            </div>
+            {paymentError && (
+              <p className="px-6 pt-4 text-sm text-destructive font-medium">{paymentError}</p>
+            )}
+            {creatingIntent && (
+              <p className="px-6 pt-4 text-sm text-muted-foreground">Preparing payment…</p>
+            )}
+            <PaymentStep
+              clientSecret={clientSecret}
+              accentColor={accentColor}
+              onSuccess={() => {
+                setBookingConfirmation({
+                  date: format(selectedDate!, 'EEEE, MMMM d'),
+                  time: selectedSlot!.startDisplay,
+                  subject: form.subject,
+                  email: form.email,
+                })
+                setStep('success')
+              }}
+              onError={(msg) => setPaymentError(msg)}
+            />
           </div>
         ) : step === 'calendar' ? (
           <div className="flex flex-col md:flex-row">
@@ -489,11 +616,15 @@ export function BookingCalendar({
               <Button
                 type="submit"
                 size="lg"
-                disabled={submitting || (subjects.length > 1 && !form.subject)}
+                disabled={submitting || creatingIntent || (subjects.length > 1 && !form.subject)}
                 className="w-full font-semibold"
                 style={{ backgroundColor: accentColor, color: 'white' }}
               >
-                {submitting ? 'Sending…' : 'Request Session'}
+                {submitting || creatingIntent
+                  ? 'Please wait…'
+                  : stripeConnected
+                  ? 'Continue to Payment'
+                  : 'Request Session'}
               </Button>
             </form>
           </div>
