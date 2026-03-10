@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Globe, CheckCircle2 } from 'lucide-react'
 import { formatInTimeZone, toDate } from 'date-fns-tz'
 import {
@@ -106,6 +107,7 @@ export function BookingCalendar({
   stripeConnected,
   teacherStripeAccountId,
 }: BookingCalendarProps) {
+  const searchParams = useSearchParams()
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -113,7 +115,7 @@ export function BookingCalendar({
   const [step, setStep] = useState<'calendar' | 'form' | 'success' | 'error' | 'auth' | 'payment'>('calendar')
   const [form, setForm] = useState({
     name: '',
-    subject: subjects.length === 1 ? subjects[0] : '',
+    subject: subjects.length === 1 ? subjects[0] : (searchParams.get('subject') ?? ''),
     email: '',
     notes: '',
   })
