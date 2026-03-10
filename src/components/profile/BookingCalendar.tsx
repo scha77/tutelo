@@ -104,6 +104,7 @@ export function BookingCalendar({
   teacherId,
   submitAction,
   stripeConnected,
+  teacherStripeAccountId,
 }: BookingCalendarProps) {
   const today = startOfToday()
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -407,6 +408,7 @@ export function BookingCalendar({
             <PaymentStep
               clientSecret={clientSecret}
               accentColor={accentColor}
+              stripeAccountId={teacherStripeAccountId!}
               onSuccess={() => {
                 setBookingConfirmation({
                   date: format(selectedDate!, 'EEEE, MMMM d'),
