@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-10T15:22:16.488Z"
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-03-10T15:29:37.910Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 04-direct-booking-parent-account P02 | 45 | 2 tasks | 11 files |
 | Phase 04-direct-booking-parent-account P03 | 15 | 2 tasks | 8 files |
 | Phase 05-dashboard-reviews P01 | 3 | 3 tasks | 4 files |
+| Phase 05-dashboard-reviews P03 | 5 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard-reviews]: reviews_insert_token_stub uses WITH CHECK (true) — service role bypasses RLS; stub inserts are harmless placeholder rows
 - [Phase 05-dashboard-reviews]: reviews_public_read filters rating IS NOT NULL — prevents token-stub rows from appearing on public profile pages before review submission
 - [Phase 05-dashboard-reviews]: isActive for /dashboard root uses exact pathname match to prevent Overview lighting up on every sub-page
+- [Phase 05-dashboard-reviews]: RSC page.tsx + separate ReviewForm.tsx — cannot mix 'use client' with supabaseAdmin module-level import
+- [Phase 05-dashboard-reviews]: submitReview uses .is('token_used_at', null) idempotency guard — prevents double submission cleanly without extra query
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -155,6 +158,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-10T15:22:16.486Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-10T15:29:37.908Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
