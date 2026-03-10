@@ -18,7 +18,11 @@ const authSchema = z.object({
 
 type AuthFormValues = z.infer<typeof authSchema>
 
-export default function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string
+}
+
+export default function LoginForm({ redirectTo }: LoginFormProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -38,6 +42,9 @@ export default function LoginForm() {
     const formData = new FormData()
     formData.set('email', values.email)
     formData.set('password', values.password)
+    if (redirectTo) {
+      formData.set('redirectTo', redirectTo)
+    }
 
     try {
       const result = mode === 'signup' ? await signUp(formData) : await signIn(formData)
