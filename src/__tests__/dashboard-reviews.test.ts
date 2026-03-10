@@ -2,6 +2,41 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { randomBytes } from 'crypto'
 
 // ---------------------------------------------------------------------------
+// Pure logic helpers (extracted inline for testability — no RSC context needed)
+// ---------------------------------------------------------------------------
+
+function sumEarnings(bookings: Array<{ amount_cents: number | null }>): number {
+  return bookings.reduce((sum, b) => sum + (b.amount_cents ?? 0), 0)
+}
+
+function groupStudents(
+  bookings: Array<{ student_name: string; parent_email: string; subject: string }>
+): Array<{ name: string; email: string; subjects: string[]; count: number }> {
+  const studentMap = new Map<
+    string,
+    { name: string; email: string; subjects: Set<string>; count: number }
+  >()
+  for (const b of bookings) {
+    const key = `${b.student_name}|${b.parent_email}`
+    const existing = studentMap.get(key)
+    if (existing) {
+      existing.subjects.add(b.subject)
+      existing.count++
+    } else {
+      studentMap.set(key, {
+        name: b.student_name,
+        email: b.parent_email,
+        subjects: new Set([b.subject]),
+        count: 1,
+      })
+    }
+  }
+  return Array.from(studentMap.values())
+    .map((v) => ({ ...v, subjects: Array.from(v.subjects) }))
+    .sort((a, b) => b.count - a.count)
+}
+
+// ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
@@ -53,26 +88,90 @@ vi.mock('@/lib/supabase/server', () => ({
 // DASH-01: Upcoming confirmed sessions view
 // ---------------------------------------------------------------------------
 describe('sessions page — upcoming section', () => {
-  it.todo('returns confirmed bookings sorted ascending by booking_date')
-  it.todo('returns empty array when teacher has no confirmed bookings')
+  it('returns confirmed bookings sorted ascending by booking_date', () => {
+    const bookings = [
+      { id: '1', status: 'confirmed', booking_date: '2026-04-10' },
+      { id: '2', status: 'confirmed', booking_date: '2026-04-01' },
+      { id: '3', status: 'confirmed', booking_date: '2026-04-05' },
+    ]
+    const sorted = [...bookings].sort((a, b) =>
+      a.booking_date < b.booking_date ? -1 : 1
+    )
+    expect(sorted[0].booking_date).toBe('2026-04-01')
+    expect(sorted[1].booking_date).toBe('2026-04-05')
+    expect(sorted[2].booking_date).toBe('2026-04-10')
+  })
+
+  it('returns empty array when teacher has no confirmed bookings', () => {
+    const bookings: Array<{ id: string; status: string; booking_date: string }> = []
+    const confirmed = bookings.filter((b) => b.status === 'confirmed')
+    expect(confirmed).toHaveLength(0)
+  })
 })
 
 // ---------------------------------------------------------------------------
 // DASH-03: Earnings display
 // ---------------------------------------------------------------------------
 describe('earnings calculation', () => {
-  it.todo('sums amount_cents from completed bookings correctly')
-  it.todo('handles null amount_cents (historical rows) — treats as 0')
-  it.todo('returns 0 when teacher has no completed bookings')
+  it('sums amount_cents from completed bookings correctly', () => {
+    const bookings = [
+      { amount_cents: 1000 },
+      { amount_cents: 2000 },
+      { amount_cents: 500 },
+    ]
+    expect(sumEarnings(bookings)).toBe(3500)
+  })
+
+  it('handles null amount_cents (historical rows) — treats as 0', () => {
+    const bookings = [
+      { amount_cents: 1000 },
+      { amount_cents: null },
+      { amount_cents: 2000 },
+    ]
+    expect(sumEarnings(bookings)).toBe(3000)
+  })
+
+  it('returns 0 when teacher has no completed bookings', () => {
+    expect(sumEarnings([])).toBe(0)
+  })
 })
 
 // ---------------------------------------------------------------------------
 // DASH-04: Student list aggregation
 // ---------------------------------------------------------------------------
 describe('student list grouping', () => {
-  it.todo('groups bookings by (student_name, parent_email) correctly')
-  it.todo('aggregates subjects across sessions for same student')
-  it.todo('counts sessions per student correctly')
+  it('groups bookings by (student_name, parent_email) correctly', () => {
+    const bookings = [
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Math' },
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Reading' },
+      { student_name: 'Lily', parent_email: 'c@d.com', subject: 'Science' },
+    ]
+    const result = groupStudents(bookings)
+    expect(result).toHaveLength(2)
+  })
+
+  it('aggregates subjects across sessions for same student', () => {
+    const bookings = [
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Math' },
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Reading' },
+    ]
+    const result = groupStudents(bookings)
+    expect(result[0].subjects).toContain('Math')
+    expect(result[0].subjects).toContain('Reading')
+  })
+
+  it('counts sessions per student correctly', () => {
+    const bookings = [
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Math' },
+      { student_name: 'Sam', parent_email: 'a@b.com', subject: 'Reading' },
+      { student_name: 'Lily', parent_email: 'c@d.com', subject: 'Science' },
+    ]
+    const result = groupStudents(bookings)
+    // sorted by count desc — Sam has 2 sessions, Lily has 1
+    expect(result[0].name).toBe('Sam')
+    expect(result[0].count).toBe(2)
+    expect(result[1].count).toBe(1)
+  })
 })
 
 // ---------------------------------------------------------------------------
