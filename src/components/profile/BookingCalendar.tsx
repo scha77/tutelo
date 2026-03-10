@@ -417,6 +417,7 @@ export function BookingCalendar({
             <PaymentStep
               clientSecret={clientSecret}
               accentColor={accentColor}
+              onBookAnother={handleBookAnother}
               onSuccess={() => {
                 setBookingConfirmation({
                   date: format(selectedDate!, 'EEEE, MMMM d'),

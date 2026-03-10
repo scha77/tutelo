@@ -13,12 +13,13 @@ interface PaymentStepProps {
   accentColor: string
   onSuccess: () => void
   onError: (msg: string) => void
+  onBookAnother: () => void
 }
 
-export function PaymentStep({ clientSecret, accentColor, onSuccess, onError }: PaymentStepProps) {
+export function PaymentStep({ clientSecret, accentColor, onSuccess, onError, onBookAnother }: PaymentStepProps) {
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <CheckoutForm accentColor={accentColor} onSuccess={onSuccess} onError={onError} />
+      <CheckoutForm accentColor={accentColor} onSuccess={onSuccess} onError={onError} onBookAnother={onBookAnother} />
     </Elements>
   )
 }
@@ -27,9 +28,10 @@ interface CheckoutFormProps {
   accentColor: string
   onSuccess: () => void
   onError: (msg: string) => void
+  onBookAnother: () => void
 }
 
-function CheckoutForm({ accentColor, onSuccess, onError }: CheckoutFormProps) {
+function CheckoutForm({ accentColor, onSuccess, onError, onBookAnother }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [submitting, setSubmitting] = useState(false)
@@ -52,7 +54,7 @@ function CheckoutForm({ accentColor, onSuccess, onError }: CheckoutFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-5 max-w-md">
+    <form onSubmit={handleSubmit} className="p-6 space-y-4 max-w-md mx-auto">
       <PaymentElement />
       <Button
         type="submit"
@@ -63,6 +65,13 @@ function CheckoutForm({ accentColor, onSuccess, onError }: CheckoutFormProps) {
       >
         {submitting ? 'Processing…' : 'Confirm & Pay'}
       </Button>
+      <button
+        type="button"
+        onClick={onBookAnother}
+        className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+      >
+        Book another time
+      </button>
     </form>
   )
 }

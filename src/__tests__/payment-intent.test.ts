@@ -92,7 +92,7 @@ describe('PaymentIntent creation (create-intent API route)', () => {
     )
   })
 
-  it('uses destination charge: on_behalf_of + transfer_data.destination = teacher stripe_account_id', async () => {
+  it('uses destination charge: transfer_data.destination = teacher stripe_account_id', async () => {
     const { createClient } = await import('@/lib/supabase/server')
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1', email: 'p@test.com' } } }) },
@@ -135,9 +135,10 @@ describe('PaymentIntent creation (create-intent API route)', () => {
     const { POST } = await import('@/app/api/direct-booking/create-intent/route')
     await POST(req)
 
+    // Implementation uses destination charges without on_behalf_of (platform-side PaymentIntent)
+    // See fix(04-02): switch to destination charges without on_behalf_of
     expect(stripeCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        on_behalf_of: STRIPE_ACCOUNT_ID,
         transfer_data: { destination: STRIPE_ACCOUNT_ID },
       })
     )

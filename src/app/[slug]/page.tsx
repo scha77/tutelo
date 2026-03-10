@@ -34,7 +34,7 @@ function SocialLinks({ instagram, email, website }: SocialLinksProps) {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-4 border-t">
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         {instagram && (
           <a
             href={`https://instagram.com/${instagram}`}
@@ -118,7 +118,6 @@ export default async function TeacherProfilePage({
         email={teacher.social_email}
         website={teacher.social_website}
       />
-      <BookNowCTA />
     </main>
   )
 }
