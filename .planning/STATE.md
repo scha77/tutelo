@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-03-08T15:20:50.969Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-10T03:14:58.764Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 100
 ---
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 03-stripe-connect-deferred-payment P04 | 5 | 1 tasks | 1 files |
 | Phase 04-direct-booking-parent-account P01 | 3 | 2 tasks | 8 files |
 | Phase 04-direct-booking-parent-account P04 | 15 | 2 tasks | 5 files |
+| Phase 04-direct-booking-parent-account P02 | 45 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 04-direct-booking-parent-account]: Wave-0 scaffold pattern: migration + it.todo() test stubs first, Wave-2 plans implement in parallel without schema or test file gaps
 - [Phase 04-direct-booking-parent-account]: Cron at 9 AM UTC for session reminders covers both US coasts for same-day tomorrow date boundary
 - [Phase 04-direct-booking-parent-account]: reminder_sent_at IS NULL idempotency sentinel: conditional update prevents duplicate emails on cron re-run
+- [Phase 04-direct-booking-parent-account]: Destination charges without on_behalf_of: platform-side PaymentIntent with transfer_data.destination only
+- [Phase 04-direct-booking-parent-account]: loadStripe at module level in PaymentStep to prevent re-initialization
+- [Phase 04-direct-booking-parent-account]: accountUrl passed to parent confirmation email only (teacher email omits it — teacher uses /dashboard)
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -143,6 +147,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-08T15:20:50.967Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-03-10T03:14:58.761Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
