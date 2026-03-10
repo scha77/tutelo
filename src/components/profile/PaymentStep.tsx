@@ -2,23 +2,20 @@
 
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+
+// Platform-side PaymentIntent (on_behalf_of + transfer_data.destination) — use platform key only
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 interface PaymentStepProps {
   clientSecret: string
   accentColor: string
-  stripeAccountId: string
   onSuccess: () => void
   onError: (msg: string) => void
 }
 
-export function PaymentStep({ clientSecret, accentColor, stripeAccountId, onSuccess, onError }: PaymentStepProps) {
-  // Must pass stripeAccount because PaymentIntent is created with on_behalf_of
-  const stripePromise = useMemo(
-    () => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, { stripeAccount: stripeAccountId }),
-    [stripeAccountId]
-  )
+export function PaymentStep({ clientSecret, accentColor, onSuccess, onError }: PaymentStepProps) {
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
       <CheckoutForm accentColor={accentColor} onSuccess={onSuccess} onError={onError} />
