@@ -83,11 +83,11 @@
 
 ### Teacher Dashboard
 
-- [ ] **DASH-01**: Teacher can view upcoming sessions
+- [x] **DASH-01**: Teacher can view upcoming sessions
 - [x] **DASH-02**: Teacher can view and action pending booking requests (accept / decline)
-- [ ] **DASH-03**: Teacher can view earnings (completed sessions and total payout)
-- [ ] **DASH-04**: Teacher can view their student list (name, subject, sessions completed)
-- [ ] **DASH-05**: Teacher can mark a session as complete
+- [x] **DASH-03**: Teacher can view earnings (completed sessions and total payout)
+- [x] **DASH-04**: Teacher can view their student list (name, subject, sessions completed)
+- [x] **DASH-05**: Teacher can mark a session as complete
 - [x] **DASH-06**: Teacher can toggle page Active / Draft from the dashboard (see VIS-01)
 
 ### Parent Account
@@ -98,9 +98,9 @@
 
 ### Reviews
 
-- [ ] **REVIEW-01**: Parent can leave a 1–5 star rating and optional text review after a completed session
-- [ ] **REVIEW-02**: Reviews are displayed on the teacher's public landing page
-- [ ] **REVIEW-03**: Review prompt is delivered via email after session completion
+- [x] **REVIEW-01**: Parent can leave a 1–5 star rating and optional text review after a completed session
+- [x] **REVIEW-02**: Reviews are displayed on the teacher's public landing page
+- [x] **REVIEW-03**: Review prompt is delivered via email after session completion
 
 ---
 
@@ -233,13 +233,13 @@
 | PARENT-02 | Phase 4 | Complete |
 | PARENT-03 | Phase 4 | Complete |
 | NOTIF-04 | Phase 4 | Complete |
-| DASH-01 | Phase 5 | Pending |
-| DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
-| DASH-05 | Phase 5 | Pending |
-| REVIEW-01 | Phase 5 | Pending |
-| REVIEW-02 | Phase 5 | Pending |
-| REVIEW-03 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
+| DASH-03 | Phase 5 | Complete |
+| DASH-04 | Phase 5 | Complete |
+| DASH-05 | Phase 5 | Complete |
+| REVIEW-01 | Phase 5 | Complete |
+| REVIEW-02 | Phase 5 | Complete |
+| REVIEW-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 59 total (count corrected from initial 57 — verified against actual requirement list)

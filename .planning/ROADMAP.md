@@ -153,4 +153,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Booking Requests | 3/3 | Complete   | 2026-03-06 |
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
 | 4. Direct Booking + Parent Account | 4/4 | Complete   | 2026-03-10 |
-| 5. Dashboard + Reviews | 0/3 | Not started | - |
+| 5. Dashboard + Reviews | 1/3 | In Progress|  |
