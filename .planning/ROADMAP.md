@@ -133,11 +133,12 @@ Plans:
   3. A parent receives a review prompt email after their session is marked complete and can leave a 1–5 star rating and optional text review by following the email link
   4. Submitted reviews appear on the teacher's public profile page, visible to any visitor
 
-**Plans**: 5 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Teacher dashboard — DASH-01/03/04, upcoming sessions view, earnings display, student list (RSC shell with client islands)
-- [ ] 05-02: Session completion + reviews — DASH-05, REVIEW-01/02/03, review prompt email (NOTIF-06 already wired in Phase 3 — connect to review flow here), review display on /[slug]
+- [ ] 05-01-PLAN.md — Schema migration (token + amount_cents columns, RLS updates), test scaffold, Sidebar nav update (Sessions + Students), requests page pending-only cleanup
+- [ ] 05-02-PLAN.md — Dashboard overview (/dashboard real RSC with StatsBar), sessions page (/dashboard/sessions), students page (/dashboard/students) (DASH-01, DASH-03, DASH-04)
+- [ ] 05-03-PLAN.md — Review flow: markSessionComplete token gen + review stub, /review/[token] public form, submitReview action, ReviewsSection on /[slug] (DASH-05, REVIEW-01, REVIEW-02, REVIEW-03)
 
 ---
 
@@ -152,4 +153,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Booking Requests | 3/3 | Complete   | 2026-03-06 |
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
 | 4. Direct Booking + Parent Account | 4/4 | Complete   | 2026-03-10 |
-| 5. Dashboard + Reviews | 0/2 | Not started | - |
+| 5. Dashboard + Reviews | 0/3 | Not started | - |
