@@ -213,7 +213,16 @@ export function BookingCalendar({
     })
     setCreatingIntent(false)
     if (!res.ok) {
-      setErrorMessage('Could not initialize payment. Please try again.')
+      if (res.status === 409) {
+        setErrorMessage('This time slot was just booked. Please choose another.')
+      } else if (res.status === 400) {
+        const text = await res.text()
+        setErrorMessage(text === 'Invalid session amount'
+          ? 'This teacher hasn\'t set their rate yet. Please try again later.'
+          : 'Could not initialize payment. Please try again.')
+      } else {
+        setErrorMessage('Could not initialize payment. Please try again.')
+      }
       setStep('error')
       return
     }
