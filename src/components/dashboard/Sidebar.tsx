@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, Inbox, FileText, Calendar, Settings } from 'lucide-react'
+import { ExternalLink, Inbox, CalendarCheck, Users, FileText, Calendar, Settings, LayoutDashboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -12,26 +12,13 @@ interface SidebarProps {
 }
 
 const navItems = [
-  {
-    href: '/dashboard/requests',
-    label: 'Requests',
-    icon: Inbox,
-  },
-  {
-    href: '/dashboard/page',
-    label: 'Page',
-    icon: FileText,
-  },
-  {
-    href: '/dashboard/availability',
-    label: 'Availability',
-    icon: Calendar,
-  },
-  {
-    href: '/dashboard/settings',
-    label: 'Settings',
-    icon: Settings,
-  },
+  { href: '/dashboard',              label: 'Overview',     icon: LayoutDashboard },
+  { href: '/dashboard/requests',     label: 'Requests',     icon: Inbox           },
+  { href: '/dashboard/sessions',     label: 'Sessions',     icon: CalendarCheck   },
+  { href: '/dashboard/students',     label: 'Students',     icon: Users           },
+  { href: '/dashboard/page',         label: 'Page',         icon: FileText        },
+  { href: '/dashboard/availability', label: 'Availability', icon: Calendar        },
+  { href: '/dashboard/settings',     label: 'Settings',     icon: Settings        },
 ]
 
 export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps) {
@@ -57,7 +44,9 @@ export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps
       <nav className="flex-1 p-3">
         <ul className="space-y-1">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href || pathname.startsWith(href + '/')
+            const isActive = href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === href || pathname.startsWith(href + '/')
             return (
               <li key={href}>
                 <Link
