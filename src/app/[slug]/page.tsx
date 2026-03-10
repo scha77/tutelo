@@ -6,6 +6,7 @@ import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
 import { BookingCalendar } from '@/components/profile/BookingCalendar'
 import { BookNowCTA } from '@/components/profile/BookNowCTA'
+import { ReviewsSection } from '@/components/profile/ReviewsSection'
 import { submitBookingRequest } from '@/actions/bookings'
 
 // VIS-02: Graceful draft state — NOT a 404
@@ -97,6 +98,15 @@ export default async function TeacherProfilePage({
     return <DraftPage />
   }
 
+  // REVIEW-02: Fetch submitted reviews for public profile display
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('rating, review_text, reviewer_name, created_at')
+    .eq('teacher_id', teacher.id)
+    .not('rating', 'is', null) // only submitted reviews (stub rows have rating = null)
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   return (
     <main style={{ '--accent': teacher.accent_color } as React.CSSProperties}>
       <HeroSection teacher={teacher} />
@@ -113,6 +123,7 @@ export default async function TeacherProfilePage({
         stripeConnected={teacher.stripe_charges_enabled ?? false}
         teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
       />
+      <ReviewsSection reviews={reviews ?? []} />
       <SocialLinks
         instagram={teacher.social_instagram}
         email={teacher.social_email}

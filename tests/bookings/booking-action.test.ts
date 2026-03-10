@@ -10,6 +10,15 @@ vi.mock('@/lib/email', () => ({
   sendBookingEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Mock supabaseAdmin — required since bookings.ts imports it at module level (Plan 05-03)
+vi.mock('@/lib/supabase/service', () => ({
+  supabaseAdmin: {
+    from: vi.fn(() => ({
+      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })),
+  },
+}))
+
 // Mock Supabase server client
 const mockGetClaims = vi.fn()
 const mockTeacherSingle = vi.fn()
