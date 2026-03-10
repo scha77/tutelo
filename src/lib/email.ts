@@ -255,7 +255,7 @@ export async function sendSessionReminderEmail(bookingId: string): Promise<void>
   }
 }
 
-export async function sendSessionCompleteEmail(bookingId: string): Promise<void> {
+export async function sendSessionCompleteEmail(bookingId: string, reviewToken: string): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const { data } = await supabaseAdmin
     .from('bookings')
@@ -265,7 +265,7 @@ export async function sendSessionCompleteEmail(bookingId: string): Promise<void>
   if (!data) return
 
   const teacher = data.teachers as unknown as { full_name: string }
-  const reviewUrl = `${appUrl}/review?booking=${bookingId}`
+  const reviewUrl = `${appUrl}/review/${reviewToken}`
 
   await resend.emails.send({
     from: 'Tutelo <noreply@tutelo.app>',

@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { BookingRequestSchema } from '@/lib/schemas/booking'
 import { revalidatePath } from 'next/cache'
 import Stripe from 'stripe'
+import { randomBytes } from 'crypto'
+import { supabaseAdmin } from '@/lib/supabase/service'
 
 export type BookingResult =
   | { success: true; bookingId: string }
@@ -123,18 +125,31 @@ export async function markSessionComplete(
     application_fee_amount: applicationFee,
   })
 
-  // Update booking status
+  // Generate review token (DASH-05)
+  const reviewToken = randomBytes(32).toString('hex')
+
+  // Update booking status + write amount_cents
   await supabase
     .from('bookings')
-    .update({ status: 'completed', updated_at: new Date().toISOString() })
+    .update({ status: 'completed', updated_at: new Date().toISOString(), amount_cents: amountToCapture })
     .eq('id', bookingId)
+
+  // Insert review stub — service role bypasses RLS (reviews_insert_token_stub policy)
+  await supabaseAdmin
+    .from('reviews')
+    .insert({
+      booking_id: bookingId,
+      teacher_id: teacher.id,
+      token: reviewToken,
+    })
 
   // Send session-complete email to parent (NOTIF-06) — fire and forget
   const { sendSessionCompleteEmail } = await import('@/lib/email')
-  sendSessionCompleteEmail(bookingId).catch(console.error)
+  sendSessionCompleteEmail(bookingId, reviewToken).catch(console.error)
 
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
+  revalidatePath('/dashboard/sessions')
   return { success: true }
 }
 
