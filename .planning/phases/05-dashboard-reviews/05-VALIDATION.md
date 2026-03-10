@@ -2,7 +2,7 @@
 phase: 5
 slug: dashboard-reviews
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-10
 ---
@@ -38,14 +38,14 @@ created: 2026-03-10
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 5-01-01 | 01 | 0 | DASH-01 | unit | `npx vitest run src/app/(dashboard)/dashboard/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-01-02 | 01 | 1 | DASH-03 | unit | `npx vitest run src/app/(dashboard)/dashboard/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-01-03 | 01 | 1 | DASH-04 | unit | `npx vitest run src/app/(dashboard)/dashboard/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-01-04 | 01 | 1 | DASH-01 | unit | `npx vitest run src/app/(dashboard)/dashboard/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-02-01 | 02 | 0 | DASH-05 | unit | `npx vitest run src/app/(dashboard)/dashboard/requests/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-02-02 | 02 | 1 | REVIEW-01 | unit | `npx vitest run src/app/review/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-02-03 | 02 | 1 | REVIEW-02 | unit | `npx vitest run src/app/review/page.test.tsx` | ❌ W0 | ⬜ pending |
-| 5-02-04 | 02 | 2 | REVIEW-03 | unit | `npx vitest run src/app/(public)/[slug]/page.test.tsx` | ✅ | ⬜ pending |
+| 5-01-01 | 01 | 1 | migration | schema | `npx supabase db push --dry-run 2>&1 \| grep -E "error\|Error" \|\| echo "migration valid"` | ❌ W0 | ⬜ pending |
+| 5-01-02 | 01 | 1 | all | scaffold | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
+| 5-01-03 | 01 | 1 | sidebar | typecheck | `npx tsc --noEmit 2>&1 \| grep -E "error TS" \|\| echo "clean"` | n/a | ⬜ pending |
+| 5-02-01 | 02 | 2 | DASH-01/03/04 | unit | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
+| 5-02-02 | 02 | 2 | DASH-01/04 | unit | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
+| 5-03-01 | 03 | 2 | DASH-05/REVIEW-03 | unit | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
+| 5-03-02 | 03 | 2 | REVIEW-01 | unit | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
+| 5-03-03 | 03 | 2 | REVIEW-02 | unit | `npx vitest run src/__tests__/dashboard-reviews.test.ts` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,9 +53,7 @@ created: 2026-03-10
 
 ## Wave 0 Requirements
 
-- [ ] `src/app/(dashboard)/dashboard/page.test.tsx` — stubs for DASH-01, DASH-03, DASH-04 (dashboard renders with session list, earnings, student list)
-- [ ] `src/app/(dashboard)/dashboard/requests/page.test.tsx` — stubs for DASH-05 (mark-complete action)
-- [ ] `src/app/review/page.test.tsx` — stubs for REVIEW-01, REVIEW-02 (review form renders, submit action)
+- [ ] `src/__tests__/dashboard-reviews.test.ts` — stubs for DASH-01, DASH-03, DASH-04, DASH-05, REVIEW-01, REVIEW-02, REVIEW-03 (created by 05-01 Task 2)
 
 ---
 
@@ -71,11 +69,11 @@ created: 2026-03-10
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 20s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 20s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
