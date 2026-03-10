@@ -28,8 +28,8 @@
 - [x] **PAGE-02**: Page displays: name, profile photo (or initials avatar), school name, city/state
 - [x] **PAGE-03**: Page displays: credential bar (verified teacher badge, years experience, subjects, grade levels)
 - [x] **PAGE-04**: Page displays: auto-generated bio if teacher skips writing one
-- [x] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
-- [x] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
+- [ ] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
+- [ ] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
 - [x] **PAGE-07**: Page applies teacher's chosen accent color / theme throughout
 - [x] **PAGE-08**: Page displays teacher's custom headline / tagline below their name (if set)
 - [x] **PAGE-09**: Page displays teacher's banner image at the top (if uploaded)
@@ -56,7 +56,7 @@
 ### Booking System
 
 - [x] **BOOK-01**: Parent can submit a booking request (no payment) by selecting a time slot, entering student name, subject, optional note, and email — no parent account required
-- [x] **BOOK-02**: Parent sees a pending confirmation screen after request submission
+- [ ] **BOOK-02**: Parent sees a pending confirmation screen after request submission
 - [x] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
 - [x] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
 - [x] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
@@ -67,7 +67,7 @@
 - [x] **STRIPE-01**: Teacher is NOT required to connect Stripe to publish their page or receive booking requests
 - [x] **STRIPE-02**: Teacher receives "money waiting" notification (email + in-app) when first booking request arrives, with a direct CTA to connect Stripe
 - [x] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
-- [x] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
+- [ ] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
 - [x] **STRIPE-05**: Payment is authorized (not captured) at booking time using `capture_method: manual`
 - [x] **STRIPE-06**: Teacher marking a session as complete triggers automatic payment capture
 - [x] **STRIPE-07**: Platform applies a 7% application fee on every captured payment via Stripe Connect
@@ -76,7 +76,7 @@
 
 - [x] **NOTIF-01**: Teacher receives email when a booking request is submitted
 - [x] **NOTIF-02**: Teacher receives follow-up emails (at 24hr and 48hr) if Stripe has not been connected after a booking request arrives
-- [x] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
+- [ ] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
 - [x] **NOTIF-04**: Both teacher and parent receive a 24-hour reminder before each scheduled session
 - [x] **NOTIF-05**: Both teacher and parent receive a cancellation notification
 - [x] **NOTIF-06**: Parent receives a session-complete email with a review prompt
@@ -94,7 +94,7 @@
 
 - [x] **PARENT-01**: Parent can create an account (email + password or Google SSO)
 - [x] **PARENT-02**: Parent can view booking history and upcoming sessions
-- [x] **PARENT-03**: Parent can rebook a session with the same teacher
+- [ ] **PARENT-03**: Parent can rebook a session with the same teacher
 
 ### Reviews
 
@@ -182,7 +182,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 1 | Complete |
+| AUTH-02 | Phase 6 | Pending |
 | ONBOARD-01 | Phase 1 | Complete |
 | ONBOARD-02 | Phase 1 | Complete |
 | ONBOARD-03 | Phase 1 | Complete |
@@ -194,8 +194,8 @@
 | PAGE-02 | Phase 1 | Complete |
 | PAGE-03 | Phase 1 | Complete |
 | PAGE-04 | Phase 1 | Complete |
-| PAGE-05 | Phase 1 | Complete |
-| PAGE-06 | Phase 1 | Complete |
+| PAGE-05 | Phase 6 | Pending |
+| PAGE-06 | Phase 6 | Pending |
 | PAGE-07 | Phase 1 | Complete |
 | PAGE-08 | Phase 1 | Complete |
 | PAGE-09 | Phase 1 | Complete |
@@ -211,7 +211,7 @@
 | VIS-02 | Phase 1 | Complete |
 | DASH-06 | Phase 1 | Complete |
 | BOOK-01 | Phase 2 | Complete |
-| BOOK-02 | Phase 2 | Complete |
+| BOOK-02 | Phase 7 | Pending |
 | BOOK-03 | Phase 2 | Complete |
 | BOOK-04 | Phase 2 | Complete |
 | BOOK-06 | Phase 2 | Complete |
@@ -220,18 +220,18 @@
 | NOTIF-01 | Phase 2 | Complete |
 | DASH-02 | Phase 2 | Complete |
 | STRIPE-03 | Phase 3 | Complete |
-| STRIPE-04 | Phase 3 | Complete |
+| STRIPE-04 | Phase 7 | Pending |
 | STRIPE-05 | Phase 3 | Complete |
 | STRIPE-06 | Phase 3 | Complete |
 | STRIPE-07 | Phase 3 | Complete |
 | NOTIF-02 | Phase 3 | Complete |
-| NOTIF-03 | Phase 3 | Complete |
+| NOTIF-03 | Phase 7 | Pending |
 | NOTIF-05 | Phase 3 | Complete |
 | NOTIF-06 | Phase 3 | Complete |
 | BOOK-05 | Phase 4 | Complete |
 | PARENT-01 | Phase 4 | Complete |
 | PARENT-02 | Phase 4 | Complete |
-| PARENT-03 | Phase 4 | Complete |
+| PARENT-03 | Phase 6 | Pending |
 | NOTIF-04 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |
@@ -245,6 +245,7 @@
 - v1 requirements: 59 total (count corrected from initial 57 — verified against actual requirement list)
 - Mapped to phases: 59
 - Unmapped: 0
+- Pending (gap closure): 6 (AUTH-02, PAGE-05, PAGE-06, BOOK-02, STRIPE-04, NOTIF-03, PARENT-03 → Phases 6–7)
 
 | Phase | Requirements | Count |
 |-------|-------------|-------|

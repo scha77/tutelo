@@ -142,10 +142,58 @@ Plans:
 
 ---
 
+---
+
+### Phase 6: Profile + Account Integration Fixes
+
+**Goal**: All public profile display requirements are fully satisfied (hourly rate visible, sticky mobile CTA rendered) and the parent rebook flow works correctly (subject pre-fill, /account middleware protection).
+
+**Depends on**: Phase 5
+
+**Requirements**: PAGE-05, PAGE-06, PARENT-03, AUTH-02
+
+**Gap Closure:** Closes gaps from v1.0 audit
+
+**Success Criteria** (what must be TRUE):
+  1. Visiting a teacher's public page on mobile shows the sticky "Book Now" CTA at the bottom of the screen at all times
+  2. The teacher's hourly rate is displayed on their public profile (e.g. "$X/hr" in the credentials bar)
+  3. Clicking "Rebook" from `/account` pre-fills the subject field in `BookingCalendar` correctly
+  4. Unauthenticated visitors to `/account` trigger the middleware cookie refresh (isProtected guard)
+  5. The failing `signIn` test in `signup.test.ts` passes
+
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Fix BookNowCTA render, hourly_rate display, rebook URL order, proxy.ts isProtected, signup test mock
+
+---
+
+### Phase 7: Deferred Payment Critical Bug Fix
+
+**Goal**: The deferred booking flow works correctly regardless of whether the teacher accepts a booking before or after connecting Stripe — no booking can become permanently stuck at `pending` with no Checkout session.
+
+**Depends on**: Phase 6
+
+**Requirements**: BOOK-02, STRIPE-04, NOTIF-03
+
+**Gap Closure:** Closes critical integration gap from v1.0 audit
+
+**Success Criteria** (what must be TRUE):
+  1. When a teacher accepts a booking request (status → `pending`) before connecting Stripe, the platform webhook `account.updated` still creates a Checkout session for that booking
+  2. `createCheckoutSessionsForTeacher` queries `.in('status', ['requested', 'pending'])` so both pre- and post-accept bookings receive Checkout sessions
+  3. No booking can be permanently stuck at `pending` due to a teacher accepting before connecting Stripe
+
+**Plans**: 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Fix createCheckoutSessionsForTeacher status filter in platform webhook
+
+---
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -154,3 +202,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
 | 4. Direct Booking + Parent Account | 4/4 | Complete   | 2026-03-10 |
 | 5. Dashboard + Reviews | 3/3 | Complete   | 2026-03-10 |
+| 6. Profile + Account Integration Fixes | 0/1 | Pending | — |
+| 7. Deferred Payment Critical Bug Fix | 0/1 | Pending | — |
