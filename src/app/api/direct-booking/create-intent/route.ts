@@ -83,7 +83,6 @@ export async function POST(req: Request) {
       amount: amountInCents,
       currency: 'usd',
       capture_method: 'manual',
-      on_behalf_of: teacher.stripe_account_id,
       transfer_data: { destination: teacher.stripe_account_id },
       application_fee_amount: applicationFeeAmount,
       receipt_email: user.email,
