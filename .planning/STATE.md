@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-10T03:14:58.764Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-10T04:07:55.222Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 04-direct-booking-parent-account P01 | 3 | 2 tasks | 8 files |
 | Phase 04-direct-booking-parent-account P04 | 15 | 2 tasks | 5 files |
 | Phase 04-direct-booking-parent-account P02 | 45 | 2 tasks | 11 files |
+| Phase 04-direct-booking-parent-account P03 | 15 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,9 @@ Recent decisions affecting current work:
 - [Phase 04-direct-booking-parent-account]: Destination charges without on_behalf_of: platform-side PaymentIntent with transfer_data.destination only
 - [Phase 04-direct-booking-parent-account]: loadStripe at module level in PaymentStep to prevent re-initialization
 - [Phase 04-direct-booking-parent-account]: accountUrl passed to parent confirmation email only (teacher email omits it — teacher uses /dashboard)
+- [Phase 04-direct-booking-parent-account]: redirectTo passed via FormData to server action — keeps LoginForm as 'use client' without router dependency in auth actions
+- [Phase 04-direct-booking-parent-account]: Pure logic tests for RSC: splitBookings and getInitialSubject extracted inline in test files to avoid full RSC render
+- [Phase 04-direct-booking-parent-account]: proxy.ts carries all routing logic (isProtected, redirect param); middleware.ts is a thin re-export shim
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -147,6 +151,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-10T03:14:58.761Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-10T04:07:55.220Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

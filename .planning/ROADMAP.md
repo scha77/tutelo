@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Auth, teacher onboarding wizard, public profile page, availability, page visibility
 - [x] **Phase 2: Booking Requests** - Pre-payment booking loop, state machine, teacher accept/decline, booking notifications (completed 2026-03-06)
 - [x] **Phase 3: Stripe Connect + Deferred Payment** - Revenue path, deferred Stripe onboarding, payment authorization + capture, webhook infrastructure (completed 2026-03-06)
-- [ ] **Phase 4: Direct Booking + Parent Account** - Stripe-connected teacher direct booking flow, parent account, session reminders
+- [x] **Phase 4: Direct Booking + Parent Account** - Stripe-connected teacher direct booking flow, parent account, session reminders (completed 2026-03-10)
 - [ ] **Phase 5: Dashboard + Reviews** - Teacher dashboard (sessions, earnings, students), review collection, review display
 
 ## Phase Details
@@ -151,5 +151,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation | 5/5 | Complete   | 2026-03-05 |
 | 2. Booking Requests | 3/3 | Complete   | 2026-03-06 |
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
-| 4. Direct Booking + Parent Account | 1/4 | In Progress|  |
+| 4. Direct Booking + Parent Account | 4/4 | Complete   | 2026-03-10 |
 | 5. Dashboard + Reviews | 0/2 | Not started | - |
