@@ -10,7 +10,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
  * who has just connected Stripe. Called after account.updated fires with charges_enabled: true.
  *
  * Design:
- * - Fetches bookings where status = 'requested' AND stripe_payment_intent IS NULL
+ * - Fetches bookings where status = 'requested' OR 'pending' AND stripe_payment_intent IS NULL
  * - IS NULL guard provides idempotency: skips bookings that already went through Checkout
  * - Each booking is processed independently with try/catch — one failure does not block others
  * - Checkout uses capture_method: 'manual' (authorize only — captured on Mark Complete)
@@ -24,7 +24,7 @@ async function createCheckoutSessionsForTeacher(
     .from('bookings')
     .select('id, parent_email, student_name, subject, booking_date, stripe_payment_intent, teachers(hourly_rate)')
     .eq('teacher_id', teacherId)
-    .eq('status', 'requested')
+    .in('status', ['requested', 'pending'])
     .is('stripe_payment_intent', null)
 
   if (!bookings || bookings.length === 0) {
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', bookingId)
-        .eq('status', 'requested')
+        .in('status', ['requested', 'pending'])
 
       if (error) {
         console.error(`[stripe/webhook] Failed to confirm booking ${bookingId}:`, error)
