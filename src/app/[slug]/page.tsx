@@ -123,6 +123,7 @@ export default async function TeacherProfilePage({
         stripeConnected={teacher.stripe_charges_enabled ?? false}
         teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
       />
+      <BookNowCTA />
       <ReviewsSection reviews={reviews ?? []} />
       <SocialLinks
         instagram={teacher.social_instagram}
