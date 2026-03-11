@@ -86,6 +86,22 @@ describe('auth signup', () => {
       await expect(signIn(formData)).rejects.toThrow('NEXT_REDIRECT:/dashboard')
     })
 
+    it('draft teacher (no is_published) redirects to /dashboard', async () => {
+      // Arrange — mock returns teacher row with id only (not is_published)
+      mockSignInWithPassword.mockResolvedValue({
+        error: null,
+        data: { user: { id: 'mock-user-id' } },
+      })
+      mockMaybeSingle.mockResolvedValue({ data: { id: 'mock-teacher-id' } })
+      const { signIn } = await import('@/actions/auth')
+      const formData = new FormData()
+      formData.set('email', 'draft@example.com')
+      formData.set('password', 'password123')
+
+      // Act & Assert
+      await expect(signIn(formData)).rejects.toThrow('NEXT_REDIRECT:/dashboard')
+    })
+
     it('wrong credentials returns descriptive error', async () => {
       // Arrange
       mockSignInWithPassword.mockResolvedValue({

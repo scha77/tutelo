@@ -39,11 +39,11 @@ export async function signIn(formData: FormData): Promise<{ error: string } | vo
   if (userId) {
     const { data: teacher } = await supabase
       .from('teachers')
-      .select('is_published')
+      .select('id')
       .eq('user_id', userId)
       .maybeSingle()
 
-    if (teacher?.is_published) {
+    if (teacher) {
       redirect('/dashboard')
     }
   }
