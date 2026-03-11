@@ -56,7 +56,7 @@
 ### Booking System
 
 - [x] **BOOK-01**: Parent can submit a booking request (no payment) by selecting a time slot, entering student name, subject, optional note, and email — no parent account required
-- [ ] **BOOK-02**: Parent sees a pending confirmation screen after request submission
+- [x] **BOOK-02**: Parent sees a pending confirmation screen after request submission
 - [x] **BOOK-03**: Booking has an explicit state machine: `requested → pending → confirmed → completed → cancelled`
 - [x] **BOOK-04**: Booking creation is atomic — double-booking is impossible (DB-level unique constraint + atomic function)
 - [x] **BOOK-05**: Parent can complete direct booking (time slot → account creation → payment) when teacher already has Stripe connected
@@ -67,7 +67,7 @@
 - [x] **STRIPE-01**: Teacher is NOT required to connect Stripe to publish their page or receive booking requests
 - [x] **STRIPE-02**: Teacher receives "money waiting" notification (email + in-app) when first booking request arrives, with a direct CTA to connect Stripe
 - [x] **STRIPE-03**: Teacher can complete Stripe Connect Express onboarding (2–3 min) via the "money waiting" notification link
-- [ ] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
+- [x] **STRIPE-04**: Unconfirmed booking requests auto-cancel after 48 hours if teacher has not connected Stripe, with notification to both parties
 - [x] **STRIPE-05**: Payment is authorized (not captured) at booking time using `capture_method: manual`
 - [x] **STRIPE-06**: Teacher marking a session as complete triggers automatic payment capture
 - [x] **STRIPE-07**: Platform applies a 7% application fee on every captured payment via Stripe Connect
@@ -76,7 +76,7 @@
 
 - [x] **NOTIF-01**: Teacher receives email when a booking request is submitted
 - [x] **NOTIF-02**: Teacher receives follow-up emails (at 24hr and 48hr) if Stripe has not been connected after a booking request arrives
-- [ ] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
+- [x] **NOTIF-03**: Both teacher and parent receive booking confirmation emails
 - [x] **NOTIF-04**: Both teacher and parent receive a 24-hour reminder before each scheduled session
 - [x] **NOTIF-05**: Both teacher and parent receive a cancellation notification
 - [x] **NOTIF-06**: Parent receives a session-complete email with a review prompt
@@ -211,7 +211,7 @@
 | VIS-02 | Phase 1 | Complete |
 | DASH-06 | Phase 1 | Complete |
 | BOOK-01 | Phase 2 | Complete |
-| BOOK-02 | Phase 7 | Pending |
+| BOOK-02 | Phase 7 | Complete |
 | BOOK-03 | Phase 2 | Complete |
 | BOOK-04 | Phase 2 | Complete |
 | BOOK-06 | Phase 2 | Complete |
@@ -220,12 +220,12 @@
 | NOTIF-01 | Phase 2 | Complete |
 | DASH-02 | Phase 2 | Complete |
 | STRIPE-03 | Phase 3 | Complete |
-| STRIPE-04 | Phase 7 | Pending |
+| STRIPE-04 | Phase 7 | Complete |
 | STRIPE-05 | Phase 3 | Complete |
 | STRIPE-06 | Phase 3 | Complete |
 | STRIPE-07 | Phase 3 | Complete |
 | NOTIF-02 | Phase 3 | Complete |
-| NOTIF-03 | Phase 7 | Pending |
+| NOTIF-03 | Phase 7 | Complete |
 | NOTIF-05 | Phase 3 | Complete |
 | NOTIF-06 | Phase 3 | Complete |
 | BOOK-05 | Phase 4 | Complete |

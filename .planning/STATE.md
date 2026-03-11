@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-11T13:06:53.250Z"
+stopped_at: "Completed 07-01: deferred payment fix — two-line webhook change + 4 tests"
+last_updated: "2026-03-11T13:21:11.668Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 7
-  completed_phases: 6
-  total_plans: 20
-  completed_plans: 20
+  completed_phases: 7
+  total_plans: 21
+  completed_plans: 21
   percent: 100
 ---
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 05-dashboard-reviews P03 | 5 | 3 tasks | 9 files |
 | Phase 05-dashboard-reviews P02 | 5 | 2 tasks | 6 files |
 | Phase 06-profile-account-fixes P01 | 8 | 3 tasks | 5 files |
+| Phase 07-deferred-payment-fix P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,7 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard-reviews]: Pre-existing REVIEW-02 test assertion fixed: JSX renders review count as children array not plain string
 - [Phase 06-01]: .select('id') + if (teacher) checks row existence not is_published status — any teacher row redirects to /dashboard
 - [Phase 06-01]: URL construction: ?subject=X#booking (query param before fragment) — browser terminates search string at # so params after # are ignored by useSearchParams
+- [Phase 07-deferred-payment-fix]: .in('status', ['requested', 'pending']) used in createCheckoutSessionsForTeacher and checkout.session.completed — covers teacher-accept-before-Stripe scenario without touching direct booking path
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -164,6 +166,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-11T13:06:53.247Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-deferred-payment-fix/07-CONTEXT.md
+Last session: 2026-03-11T13:21:11.666Z
+Stopped at: Completed 07-01: deferred payment fix — two-line webhook change + 4 tests
+Resume file: None
