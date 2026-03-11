@@ -28,8 +28,8 @@
 - [x] **PAGE-02**: Page displays: name, profile photo (or initials avatar), school name, city/state
 - [x] **PAGE-03**: Page displays: credential bar (verified teacher badge, years experience, subjects, grade levels)
 - [x] **PAGE-04**: Page displays: auto-generated bio if teacher skips writing one
-- [ ] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
-- [ ] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
+- [x] **PAGE-05**: Page displays: subjects + hourly rate, interactive availability calendar, reviews section
+- [x] **PAGE-06**: Sticky "Book Now" CTA visible at all times on mobile
 - [x] **PAGE-07**: Page applies teacher's chosen accent color / theme throughout
 - [x] **PAGE-08**: Page displays teacher's custom headline / tagline below their name (if set)
 - [x] **PAGE-09**: Page displays teacher's banner image at the top (if uploaded)
@@ -94,7 +94,7 @@
 
 - [x] **PARENT-01**: Parent can create an account (email + password or Google SSO)
 - [x] **PARENT-02**: Parent can view booking history and upcoming sessions
-- [ ] **PARENT-03**: Parent can rebook a session with the same teacher
+- [x] **PARENT-03**: Parent can rebook a session with the same teacher
 
 ### Reviews
 
@@ -182,7 +182,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 6 | Pending |
+| AUTH-02 | Phase 6 | Complete |
 | ONBOARD-01 | Phase 1 | Complete |
 | ONBOARD-02 | Phase 1 | Complete |
 | ONBOARD-03 | Phase 1 | Complete |
@@ -194,8 +194,8 @@
 | PAGE-02 | Phase 1 | Complete |
 | PAGE-03 | Phase 1 | Complete |
 | PAGE-04 | Phase 1 | Complete |
-| PAGE-05 | Phase 6 | Pending |
-| PAGE-06 | Phase 6 | Pending |
+| PAGE-05 | Phase 6 | Complete |
+| PAGE-06 | Phase 6 | Complete |
 | PAGE-07 | Phase 1 | Complete |
 | PAGE-08 | Phase 1 | Complete |
 | PAGE-09 | Phase 1 | Complete |
@@ -231,7 +231,7 @@
 | BOOK-05 | Phase 4 | Complete |
 | PARENT-01 | Phase 4 | Complete |
 | PARENT-02 | Phase 4 | Complete |
-| PARENT-03 | Phase 6 | Pending |
+| PARENT-03 | Phase 6 | Complete |
 | NOTIF-04 | Phase 4 | Complete |
 | DASH-01 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-11T00:16:48.496Z"
+stopped_at: "Completed 06-01 automated tasks; waiting at checkpoint:human-verify Task 4"
+last_updated: "2026-03-11T00:32:11.495Z"
 last_activity: "2026-03-05 — Plan 01-05 complete: /[slug] profile page + dashboard verified in browser (checkpoint approved)"
 progress:
   total_phases: 7
-  completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
+  completed_phases: 6
+  total_plans: 20
+  completed_plans: 20
   percent: 100
 ---
 
@@ -67,6 +67,7 @@ Progress: [██████████] 100% (Phase 1)
 | Phase 05-dashboard-reviews P01 | 3 | 3 tasks | 4 files |
 | Phase 05-dashboard-reviews P03 | 5 | 3 tasks | 9 files |
 | Phase 05-dashboard-reviews P02 | 5 | 2 tasks | 6 files |
+| Phase 06-profile-account-fixes P01 | 8 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard-reviews]: submitReview uses .is('token_used_at', null) idempotency guard — prevents double submission cleanly without extra query
 - [Phase 05-dashboard-reviews]: sumEarnings and groupStudents extracted as inline pure functions in test file — avoids RSC render context in Vitest
 - [Phase 05-dashboard-reviews]: Pre-existing REVIEW-02 test assertion fixed: JSX renders review count as children array not plain string
+- [Phase 06-01]: .select('id') + if (teacher) checks row existence not is_published status — any teacher row redirects to /dashboard
+- [Phase 06-01]: URL construction: ?subject=X#booking (query param before fragment) — browser terminates search string at # so params after # are ignored by useSearchParams
 
 ### Critical Pitfalls to Embed in Phase 1
 
@@ -161,6 +164,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-11T00:16:48.482Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-profile-account-fixes/06-CONTEXT.md
+Last session: 2026-03-11T00:32:11.493Z
+Stopped at: Completed 06-01 automated tasks; waiting at checkpoint:human-verify Task 4
+Resume file: None
