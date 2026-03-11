@@ -74,7 +74,7 @@ export default async function AccountPage() {
           <div className="space-y-3">
             {past.map((booking) => {
               const teacher = booking.teachers as unknown as { full_name: string; slug: string }
-              const rebookUrl = `/${teacher.slug}#booking?subject=${encodeURIComponent(booking.subject)}`
+              const rebookUrl = `/${teacher.slug}?subject=${encodeURIComponent(booking.subject)}#booking`
               return (
                 <div key={booking.id} className="border rounded-lg p-4 space-y-2">
                   <p className="font-medium">{booking.student_name} — {booking.subject}</p>

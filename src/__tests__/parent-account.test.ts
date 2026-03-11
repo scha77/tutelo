@@ -134,9 +134,9 @@ describe('/account page', () => {
       },
     ]
     const booking = bookings[0]
-    const rebookUrl = `/${booking.teachers.slug}#booking?subject=${encodeURIComponent(booking.subject)}`
+    const rebookUrl = `/${booking.teachers.slug}?subject=${encodeURIComponent(booking.subject)}#booking`
     expect(booking.teachers.full_name).toBe('Mrs. Johnson')
     expect(booking.teachers.slug).toBe('mrs-johnson')
-    expect(rebookUrl).toBe('/mrs-johnson#booking?subject=Math')
+    expect(rebookUrl).toBe('/mrs-johnson?subject=Math#booking')
   })
 })
