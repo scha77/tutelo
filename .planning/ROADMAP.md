@@ -164,7 +164,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Fix BookNowCTA render, hourly_rate display, rebook URL order, proxy.ts isProtected, signup test mock
+- [x] 06-01-PLAN.md — Fix BookNowCTA render, hourly_rate display, rebook URL order, proxy.ts isProtected, signup test mock
 
 ---
 
@@ -202,5 +202,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Stripe Connect + Deferred Payment | 3/4 | Gap closure pending | 2026-03-06 |
 | 4. Direct Booking + Parent Account | 4/4 | Complete   | 2026-03-10 |
 | 5. Dashboard + Reviews | 3/3 | Complete   | 2026-03-10 |
-| 6. Profile + Account Integration Fixes | 0/1 | Pending | — |
+| 6. Profile + Account Integration Fixes | 1/1 | Complete   | 2026-03-11 |
 | 7. Deferred Payment Critical Bug Fix | 0/1 | Pending | — |

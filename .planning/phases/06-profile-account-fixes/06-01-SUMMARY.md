@@ -51,11 +51,11 @@ completed: 2026-03-10
 
 ## Performance
 
-- **Duration:** ~8 min
+- **Duration:** ~8 min (automated) + human-verify checkpoint
 - **Started:** 2026-03-10T20:29:51Z
-- **Completed:** 2026-03-10T20:37:00Z
-- **Tasks:** 3 automated (Task 4 is human-verify checkpoint)
-- **Files modified:** 5
+- **Completed:** 2026-03-11T00:40:00Z
+- **Tasks:** 4 (3 automated + 1 human-verify — all complete)
+- **Files modified:** 5 (plan scope) + 3 (out-of-plan signOut additions)
 
 ## Accomplishments
 - Fixed signIn server action to redirect any teacher (draft or published) to /dashboard using TDD — RED test confirmed existing bug, GREEN fixed it
@@ -70,8 +70,9 @@ Each task was committed atomically:
 1. **Task 1: Wave 0 — Add draft-teacher signIn test + fix signIn action** - `b42bf5e` (feat/test)
 2. **Task 2: Fix rebook URL in account/page.tsx + update parent-account test assertion** - `e882fd7` (fix)
 3. **Task 3: Render BookNowCTA in [slug]/page.tsx + full suite verification** - `a311a5b` (feat)
+4. **Task 4: Human verify — profile CTA, rate display, rebook, auth flows** - Approved (no code commit — verification only)
 
-**Plan metadata:** (pending final commit after human-verify)
+**Plan metadata:** `e59d6f2` (docs: complete plan — pre-checkpoint approval) + updated post-approval
 
 _Note: Task 1 uses TDD: RED commit then GREEN fix in same atomic commit._
 
@@ -89,7 +90,21 @@ _Note: Task 1 uses TDD: RED commit then GREEN fix in same atomic commit._
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Out-of-Plan Changes (Post-Checkpoint, Committed Separately)
+
+The following changes were made after the automated tasks completed and the human-verify checkpoint was reached. They were committed separately and are not part of the plan's success criteria — documented here for traceability.
+
+**1. [Out-of-Plan] Added signOut server action and Sign Out UI**
+- **Made during:** Post-checkpoint (after Task 3 commit, before Task 4 human approval)
+- **Change:** Added `signOut` server action to `src/actions/auth.ts`, added Sign Out button to `src/components/dashboard/Sidebar.tsx`, added Sign Out link to `src/app/account/page.tsx`
+- **Rationale:** Sign-out functionality was missing from the UI — teachers and parents had no way to log out
+- **Files modified:** `src/actions/auth.ts`, `src/components/dashboard/Sidebar.tsx`, `src/app/account/page.tsx`
+- **Note:** These changes do not affect the plan's success criteria or test suite
+
+---
+
+**Total plan deviations:** 0 (plan executed exactly as written)
+**Out-of-plan additions:** 1 (signOut UX — committed separately)
 
 ## Issues Encountered
 None.
@@ -98,9 +113,9 @@ None.
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- All five v1.0 audit gaps addressed in automated tasks
-- Task 4 (human-verify checkpoint) requires browser verification of: sticky CTA at 375px, $X/hr in CredentialsBar, rebook pre-fill, /account redirect to /login, draft teacher redirect to /dashboard
-- Full test suite green — ready for checkpoint verification
+- All five v1.0 audit gaps confirmed in browser: sticky CTA at 375px, $X/hr in CredentialsBar, rebook pre-fill working, /account redirects to /login, draft teacher redirects to /dashboard
+- Full test suite green
+- Phase 7 (Deferred Payment Critical Bug Fix) is next: fix `createCheckoutSessionsForTeacher` to query `.in('status', ['requested', 'pending'])` so pre-accept bookings also receive Checkout sessions
 
 ---
 *Phase: 06-profile-account-fixes*
