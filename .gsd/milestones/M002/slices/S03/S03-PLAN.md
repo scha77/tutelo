@@ -40,7 +40,7 @@
 
 ## Tasks
 
-- [ ] **T01: Add error boundary and custom error pages** `est:20m`
+- [x] **T01: Add error boundary and custom error pages** `est:20m`
   - Why: Raw Next.js error pages expose implementation details and look unprofessional. Teachers and parents hitting an error should see a branded, helpful page.
   - Files: `src/app/not-found.tsx`, `src/app/error.tsx`, `src/app/global-error.tsx`
   - Do:
@@ -52,7 +52,7 @@
   - Verify: Visit `/nonexistent` on live URL → custom 404. Visit `/fake-teacher-slug` → graceful not-found state.
   - Done when: No raw Next.js error pages visible to users on the live URL
 
-- [ ] **T02: Write LAUNCH.md and update PROJECT.md** `est:15m`
+- [x] **T02: Write LAUNCH.md and update PROJECT.md** `est:15m`
   - Why: The founder needs a single reference document for the live environment. Future agents need PROJECT.md to reflect reality.
   - Files: `LAUNCH.md`, `.gsd/PROJECT.md`
   - Do:
@@ -71,7 +71,7 @@
   - Verify: LAUNCH.md exists and contains all required sections. PROJECT.md reflects production deployment.
   - Done when: A new agent reading LAUNCH.md could understand and operate the production environment
 
-- [ ] **T03: Clean up old planning directory** `est:5m`
+- [x] **T03: Clean up old planning directory** `est:5m`
   - Why: The `.planning/` directory is the pre-migration artifact. Now that `.gsd/` is the source of truth and M001 is complete, keeping both is confusing.
   - Files: `.planning/` directory, `.gitignore`
   - Do:
