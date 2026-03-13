@@ -12,58 +12,12 @@ Tagline: "Shopify for teacher side hustles."
 
 ## Requirements
 
-### Validated
+All 59 MVP requirements are **Validated** — implemented in M001 and verified working in production in M002.
+See `.gsd/REQUIREMENTS.md` for the full register with status and evidence.
 
-(None yet — ship to validate)
+### Candidate (not yet formal)
 
-### Active
-
-**Teacher Onboarding**
-- [ ] Teacher can sign up and generate a live landing page in under 7 minutes
-- [ ] Onboarding requires no payment setup to publish (Stripe deferred)
-- [ ] Teacher can set profile: name, school, city/state, subjects, grade range, years experience, optional photo
-- [ ] Teacher can set weekly availability via visual calendar (defaults to weekday evenings + weekends)
-- [ ] Teacher can set hourly rate (shown with area rate benchmarks)
-- [ ] Teacher gets shareable URL on publish (tutelo.com/ms-johnson)
-
-**Teacher Landing Page**
-- [ ] Auto-generated, mobile-first public page from onboarding answers
-- [ ] Page shows: name, school, credentials bar, subjects/rates, availability calendar, reviews, Book Now CTA
-- [ ] Auto-generated bio if teacher skips writing one
-- [ ] Sticky "Book Now" button on mobile
-
-**Booking System**
-- [ ] Parent can submit a booking request (pre-Stripe): student name, time slot, subject, optional note, email
-- [ ] "Money waiting" notification triggers Stripe Connect onboarding for teacher when first booking request arrives
-- [ ] Parent receives pending confirmation; teacher has time-pressure urgency to connect
-- [ ] Direct booking flow (post-Stripe): parent creates account, enters payment, booking confirmed with payment authorization
-- [ ] Teacher can mark session complete, triggering payment capture
-- [ ] 24hr reminder emails to both parties before session
-
-**Teacher Dashboard**
-- [ ] Teacher sees upcoming sessions, pending requests, earnings, and student list
-- [ ] Teacher can accept/decline booking requests
-
-**Parent Account**
-- [ ] Parent can view bookings, payment history, and rebook
-
-**Reviews**
-- [ ] Parent can leave star rating + text review after completed session
-- [ ] Reviews displayed on teacher landing page
-
-**Email Notifications**
-- [ ] Booking request received (teacher)
-- [ ] "Money waiting" trigger with urgency copy (teacher)
-- [ ] 24/48/72hr follow-up if teacher hasn't connected Stripe after first request
-- [ ] Booking confirmation (both)
-- [ ] Session reminders (both)
-- [ ] Cancellation (both)
-- [ ] Session complete + review prompt (parent)
-
-**Payments**
-- [ ] Stripe Connect Express for teacher payouts
-- [ ] 7% platform fee deducted from teacher payout
-- [ ] Stripe handles payment authorization at booking, capture at session completion
+- **ONBOARD-08** — Onboarding wizard should prompt for teacher notification email (`social_email`). Teachers who skip Page settings after onboarding will silently miss booking notification emails. Recommend adding this prompt to step 1 or 2 of the onboarding wizard.
 
 ### Out of Scope
 
@@ -107,23 +61,41 @@ Tagline: "Shopify for teacher side hustles."
 
 ## Current Status
 
-**Deployed to production at https://tutelo.app** (March 11, 2026)
+**M002 complete — live in production at https://tutelo.app** (deployed March 11, completed March 12, 2026)
 
-- All 59 MVP requirements implemented and validated
-- Stripe in test mode — switch to live keys when ready for real payments
-- Crons running daily (Vercel Hobby plan) — upgrade to Pro for hourly
-- See `LAUNCH.md` for full production environment documentation
+All milestones complete:
+- **M001:** All 59 requirements implemented and validated (105 passing tests)
+- **M002:** Production deployment — all flows verified on live URL; error boundaries in place
+
+Current state:
+- Stripe in **test mode** — switch to live keys before real payments go live
+- Crons running **daily** (Vercel Hobby plan) — upgrade to Pro for hourly cadence
+- Homepage (tutelo.app/) shows Next.js default page — needs a redirect or landing page before broad sharing
+- Stripe Connect full roundtrip (account.updated webhook → DB update) not yet manually exercised
+- `social_email` must be set for teacher booking notification emails to fire
+
+See `LAUNCH.md` for full production environment documentation, upgrade checklist, and operational runbook.
+
+### Known Limitations Before Broad Launch
+
+1. **Homepage** — tutelo.app/ shows Next.js default starter page; add redirect to /login or a marketing page
+2. **Stripe live mode** — currently test mode; requires switching `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY` on Vercel
+3. **Stripe Connect roundtrip** — button redirects correctly to Stripe Express onboarding; full test onboarding walkthrough (and `account.updated` webhook receipt verification) not yet completed by founder
+4. **Notification email** — teachers who don't visit Page settings won't have `social_email` set; booking notifications silently skip in that case
+5. **Cron frequency** — daily (Hobby plan); auto-cancel window effectively 48–72hr instead of 48hr; upgrade to Pro for tighter cadence
+6. **React hydration mismatch (error #418)** — on public profile pages; likely timezone rendering server/client delta; cosmetic only
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Defer Stripe Connect to first booking request | Removes friction at lowest motivation point; adds it at highest (real parent waiting to pay) | ✅ Implemented — deferred flow works end-to-end |
-| Booking request model before teacher connects Stripe | Parent submits request without payment; teacher activates payments in response to urgency | ✅ Implemented — "money waiting" email triggers Stripe setup |
-| No marketplace / discovery at MVP | Teachers bring their own students; platform professionalizes existing relationships, not new matchmaking | ✅ Implemented — no discovery, teachers share /[slug] links |
-| 7% platform fee (teacher-side only) | Below all major competitors; justified by full stack (page + booking + payments + trust layer) | ✅ Implemented — application_fee_amount on all captures |
+| Defer Stripe Connect to first booking request | Removes friction at lowest motivation point; adds it at highest (real parent waiting to pay) | ✅ Verified end-to-end on live URL |
+| Booking request model before teacher connects Stripe | Parent submits request without payment; teacher activates payments in response to urgency | ✅ "money waiting" email triggers Stripe setup |
+| No marketplace / discovery at MVP | Teachers bring their own students; platform professionalizes existing relationships, not new matchmaking | ✅ No discovery; teachers share /[slug] links |
+| 7% platform fee (teacher-side only) | Below all major competitors; justified by full stack (page + booking + payments + trust layer) | ✅ application_fee_amount on all captures |
 | Next.js + Supabase + Vercel | Full-stack JS, minimal ops overhead, generous free tiers, founder already knows React | ✅ Deployed — Next.js 16.1.6 + Supabase + Vercel |
-| Vanity URL slug (tutelo.app/ms-johnson) | Shareable, professional, memorable — core to the "own your page" value prop | ✅ Implemented — auto-generated on onboarding |
+| Vanity URL slug (tutelo.app/ms-johnson) | Shareable, professional, memorable — core to the "own your page" value prop | ✅ Auto-generated on onboarding |
+| API route handlers not server actions for protected-layout actions | Next.js 16 server actions fail auth under dashboard layout during POST re-renders | ✅ connectStripe converted; pattern documented in DECISIONS.md |
 
 ---
-*Last updated: 2026-03-11 after production deployment*
+*Last updated: 2026-03-12 after M002 completion*
