@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { connectStripe } from '@/actions/stripe'
+import { ConnectStripeButton } from './ConnectStripeButton'
 
 export default async function ConnectStripePage() {
   const supabase = await createClient()
-  const { data: claimsData } = await supabase.auth.getClaims()
-  if (!claimsData?.claims) redirect('/login')
 
-  const userId = claimsData.claims.sub
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData?.user) redirect('/login')
+
+  const userId = userData.user.id
+
   const { data: teacher } = await supabase
     .from('teachers')
     .select('stripe_charges_enabled')
@@ -24,14 +26,7 @@ export default async function ConnectStripePage() {
         Connect Stripe to confirm your pending bookings and receive payments directly. Takes 2–3
         minutes. Tutelo charges a 7% platform fee — parents are never surprised.
       </p>
-      <form action={connectStripe}>
-        <button
-          type="submit"
-          className="bg-[#635BFF] hover:bg-[#5249d6] text-white font-semibold px-6 py-3 rounded-lg w-full transition-colors"
-        >
-          Connect with Stripe
-        </button>
-      </form>
+      <ConnectStripeButton />
     </div>
   )
 }

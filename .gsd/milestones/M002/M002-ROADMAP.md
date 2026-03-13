@@ -52,7 +52,7 @@ This milestone is complete only when all are true:
 
 - [x] **S01: Deploy & Configure** `risk:high` `depends:[]`
   > After this: The app is live on Vercel with Supabase, Stripe, and Resend configured. All routes load without errors.
-- [ ] **S02: Integration Verification** `risk:medium` `depends:[S01]`
+- [x] **S02: Integration Verification** `risk:medium` `depends:[S01]`
   > After this: Auth, booking, Stripe webhooks, and email delivery are verified working on the live URL. Any broken integrations are fixed.
 - [x] **S03: Production Hardening** `risk:low` `depends:[S02]`
   > After this: Error boundaries catch unexpected failures gracefully, environment is documented for the founder, and the app is ready for real teachers.

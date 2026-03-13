@@ -1,20 +1,15 @@
-'use server'
+import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-export async function connectStripe(): Promise<void> {
+export async function POST() {
   const supabase = await createClient()
 
-  // Use getUser() for verified identity — getClaims()/getSession() can fail
-  // in server actions when proxy token refresh doesn't propagate cookies
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData?.user) {
-    console.error('[connectStripe] No authenticated user:', userError?.message ?? 'no user')
-    redirect('/login')
-    return
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const userId = userData.user.id
@@ -26,14 +21,11 @@ export async function connectStripe(): Promise<void> {
     .single()
 
   if (!teacher) {
-    console.error(`[connectStripe] No teacher record for user ${userId}`)
-    redirect('/login')
-    return
+    return NextResponse.json({ error: 'Teacher not found' }, { status: 404 })
   }
 
-  // Guard: already connected — redirect to dashboard
   if (teacher.stripe_charges_enabled) {
-    redirect('/dashboard')
+    return NextResponse.json({ redirect: '/dashboard' })
   }
 
   let stripeAccountId = teacher.stripe_account_id
@@ -55,10 +47,9 @@ export async function connectStripe(): Promise<void> {
       .update({ stripe_account_id: stripeAccountId })
       .eq('id', teacher.id)
 
-    console.log(`[connectStripe] Created Stripe Express account ${stripeAccountId} for teacher ${teacher.id}`)
+    console.log(`[connect-stripe] Created Stripe Express account ${stripeAccountId} for teacher ${teacher.id}`)
   }
 
-  // Generate one-time account link (single-use — generate on each request)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const accountLink = await stripe.accountLinks.create({
     account: stripeAccountId,
@@ -67,6 +58,6 @@ export async function connectStripe(): Promise<void> {
     refresh_url: `${appUrl}/dashboard/connect-stripe`,
   })
 
-  console.log(`[connectStripe] Redirecting teacher ${teacher.id} to Stripe onboarding`)
-  redirect(accountLink.url)
+  console.log(`[connect-stripe] Redirecting teacher ${teacher.id} to Stripe onboarding`)
+  return NextResponse.json({ redirect: accountLink.url })
 }

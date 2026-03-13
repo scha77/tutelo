@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -21,18 +21,11 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data } = await supabase.auth.getClaims()
-  const claims = data?.claims ?? null
-
-  const isProtected =
-    request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/onboarding')
-
-  if (isProtected && !claims) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
+  // Refresh auth token — getUser() makes a verified API call to Supabase Auth.
+  // The supabaseResponse carries updated Set-Cookie headers downstream.
+  // Auth protection is handled by individual layouts/pages (not here) to avoid
+  // server-action POST re-render issues where getClaims() can fail.
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }

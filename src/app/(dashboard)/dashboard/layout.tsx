@@ -9,13 +9,14 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient()
 
-  // Auth check — require authenticated user
-  const { data: claimsData } = await supabase.auth.getClaims()
-  if (!claimsData?.claims) {
+  // Auth check — use getUser() for verified identity (makes API call to Supabase Auth).
+  // getClaims() reads only from cookies and can fail on server-action POST re-renders.
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData?.user) {
     redirect('/login')
   }
 
-  const userId = claimsData.claims.sub
+  const userId = userData.user.id
 
   // Fetch teacher row for the logged-in user (includes stripe_charges_enabled for banner)
   const { data: teacher } = await supabase

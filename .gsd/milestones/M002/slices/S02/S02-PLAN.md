@@ -41,7 +41,7 @@
 
 ## Tasks
 
-- [ ] **T01: Teacher flow walkthrough** `est:20m`
+- [x] **T01: Teacher flow walkthrough** `est:20m`
   - Why: The core product flow must work. Teacher signup → onboarding → publish is the highest-priority path.
   - Files: source files only if bugs are found and fixed
   - Do:
@@ -56,7 +56,7 @@
   - Verify: Public /[slug] page is live and accessible. Dashboard shows correct data.
   - Done when: A complete teacher profile exists on the live app with a functional dashboard
 
-- [ ] **T02: Booking and notification flow walkthrough** `est:15m`
+- [x] **T02: Booking and notification flow walkthrough** `est:15m`
   - Why: The booking request flow is the core value loop — parents submitting requests is what makes the product useful.
   - Files: source files only if bugs are found and fixed
   - Do:
@@ -72,7 +72,7 @@
   - Verify: Booking row exists in DB. Email was delivered. Request appears on teacher dashboard.
   - Done when: Complete booking request cycle verified with real email delivery
 
-- [ ] **T03: Stripe Connect and payment flow verification** `est:15m`
+- [x] **T03: Stripe Connect and payment flow verification** `est:15m`
   - Why: The payment flow is the revenue path. Even in test mode, the Stripe Connect link and webhook must function.
   - Files: source files only if bugs are found and fixed
   - Do:

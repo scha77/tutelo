@@ -62,3 +62,8 @@
 - ".in('status', ['requested', 'pending']) used in both createCheckoutSessionsForTeacher and checkout.session.completed — covers teacher-accept-before-Stripe scenario without changing direct booking path"
 - "payment_intent.amount_capturable_updated handler left unchanged — its .eq('status', 'requested') guard is correct for the direct booking flow where pending is never an intermediate state"
 - "sendBookingConfirmationEmail added to @/lib/email mock in test file to support checkout.session.completed test assertions"
+- "middleware.ts → proxy.ts rename: Next.js 16 deprecated middleware convention; proxy.ts with export function proxy() is the new standard. proxy runtime is nodejs (not edge)."
+- "Dashboard layout auth uses getUser() not getClaims() — getClaims() reads unverified cookies that fail on server-action POST re-renders; getUser() makes verified API call to Supabase Auth"
+- "Proxy handles token refresh only (getUser call), no auth redirect — auth protection delegated to layouts/pages to avoid server-action POST re-render cookie issues"
+- "Server-action auth bug identified: Next.js 16 does not forward cookies correctly during layout re-render triggered by server action POST. Affects all server actions using redirect() under dashboard layout. Fix: convert to API route handler pattern."
+- "connectStripe converted to POST /api/connect-stripe API route handler — server actions under dashboard layout fail auth on Next.js 16 POST re-renders; API route handlers correctly receive forwarded cookies. Client component calls fetch() and redirects via window.location.href."
