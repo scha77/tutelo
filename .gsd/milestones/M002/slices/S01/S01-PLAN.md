@@ -40,7 +40,7 @@
 
 ## Tasks
 
-- [ ] **T01: Install Vercel CLI and deploy** `est:15m`
+- [x] **T01: Install Vercel CLI and deploy** `est:15m`
   - Why: The app needs to be on the internet. Vercel is the pre-decided hosting platform.
   - Files: none (CLI + Dashboard configuration)
   - Do:
@@ -52,7 +52,7 @@
   - Verify: `vercel ls` shows the project; preview URL returns 200 on `/login`
   - Done when: Vercel project exists and preview deployment succeeded
 
-- [ ] **T02: Configure environment variables on Vercel** `est:10m`
+- [x] **T02: Configure environment variables on Vercel** `est:10m`
   - Why: The app needs all 10 env vars to connect to Supabase, Stripe, and Resend. Without them, every route 500s.
   - Files: none (Vercel Dashboard or CLI)
   - Do:
@@ -71,7 +71,7 @@
   - Verify: Production deployment completes; `/login` loads without Supabase connection errors
   - Done when: Production URL loads the login page correctly
 
-- [ ] **T03: Apply Supabase migrations and create storage bucket** `est:10m`
+- [x] **T03: Apply Supabase migrations and create storage bucket** `est:10m`
   - Why: The remote Supabase project needs the schema. Without it, all data operations fail.
   - Files: `supabase/migrations/` (6 files, already written)
   - Do:
@@ -88,7 +88,7 @@
   - Verify: Visit `/login` on live URL → sign up with email → verify redirect to `/onboarding`
   - Done when: All 4 tables exist with RLS, storage bucket exists, auth is configured for the live URL
 
-- [ ] **T04: Register Stripe webhook endpoints** `est:10m`
+- [x] **T04: Register Stripe webhook endpoints** `est:10m`
   - Why: Without webhook registration, Stripe events (account.updated, checkout.session.completed, etc.) are never received. The entire payment flow is dead.
   - Files: none (Stripe Dashboard configuration)
   - Do:

@@ -50,7 +50,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Deploy & Configure** `risk:high` `depends:[]`
+- [x] **S01: Deploy & Configure** `risk:high` `depends:[]`
   > After this: The app is live on Vercel with Supabase, Stripe, and Resend configured. All routes load without errors.
 - [ ] **S02: Integration Verification** `risk:medium` `depends:[S01]`
   > After this: Auth, booking, Stripe webhooks, and email delivery are verified working on the live URL. Any broken integrations are fixed.
