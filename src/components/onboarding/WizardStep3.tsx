@@ -235,10 +235,16 @@ export function WizardStep3({ isSubmitting, onPublish }: WizardStep3Props) {
           Click time blocks to toggle availability. Each block is 1 hour.
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
+          <table className="w-full text-xs border-collapse table-fixed">
+            <colgroup>
+              <col className="w-12" />
+              {DAYS.map((day) => (
+                <col key={day} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
-                <th className="w-12 text-left py-1 text-muted-foreground font-normal">Time</th>
+                <th className="text-left py-1 text-muted-foreground font-normal">Time</th>
                 {DAYS.map((day) => (
                   <th key={day} className="text-center py-1 text-muted-foreground font-medium px-1">
                     {day}
