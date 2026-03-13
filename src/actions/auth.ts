@@ -50,3 +50,9 @@ export async function signIn(formData: FormData): Promise<{ error: string } | vo
 
   redirect('/onboarding')
 }
+
+export async function signOut(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/login')
+}

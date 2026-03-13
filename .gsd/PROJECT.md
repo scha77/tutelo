@@ -105,16 +105,25 @@ Tagline: "Shopify for teacher side hustles."
 - **Auth:** Supabase Auth (Google SSO + email). No custom auth.
 - **Payments:** Stripe Connect Express only. No custom payment logic.
 
+## Current Status
+
+**Deployed to production at https://tutelo.app** (March 11, 2026)
+
+- All 59 MVP requirements implemented and validated
+- Stripe in test mode — switch to live keys when ready for real payments
+- Crons running daily (Vercel Hobby plan) — upgrade to Pro for hourly
+- See `LAUNCH.md` for full production environment documentation
+
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Defer Stripe Connect to first booking request | Removes friction at lowest motivation point; adds it at highest (real parent waiting to pay) | — Pending |
-| Booking request model before teacher connects Stripe | Parent submits request without payment; teacher activates payments in response to urgency | — Pending |
-| No marketplace / discovery at MVP | Teachers bring their own students; platform professionalizes existing relationships, not new matchmaking | — Pending |
-| 7% platform fee (teacher-side only) | Below all major competitors; justified by full stack (page + booking + payments + trust layer) | — Pending |
-| Next.js + Supabase + Vercel | Full-stack JS, minimal ops overhead, generous free tiers, founder already knows React | — Pending |
-| Vanity URL slug (tutelo.com/ms-johnson) | Shareable, professional, memorable — core to the "own your page" value prop | — Pending |
+| Defer Stripe Connect to first booking request | Removes friction at lowest motivation point; adds it at highest (real parent waiting to pay) | ✅ Implemented — deferred flow works end-to-end |
+| Booking request model before teacher connects Stripe | Parent submits request without payment; teacher activates payments in response to urgency | ✅ Implemented — "money waiting" email triggers Stripe setup |
+| No marketplace / discovery at MVP | Teachers bring their own students; platform professionalizes existing relationships, not new matchmaking | ✅ Implemented — no discovery, teachers share /[slug] links |
+| 7% platform fee (teacher-side only) | Below all major competitors; justified by full stack (page + booking + payments + trust layer) | ✅ Implemented — application_fee_amount on all captures |
+| Next.js + Supabase + Vercel | Full-stack JS, minimal ops overhead, generous free tiers, founder already knows React | ✅ Deployed — Next.js 16.1.6 + Supabase + Vercel |
+| Vanity URL slug (tutelo.app/ms-johnson) | Shareable, professional, memorable — core to the "own your page" value prop | ✅ Implemented — auto-generated on onboarding |
 
 ---
-*Last updated: 2026-03-03 after initialization*
+*Last updated: 2026-03-11 after production deployment*

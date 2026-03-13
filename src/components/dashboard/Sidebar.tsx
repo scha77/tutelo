@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, Inbox, CalendarCheck, Users, FileText, Calendar, Settings, LayoutDashboard } from 'lucide-react'
+import { ExternalLink, Inbox, CalendarCheck, Users, FileText, Calendar, Settings, LayoutDashboard, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { signOut } from '@/actions/auth'
 
 interface SidebarProps {
   teacherName: string
@@ -76,6 +77,19 @@ export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps
           })}
         </ul>
       </nav>
+
+      {/* Sign out */}
+      <div className="border-t p-3">
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </form>
+      </div>
     </aside>
   )
 }

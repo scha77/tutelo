@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { signOut } from '@/actions/auth'
 
 export const metadata = { title: 'My Sessions — Tutelo' }
 
@@ -40,7 +41,17 @@ export default async function AccountPage() {
 
   return (
     <main className="min-h-screen max-w-2xl mx-auto px-4 py-10 space-y-10">
-      <h1 className="text-2xl font-bold">My Sessions</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Sessions</h1>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
 
       {/* Upcoming */}
       <section>

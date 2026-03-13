@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface RequestCardProps {
   booking: {
@@ -16,6 +17,7 @@ interface RequestCardProps {
     created_at: string
   }
   teacherTimezone: string
+  stripeConnected: boolean
   acceptAction: (id: string) => Promise<{ success?: true; error?: string }>
   declineAction: (id: string) => Promise<{ success?: true; error?: string }>
 }
@@ -23,6 +25,7 @@ interface RequestCardProps {
 export function RequestCard({
   booking,
   teacherTimezone,
+  stripeConnected,
   acceptAction,
   declineAction,
 }: RequestCardProps) {
@@ -84,13 +87,22 @@ export function RequestCard({
 
       {/* Accept / Decline buttons */}
       <div className="mt-4 flex items-center gap-2">
-        <button
-          onClick={handleAccept}
-          disabled={isPending}
-          className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isPending && pendingAction === 'accept' ? 'Accepting…' : 'Accept'}
-        </button>
+        {stripeConnected ? (
+          <button
+            onClick={handleAccept}
+            disabled={isPending}
+            className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending && pendingAction === 'accept' ? 'Accepting…' : 'Accept'}
+          </button>
+        ) : (
+          <Link
+            href="/dashboard/connect-stripe"
+            className="rounded-md bg-[#635BFF] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#5249d6] transition-colors"
+          >
+            Connect Stripe to confirm
+          </Link>
+        )}
         <button
           onClick={handleDecline}
           disabled={isPending}
