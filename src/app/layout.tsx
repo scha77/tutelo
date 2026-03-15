@@ -14,8 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tutelo.app"),
   title: "Tutelo",
-  description: "Professional tutoring pages for classroom teachers",
+  description:
+    "Tutelo helps classroom teachers launch professional tutoring pages in minutes — manage bookings, share your link, and grow your practice.",
+  icons: {
+    icon: "/favicon-32.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

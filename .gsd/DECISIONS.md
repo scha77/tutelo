@@ -77,3 +77,6 @@
 - "Landing page CTA is 'Start your page' → direct to signup. No demo page intermediate step."
 - "Founding Teacher badge NOT on landing page yet — saved for Instagram launch. Landing page kept universal."
 - "Logo file: public/logo.png (Tutelo 'T' with leaf motif, 4000x4000). Needs optimized web variants."
+- "Landing page sections extracted to src/components/landing/ as separate RSC components — enables S02 animation wiring without modifying page.tsx"
+- "TeacherMockSection is the only 'use client' landing component — all others are server components for build-time rendering"
+- "S01 uses only tw-animate-css and CSS transitions for interactivity — motion library installation deferred to S02"

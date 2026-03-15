@@ -55,7 +55,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Brand Identity & Landing Page** `risk:medium` `depends:[]`
+- [x] **S01: Brand Identity & Landing Page** `risk:medium` `depends:[]`
   > After this: Visit tutelo.app/ and see a polished marketing landing page with brand colors, logo, hero, how-it-works, problem/solution, interactive teacher page mock, and "Start your page" CTA. OG meta tags present. Brand palette applied globally.
 
 - [ ] **S02: Animation System & App-Wide Polish** `risk:medium` `depends:[S01]`

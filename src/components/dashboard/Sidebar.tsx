@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ExternalLink, Inbox, CalendarCheck, Users, FileText, Calendar, Settings, LayoutDashboard, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,7 +30,17 @@ export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps
     <aside className="hidden w-56 flex-shrink-0 border-r bg-muted/20 md:flex md:flex-col">
       {/* Teacher identity + view page */}
       <div className="border-b p-4">
-        <p className="truncate text-sm font-semibold">{teacherName}</p>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            width={28}
+            height={28}
+            alt="Tutelo"
+            sizes="28px"
+            className="flex-shrink-0 rounded"
+          />
+          <p className="truncate text-sm font-semibold">{teacherName}</p>
+        </div>
         <a
           href={`/${teacherSlug}`}
           target="_blank"
