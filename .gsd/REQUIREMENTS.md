@@ -2,6 +2,210 @@
 
 ## Active
 
+### LAND-01 — Marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, and CTA
+
+- Class: launchability
+- Status: active
+- Description: Replace the Next.js default page with a polished marketing landing page. Sections: hero (professional identity + zero risk messaging), how-it-works (3-step visual), problem/solution contrast (Venmo/texting chaos vs. Tutelo), and a prominent CTA.
+- Why it matters: The homepage is the first thing anyone sees. Currently shows "To get started, edit the page.tsx file."
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: Teacher-only audience. Parents arrive via teacher slug links.
+
+### LAND-02 — Interactive teacher page mock/preview on landing page
+
+- Class: differentiator
+- Status: active
+- Description: An animated mock of a teacher's public page visible on the landing page, showing visitors what the product looks like before they sign up.
+- Why it matters: Seeing the real product is the strongest conversion signal — "this is what I'll get."
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: Should be interactive/animated, not a static screenshot.
+
+### LAND-03 — "Start your page" CTA links to signup flow
+
+- Class: primary-user-loop
+- Status: active
+- Description: The main call-to-action on the landing page is "Start your page" and links directly to the signup/onboarding flow.
+- Why it matters: Shortest path to value — teacher creates their page immediately.
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### LAND-04 — Landing page uses brand identity (#3b4d3e primary, #f6f5f0 secondary, Tutelo logo)
+
+- Class: quality-attribute
+- Status: active
+- Description: Landing page uses the established Tutelo brand palette: primary sage green #3b4d3e, secondary warm off-white #f6f5f0, and the Tutelo "T" logo.
+- Why it matters: Brand coherence from first impression.
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: Logo file at public/logo.png
+
+### LAND-05 — Landing page highlights shareable slug links as key value prop
+
+- Class: differentiator
+- Status: active
+- Description: The landing page explicitly showcases the shareable tutelo.app/ms-johnson URL as a core feature — mentioning it can be placed in emails, newsletters, social bios, etc.
+- Why it matters: The vanity URL is a key differentiator vs. marketplaces. Teachers need to see this upfront.
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### ANIM-01 — Smooth scroll-triggered section reveals on landing page
+
+- Class: quality-attribute
+- Status: active
+- Description: Landing page sections fade in and slide up as the user scrolls, creating a modern, alive feel.
+- Why it matters: Subtle animations make the page feel polished and professional without being distracting.
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: M003/S01
+- Validation: mapped
+- Notes: Framer Motion. Style: subtle & smooth.
+
+### ANIM-02 — Animated page transitions between routes
+
+- Class: quality-attribute
+- Status: active
+- Description: Smooth transitions when navigating between pages (dashboard, onboarding, profile).
+- Why it matters: Eliminates jarring page flashes; makes the app feel like a native application.
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: none
+- Validation: mapped
+- Notes: Must not break Next.js routing or SSR.
+
+### ANIM-03 — Onboarding wizard step transitions
+
+- Class: quality-attribute
+- Status: active
+- Description: Slide/fade transitions between the 3 onboarding wizard steps.
+- Why it matters: Onboarding is the first interactive experience — smooth steps feel guided and professional.
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### ANIM-04 — Dashboard card and list animations
+
+- Class: quality-attribute
+- Status: active
+- Description: Dashboard cards, lists, and status changes animate smoothly (staggered enters, booking accept/decline transitions).
+- Why it matters: Makes the dashboard feel responsive and alive instead of static page loads.
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### ANIM-05 — Teacher profile /[slug] page section entrance animations
+
+- Class: quality-attribute
+- Status: active
+- Description: Sections on the public teacher profile page animate in on load for a polished first impression.
+- Why it matters: This is what parents see — it needs to feel professional and trustworthy.
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### ANIM-06 — Micro-interactions: button hovers, toggle animations, form focus states
+
+- Class: quality-attribute
+- Status: active
+- Description: Small animation details throughout: button hover/press effects, toggle switches, form field focus transitions.
+- Why it matters: The cumulative effect of micro-interactions is what makes an app feel "modern."
+- Source: user
+- Primary owning slice: M003/S02
+- Supporting slices: none
+- Validation: mapped
+- Notes: Should be subtle — not distracting or bouncy.
+
+### MOBILE-01 — Mobile bottom navigation bar replacing hidden sidebar on dashboard
+
+- Class: core-capability
+- Status: active
+- Description: On mobile viewports, replace the hidden desktop sidebar with a thumb-friendly bottom tab bar for dashboard navigation.
+- Why it matters: Dashboard is currently desktop-only. Teachers will use their phones.
+- Source: user
+- Primary owning slice: M003/S03
+- Supporting slices: none
+- Validation: mapped
+- Notes: App-like feel. Bottom nav is the standard mobile pattern.
+
+### BRAND-01 — Global brand palette applied to app
+
+- Class: quality-attribute
+- Status: active
+- Description: Primary #3b4d3e (sage green), secondary #f6f5f0 (warm off-white), and derived accent tones applied to the global stylesheet, UI components, and all key surfaces.
+- Why it matters: Cohesive visual identity across the entire product.
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: M003/S02, M003/S03
+- Validation: mapped
+- Notes: Must not break teacher accent color customization on their profile pages.
+
+### BRAND-02 — Tutelo logo integrated into navigation/header across the app
+
+- Class: quality-attribute
+- Status: active
+- Description: The Tutelo "T" logo appears in the app navigation — landing page header, dashboard sidebar, and any other nav surfaces.
+- Why it matters: Brand recognition and professional identity.
+- Source: user
+- Primary owning slice: M003/S01
+- Supporting slices: M003/S03
+- Validation: mapped
+- Notes: Logo at public/logo.png (4000x4000 PNG).
+
+### SEO-01 — Dynamic OG meta tags on teacher /[slug] pages
+
+- Class: differentiator
+- Status: active
+- Description: Each teacher's public page generates dynamic Open Graph tags: teacher name, photo, subjects, school — so links shared on social media or in emails show a personalized preview.
+- Why it matters: Teachers sharing their links in newsletters, emails, and social will get rich previews instead of generic Tutelo branding.
+- Source: user
+- Primary owning slice: M003/S04
+- Supporting slices: none
+- Validation: mapped
+- Notes: Use Next.js generateMetadata().
+
+### SEO-02 — Proper OG meta tags on landing page
+
+- Class: launchability
+- Status: active
+- Description: The landing page at tutelo.app/ has proper Open Graph tags (title, description, brand image) for social sharing.
+- Why it matters: When the URL is shared, it should show a professional preview.
+- Source: inferred
+- Primary owning slice: M003/S01
+- Supporting slices: none
+- Validation: mapped
+- Notes: none
+
+### FIX-01 — Auto-populate social_email from signup email
+
+- Class: continuity
+- Status: active
+- Description: When a teacher signs up, auto-set social_email to their auth email so booking notifications work by default. Teacher can change it later in settings.
+- Why it matters: Currently teachers who complete onboarding but never visit Page settings silently miss all booking notification emails.
+- Source: execution
+- Primary owning slice: M003/S04
+- Supporting slices: none
+- Validation: mapped
+- Notes: Surfaced as candidate ONBOARD-08 during M002. Zero-friction fix.
+
 ## Validated
 
 ### AUTH-01 — Teacher or parent can sign up with email + password or Google SSO
@@ -537,4 +741,151 @@ Review prompt is delivered via email after session completion
 
 ## Deferred
 
+### AVAIL-04 — 5-minute granularity for availability slots
+
+- Class: core-capability
+- Status: deferred
+- Description: Teachers can set availability in 5-minute increments instead of 1-hour blocks.
+- Why it matters: Teachers with tight schedules need precise control over their available windows.
+- Source: user
+- Primary owning slice: M004
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Requires DB schema change and migration of existing availability data.
+
+### AVAIL-05 — Per-date availability overrides (not just recurring weekly)
+
+- Class: core-capability
+- Status: deferred
+- Description: Teachers can set availability for specific dates, overriding their recurring weekly pattern.
+- Why it matters: Real life isn't perfectly recurring — teachers have school events, holidays, personal commitments.
+- Source: user
+- Primary owning slice: M004
+- Supporting slices: none
+- Validation: unmapped
+- Notes: New table or column needed. Current schema is purely recurring weekly.
+
+### AVAIL-06 — Teachers can set availability weeks in advance
+
+- Class: core-capability
+- Status: deferred
+- Description: Teachers can plan and publish their availability multiple weeks ahead to enable advance booking.
+- Why it matters: Parents want to book ahead. Teachers want to plan their tutoring schedule alongside their school schedule.
+- Source: user
+- Primary owning slice: M004
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Related to AVAIL-05 — per-date overrides enable week-by-week planning.
+
+### AVAIL-07 — Redesigned availability editor with intuitive UX
+
+- Class: quality-attribute
+- Status: deferred
+- Description: The availability editor is rebuilt to be super intuitive — easy to navigate, fast to set hours, visually clear.
+- Why it matters: Current editor is a basic grid of 1-hour blocks. Needs to support 5-min granularity without being overwhelming.
+- Source: user
+- Primary owning slice: M004
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Must support both recurring weekly and per-date override workflows.
+
+### CANCEL-01 — Teacher can send last-minute cancellation notification to parent (email)
+
+- Class: core-capability
+- Status: deferred
+- Description: Teacher can trigger an immediate cancellation notification to the parent via email when they can't make a session.
+- Why it matters: Life happens. Teachers need a fast, one-tap way to notify parents of cancellations.
+- Source: user
+- Primary owning slice: M004
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Email-only in M004. SMS added in M005.
+
+### VERIFY-01 — Teacher identity verification system
+
+- Class: differentiator
+- Status: deferred
+- Description: A mechanism to confirm that people signing up are actual current or former teachers, adding a trust layer for parents.
+- Why it matters: Trust is the core value prop. Parents need to know they're booking verified educators.
+- Source: user
+- Primary owning slice: M005
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Research-dependent. No obvious turnkey API for teacher credential verification. State licensing databases are fragmented.
+
+### SMS-01 — SMS session reminders to teachers and parents
+
+- Class: core-capability
+- Status: deferred
+- Description: Session reminders sent via text message in addition to email.
+- Why it matters: Text messages have much higher open rates than email. Critical for reducing no-shows.
+- Source: user
+- Primary owning slice: M005
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Requires Twilio or similar, phone number collection, opt-in consent. Ongoing cost.
+
+### SMS-02 — SMS last-minute cancellation alerts
+
+- Class: core-capability
+- Status: deferred
+- Description: Last-minute cancellation alerts sent via text message for immediate parent notification.
+- Why it matters: Email may not be seen in time for a last-minute cancellation. Text is instant.
+- Source: user
+- Primary owning slice: M005
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Depends on SMS-01 infrastructure.
+
+### CANCEL-02 — Teacher last-minute cancellation via text (SMS)
+
+- Class: core-capability
+- Status: deferred
+- Description: The last-minute cancellation notification from CANCEL-01 is also sent via SMS.
+- Why it matters: Parents need immediate notification — email alone may not be fast enough.
+- Source: user
+- Primary owning slice: M005
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Depends on SMS-01 and CANCEL-01.
+
 ## Out of Scope
+
+## Traceability
+
+| ID | Class | Status | Primary owner | Supporting | Proof |
+|---|---|---|---|---|---|
+| LAND-01 | launchability | active | M003/S01 | none | mapped |
+| LAND-02 | differentiator | active | M003/S01 | none | mapped |
+| LAND-03 | primary-user-loop | active | M003/S01 | none | mapped |
+| LAND-04 | quality-attribute | active | M003/S01 | none | mapped |
+| LAND-05 | differentiator | active | M003/S01 | none | mapped |
+| ANIM-01 | quality-attribute | active | M003/S02 | M003/S01 | mapped |
+| ANIM-02 | quality-attribute | active | M003/S02 | none | mapped |
+| ANIM-03 | quality-attribute | active | M003/S02 | none | mapped |
+| ANIM-04 | quality-attribute | active | M003/S02 | none | mapped |
+| ANIM-05 | quality-attribute | active | M003/S02 | none | mapped |
+| ANIM-06 | quality-attribute | active | M003/S02 | none | mapped |
+| MOBILE-01 | core-capability | active | M003/S03 | none | mapped |
+| BRAND-01 | quality-attribute | active | M003/S01 | M003/S02, M003/S03 | mapped |
+| BRAND-02 | quality-attribute | active | M003/S01 | M003/S03 | mapped |
+| SEO-01 | differentiator | active | M003/S04 | none | mapped |
+| SEO-02 | launchability | active | M003/S01 | none | mapped |
+| FIX-01 | continuity | active | M003/S04 | none | mapped |
+| AVAIL-04 | core-capability | deferred | M004 | none | unmapped |
+| AVAIL-05 | core-capability | deferred | M004 | none | unmapped |
+| AVAIL-06 | core-capability | deferred | M004 | none | unmapped |
+| AVAIL-07 | quality-attribute | deferred | M004 | none | unmapped |
+| CANCEL-01 | core-capability | deferred | M004 | none | unmapped |
+| VERIFY-01 | differentiator | deferred | M005 | none | unmapped |
+| SMS-01 | core-capability | deferred | M005 | none | unmapped |
+| SMS-02 | core-capability | deferred | M005 | none | unmapped |
+| CANCEL-02 | core-capability | deferred | M005 | none | unmapped |
+
+## Coverage Summary
+
+- Active requirements: 17 (M003)
+- Mapped to slices: 17
+- Validated: 59 (from M001/M002)
+- Deferred: 9 (M004: 5, M005: 4)
+- Unmapped active requirements: 0
