@@ -1,5 +1,8 @@
 'use client'
 
+import * as m from 'motion/react-client'
+import { fadeSlideUp, VIEWPORT_ONCE } from '@/lib/animation'
+
 const ACCENT = '#10B981'
 
 const subjects = [
@@ -36,7 +39,13 @@ export function TeacherMockSection() {
         </div>
 
         {/* Browser mock */}
-        <div className="mx-auto max-w-2xl">
+        <m.div
+          className="mx-auto max-w-2xl"
+          initial={fadeSlideUp.initial}
+          whileInView={fadeSlideUp.animate}
+          viewport={VIEWPORT_ONCE}
+          transition={{ ...fadeSlideUp.transition, delay: 0.1 }}
+        >
           <div className="overflow-hidden rounded-2xl border border-[#3b4d3e]/10 bg-white shadow-2xl shadow-[#3b4d3e]/8">
             {/* Chrome bar */}
             <div className="flex items-center gap-3 border-b border-[#3b4d3e]/6 bg-[#fafaf7] px-4 py-3">
@@ -178,7 +187,7 @@ export function TeacherMockSection() {
               </div>
             </div>
           </div>
-        </div>
+        </m.div>
       </div>
     </section>
   )

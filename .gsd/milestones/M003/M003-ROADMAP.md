@@ -58,7 +58,7 @@ This milestone is complete only when all are true:
 - [x] **S01: Brand Identity & Landing Page** `risk:medium` `depends:[]`
   > After this: Visit tutelo.app/ and see a polished marketing landing page with brand colors, logo, hero, how-it-works, problem/solution, interactive teacher page mock, and "Start your page" CTA. OG meta tags present. Brand palette applied globally.
 
-- [ ] **S02: Animation System & App-Wide Polish** `risk:medium` `depends:[S01]`
+- [x] **S02: Animation System & App-Wide Polish** `risk:medium` `depends:[S01]`
   > After this: Navigate the app and see smooth animations everywhere — landing page scroll reveals, page transitions, onboarding step slides, dashboard card animations, profile section fades, and micro-interactions on buttons/toggles/forms.
 
 - [ ] **S03: Mobile Dashboard & Responsive Polish** `risk:low` `depends:[S01]`

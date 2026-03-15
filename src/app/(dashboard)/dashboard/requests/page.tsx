@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RequestCard } from '@/components/dashboard/RequestCard'
+import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 import { acceptBooking, declineBooking } from '@/actions/bookings'
 import { CopyLinkButton } from './CopyLinkButton'
 
@@ -55,18 +56,19 @@ export default async function RequestsPage() {
         <>
           {/* Pending booking requests */}
           {bookings.length > 0 && (
-            <div className="flex flex-col gap-4">
+            <AnimatedList className="flex flex-col gap-4">
               {bookings.map((booking) => (
-                <RequestCard
-                  key={booking.id}
-                  booking={booking}
-                  teacherTimezone={teacherTimezone}
-                  stripeConnected={stripeConnected}
-                  acceptAction={acceptBooking}
-                  declineAction={declineBooking}
-                />
+                <AnimatedListItem key={booking.id}>
+                  <RequestCard
+                    booking={booking}
+                    teacherTimezone={teacherTimezone}
+                    stripeConnected={stripeConnected}
+                    acceptAction={acceptBooking}
+                    declineAction={declineBooking}
+                  />
+                </AnimatedListItem>
               ))}
-            </div>
+            </AnimatedList>
           )}
 
         </>

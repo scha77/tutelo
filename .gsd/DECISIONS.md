@@ -80,3 +80,8 @@
 - "Landing page sections extracted to src/components/landing/ as separate RSC components — enables S02 animation wiring without modifying page.tsx"
 - "TeacherMockSection is the only 'use client' landing component — all others are server components for build-time rendering"
 - "S01 uses only tw-animate-css and CSS transitions for interactivity — motion library installation deferred to S02"
+- "Import motion from 'motion/react-client' (not 'motion/react') in App Router client components — tree-shaken client-only build reduces bundle size"
+- "Thin animated wrapper pattern for RSC→animation: AnimatedSection, AnimatedProfile, AnimatedList are 'use client' wrappers that accept RSC children — keeps data-fetching in RSCs and minimizes client boundary footprint"
+- "template.tsx (not layout.tsx) for page transitions — template remounts on every App Router navigation, giving AnimatePresence the key change it needs; layout persists (sidebar stays stable)"
+- "Animation constants centralized in src/lib/animation.ts — all variants, durations, easings, and viewport config shared across all surfaces for consistency"
+- "AnimatePresence imported from 'motion/react' (not 'motion/react-client') — motion v12 only exports HTML element factories from react-client; orchestration components like AnimatePresence live in the main react entrypoint"

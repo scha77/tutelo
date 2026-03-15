@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ConfirmedSessionCard } from '@/components/dashboard/ConfirmedSessionCard'
+import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 import { markSessionComplete } from '@/actions/bookings'
 
 export default async function SessionsPage() {
@@ -52,16 +53,17 @@ export default async function SessionsPage() {
         {upcomingBookings.length === 0 ? (
           <p className="text-sm text-muted-foreground">No upcoming sessions.</p>
         ) : (
-          <div className="space-y-3">
+          <AnimatedList className="space-y-3">
             {upcomingBookings.map((booking) => (
-              <ConfirmedSessionCard
-                key={booking.id}
-                booking={booking}
-                teacherTimezone={teacherTimezone}
-                markCompleteAction={markSessionComplete}
-              />
+              <AnimatedListItem key={booking.id}>
+                <ConfirmedSessionCard
+                  booking={booking}
+                  teacherTimezone={teacherTimezone}
+                  markCompleteAction={markSessionComplete}
+                />
+              </AnimatedListItem>
             ))}
-          </div>
+          </AnimatedList>
         )}
       </section>
 

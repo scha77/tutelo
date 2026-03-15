@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { toast } from 'sonner'
+import { AnimatedButton } from '@/components/shared/AnimatedButton'
 
 interface ConfirmedSessionCardProps {
   booking: {
@@ -67,13 +68,15 @@ export function ConfirmedSessionCard({
 
       {/* Mark Complete button */}
       <div className="mt-4">
-        <button
-          onClick={handleMarkComplete}
-          disabled={isPending}
-          className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isPending ? 'Capturing payment…' : 'Mark Complete'}
-        </button>
+        <AnimatedButton className="inline-block">
+          <button
+            onClick={handleMarkComplete}
+            disabled={isPending}
+            className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? 'Capturing payment…' : 'Mark Complete'}
+          </button>
+        </AnimatedButton>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { StatsBar } from '@/components/dashboard/StatsBar'
 import { ReviewPreviewCard } from '@/components/dashboard/ReviewPreviewCard'
+import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -94,9 +95,9 @@ export default async function DashboardPage() {
         {upcomingPreview.length === 0 ? (
           <p className="text-muted-foreground text-sm">No upcoming sessions.</p>
         ) : (
-          <ul className="space-y-2">
+          <AnimatedList className="space-y-2">
             {upcomingPreview.map((booking) => (
-              <li key={booking.id} className="rounded-lg border bg-card p-3 flex items-center gap-3">
+              <AnimatedListItem key={booking.id} className="rounded-lg border bg-card p-3 flex items-center gap-3">
                 <div>
                   <span className="font-medium text-foreground">{booking.student_name}</span>
                   <span className="text-sm text-muted-foreground ml-2">{booking.subject}</span>
@@ -104,9 +105,9 @@ export default async function DashboardPage() {
                 <span className="ml-auto text-sm text-muted-foreground">
                   {format(new Date(booking.booking_date), 'MMM d, yyyy')}
                 </span>
-              </li>
+              </AnimatedListItem>
             ))}
-          </ul>
+          </AnimatedList>
         )}
         <Link
           href="/dashboard/sessions"

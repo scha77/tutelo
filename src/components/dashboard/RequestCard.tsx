@@ -5,6 +5,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { AnimatedButton } from '@/components/shared/AnimatedButton'
 
 interface RequestCardProps {
   booking: {
@@ -88,13 +89,15 @@ export function RequestCard({
       {/* Accept / Decline buttons */}
       <div className="mt-4 flex items-center gap-2">
         {stripeConnected ? (
-          <button
-            onClick={handleAccept}
-            disabled={isPending}
-            className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPending && pendingAction === 'accept' ? 'Accepting…' : 'Accept'}
-          </button>
+          <AnimatedButton className="inline-block">
+            <button
+              onClick={handleAccept}
+              disabled={isPending}
+              className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending && pendingAction === 'accept' ? 'Accepting…' : 'Accept'}
+            </button>
+          </AnimatedButton>
         ) : (
           <Link
             href="/dashboard/connect-stripe"
@@ -103,13 +106,15 @@ export function RequestCard({
             Connect Stripe to confirm
           </Link>
         )}
-        <button
-          onClick={handleDecline}
-          disabled={isPending}
-          className="rounded-md border border-destructive px-4 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isPending && pendingAction === 'decline' ? 'Declining…' : 'Decline'}
-        </button>
+        <AnimatedButton className="inline-block">
+          <button
+            onClick={handleDecline}
+            disabled={isPending}
+            className="rounded-md border border-destructive px-4 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending && pendingAction === 'decline' ? 'Declining…' : 'Decline'}
+          </button>
+        </AnimatedButton>
       </div>
     </div>
   )

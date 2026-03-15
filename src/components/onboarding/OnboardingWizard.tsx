@@ -1,13 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
+import * as m from 'motion/react-client'
+import { AnimatePresence } from 'motion/react'
 import type { FullOnboardingData } from '@/lib/schemas/onboarding'
 import { FullOnboardingSchema } from '@/lib/schemas/onboarding'
 import { saveWizardStep, publishProfile } from '@/actions/onboarding'
+import { slideStep } from '@/lib/animation'
 import { WizardStep1 } from './WizardStep1'
 import { WizardStep2 } from './WizardStep2'
 import { WizardStep3 } from './WizardStep3'
@@ -32,6 +35,8 @@ export function OnboardingWizard({ initialStep, savedData, userId }: OnboardingW
     Math.max(1, Math.min(3, initialStep || 1))
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
+  /** 1 = forward (next), -1 = backward (back) */
+  const directionRef = useRef(1)
 
   const form = useForm<FullOnboardingData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,6 +77,7 @@ export function OnboardingWizard({ initialStep, savedData, userId }: OnboardingW
         toast.error(result.error)
         return
       }
+      directionRef.current = 1
       setCurrentStep((s) => s + 1)
     } finally {
       setIsSubmitting(false)
@@ -153,11 +159,22 @@ export function OnboardingWizard({ initialStep, savedData, userId }: OnboardingW
       {/* Form */}
       <FormProvider {...form}>
         <form onSubmit={(e) => e.preventDefault()}>
-          {currentStep === 1 && <WizardStep1 userId={userId} />}
-          {currentStep === 2 && <WizardStep2 />}
-          {currentStep === 3 && (
-            <WizardStep3 isSubmitting={isSubmitting} onPublish={handlePublish} />
-          )}
+          <AnimatePresence mode="wait" custom={directionRef.current}>
+            <m.div
+              key={currentStep}
+              custom={directionRef.current}
+              variants={slideStep}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {currentStep === 1 && <WizardStep1 userId={userId} />}
+              {currentStep === 2 && <WizardStep2 />}
+              {currentStep === 3 && (
+                <WizardStep3 isSubmitting={isSubmitting} onPublish={handlePublish} />
+              )}
+            </m.div>
+          </AnimatePresence>
 
           {/* Navigation buttons */}
           <div className="flex justify-between mt-8">
@@ -165,7 +182,10 @@ export function OnboardingWizard({ initialStep, savedData, userId }: OnboardingW
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCurrentStep((s) => s - 1)}
+                onClick={() => {
+                  directionRef.current = -1
+                  setCurrentStep((s) => s - 1)
+                }}
                 disabled={isSubmitting}
               >
                 Back

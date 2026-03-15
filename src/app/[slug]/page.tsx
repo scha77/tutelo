@@ -7,6 +7,7 @@ import { AboutSection } from '@/components/profile/AboutSection'
 import { BookingCalendar } from '@/components/profile/BookingCalendar'
 import { BookNowCTA } from '@/components/profile/BookNowCTA'
 import { ReviewsSection } from '@/components/profile/ReviewsSection'
+import { AnimatedProfile } from '@/components/profile/AnimatedProfile'
 import { submitBookingRequest } from '@/actions/bookings'
 
 // VIS-02: Graceful draft state — NOT a 404
@@ -109,9 +110,15 @@ export default async function TeacherProfilePage({
 
   return (
     <main style={{ '--accent': teacher.accent_color } as React.CSSProperties}>
-      <HeroSection teacher={teacher} />
-      <CredentialsBar teacher={teacher} />
-      <AboutSection teacher={teacher} />
+      <AnimatedProfile delay={0}>
+        <HeroSection teacher={teacher} />
+      </AnimatedProfile>
+      <AnimatedProfile delay={0.1}>
+        <CredentialsBar teacher={teacher} />
+      </AnimatedProfile>
+      <AnimatedProfile delay={0.15}>
+        <AboutSection teacher={teacher} />
+      </AnimatedProfile>
       <BookingCalendar
         slots={teacher.availability ?? []}
         teacherTimezone={teacher.timezone}
@@ -124,7 +131,9 @@ export default async function TeacherProfilePage({
         teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
       />
       <BookNowCTA />
-      <ReviewsSection reviews={reviews ?? []} />
+      <AnimatedProfile delay={0.2}>
+        <ReviewsSection reviews={reviews ?? []} />
+      </AnimatedProfile>
       <SocialLinks
         instagram={teacher.social_instagram}
         email={teacher.social_email}

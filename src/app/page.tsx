@@ -5,6 +5,7 @@ import { HowItWorksSection } from '@/components/landing/HowItWorksSection'
 import { ProblemSolutionSection } from '@/components/landing/ProblemSolutionSection'
 import { TeacherMockSection } from '@/components/landing/TeacherMockSection'
 import { CTASection } from '@/components/landing/CTASection'
+import { AnimatedSection } from '@/components/landing/AnimatedSection'
 
 export const metadata: Metadata = {
   title: 'Tutelo — Professional Tutoring Pages for Teachers',
@@ -23,11 +24,21 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <NavBar />
-      <HeroSection />
-      <HowItWorksSection />
-      <TeacherMockSection />
-      <ProblemSolutionSection />
-      <CTASection />
+      <AnimatedSection delay={0}>
+        <HeroSection />
+      </AnimatedSection>
+      <AnimatedSection>
+        <HowItWorksSection />
+      </AnimatedSection>
+      <AnimatedSection>
+        <TeacherMockSection />
+      </AnimatedSection>
+      <AnimatedSection>
+        <ProblemSolutionSection />
+      </AnimatedSection>
+      <AnimatedSection>
+        <CTASection />
+      </AnimatedSection>
     </div>
   )
 }
