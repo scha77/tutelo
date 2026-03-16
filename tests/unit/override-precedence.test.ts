@@ -41,13 +41,20 @@ describe('getSlotsForDate — override-wins-recurring precedence', () => {
 
     const result = getSlotsForDate(FUTURE_DATE, recurringSlots, TZ, TZ, [])
 
-    expect(result).toHaveLength(2)
-    expect(result[0].slotId).toBe('rec-1')
+    // 10:00–11:00 → 2 slots (10:00, 10:30), 14:00–15:00 → 2 slots (14:00, 14:30) = 4 total
+    expect(result).toHaveLength(4)
+    expect(result[0].slotId).toBe(`${FUTURE_DATE_STR}-10:00`)
     expect(result[0].startRaw).toBe('10:00')
-    expect(result[0].endRaw).toBe('11:00')
-    expect(result[1].slotId).toBe('rec-2')
-    expect(result[1].startRaw).toBe('14:00')
-    expect(result[1].endRaw).toBe('15:00')
+    expect(result[0].endRaw).toBe('10:30')
+    expect(result[1].slotId).toBe(`${FUTURE_DATE_STR}-10:30`)
+    expect(result[1].startRaw).toBe('10:30')
+    expect(result[1].endRaw).toBe('11:00')
+    expect(result[2].slotId).toBe(`${FUTURE_DATE_STR}-14:00`)
+    expect(result[2].startRaw).toBe('14:00')
+    expect(result[2].endRaw).toBe('14:30')
+    expect(result[3].slotId).toBe(`${FUTURE_DATE_STR}-14:30`)
+    expect(result[3].startRaw).toBe('14:30')
+    expect(result[3].endRaw).toBe('15:00')
   })
 
   it('override exists for date → returns only override slots, ignoring recurring', () => {
@@ -61,13 +68,17 @@ describe('getSlotsForDate — override-wins-recurring precedence', () => {
     const result = getSlotsForDate(FUTURE_DATE, recurringSlots, TZ, TZ, overrides)
 
     // Only override slots returned — recurring 10:00 and 14:00 are ignored
-    expect(result).toHaveLength(2)
+    // 09:00–09:30 → 1 slot (exactly 30 min), 16:00–17:00 → 2 slots (16:00, 16:30) = 3 total
+    expect(result).toHaveLength(3)
     expect(result[0].slotId).toBe(`${FUTURE_DATE_STR}-09:00`)
     expect(result[0].startRaw).toBe('09:00')
     expect(result[0].endRaw).toBe('09:30')
     expect(result[1].slotId).toBe(`${FUTURE_DATE_STR}-16:00`)
     expect(result[1].startRaw).toBe('16:00')
-    expect(result[1].endRaw).toBe('17:00')
+    expect(result[1].endRaw).toBe('16:30')
+    expect(result[2].slotId).toBe(`${FUTURE_DATE_STR}-16:30`)
+    expect(result[2].startRaw).toBe('16:30')
+    expect(result[2].endRaw).toBe('17:00')
   })
 
   it('override with zero usable windows for date → returns empty even if recurring exists', () => {
@@ -93,9 +104,12 @@ describe('getSlotsForDate — override-wins-recurring precedence', () => {
 
     const result = getSlotsForDate(FUTURE_DATE, recurringSlots, TZ, TZ, overrides)
 
-    expect(result).toHaveLength(2)
-    expect(result[0].slotId).toBe('rec-1')
-    expect(result[1].slotId).toBe('rec-2')
+    // Recurring 10:00–11:00 → 2 slots, 14:00–15:00 → 2 slots = 4 total
+    expect(result).toHaveLength(4)
+    expect(result[0].slotId).toBe(`${FUTURE_DATE_STR}-10:00`)
+    expect(result[1].slotId).toBe(`${FUTURE_DATE_STR}-10:30`)
+    expect(result[2].slotId).toBe(`${FUTURE_DATE_STR}-14:00`)
+    expect(result[3].slotId).toBe(`${FUTURE_DATE_STR}-14:30`)
   })
 
   it('override slots are sorted by startRaw', () => {
@@ -107,8 +121,12 @@ describe('getSlotsForDate — override-wins-recurring precedence', () => {
     ]
 
     const result = getSlotsForDate(FUTURE_DATE, recurringSlots, TZ, TZ, overrides)
+    // 09:00–10:00 → 2 slots, 16:00–17:00 → 2 slots = 4 total, sorted by startRaw
+    expect(result).toHaveLength(4)
     expect(result[0].startRaw).toBe('09:00')
-    expect(result[1].startRaw).toBe('16:00')
+    expect(result[1].startRaw).toBe('09:30')
+    expect(result[2].startRaw).toBe('16:00')
+    expect(result[3].startRaw).toBe('16:30')
   })
 
   it('day with no recurring slots and no overrides → empty array', () => {

@@ -101,3 +101,5 @@
 - "Select dropdowns grouped by hour for 288 time options — SelectGroup + SelectLabel headers ('8 AM', '9 AM') to improve usability over flat 288-item list"
 - "availability_overrides migration shipped in S01 (not S02) — additive table creation is zero-risk, gets schema work out of the way before editor work"
 - "Editor state is Map<number, {start_time, end_time}[]> — grouped by day_of_week, replacing the Set<string> toggle key pattern from the old 1-hour grid"
+- "computeSessionAmount extracted to src/lib/utils/booking.ts as pure function — decouples payment math from route handler for testability; create-intent imports it"
+- "Payment proration: create-intent computes amountInCents from (endTime - startTime) / 60 * hourlyRate * 100 — no longer assumes 1-hour sessions; 30-min slot costs half the hourly rate"

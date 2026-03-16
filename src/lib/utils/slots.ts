@@ -32,6 +32,61 @@ export interface TimeSlot {
   endRaw: string   // "HH:MM" — teacher-timezone time for DB storage
 }
 
+const SLOT_DURATION_MS = 30 * 60 * 1000 // 30 minutes in milliseconds
+
+/**
+ * Expand a single availability window into 30-minute booking increment slots.
+ *
+ * Pure function — all time arithmetic uses UTC epoch math via `toDate()`.
+ * Filters out past slots per 30-min increment (not per window).
+ * Windows shorter than 30 minutes produce an empty array (no crash).
+ *
+ * @param dateStr         "YYYY-MM-DD" date string
+ * @param startRaw        "HH:MM" start of the availability window (teacher timezone)
+ * @param endRaw          "HH:MM" end of the availability window (teacher timezone)
+ * @param now             Current time for past-slot filtering
+ * @param teacherTimezone IANA timezone of the teacher
+ * @param visitorTimezone IANA timezone of the visitor
+ */
+export function generateSlotsFromWindow(
+  dateStr: string,
+  startRaw: string,
+  endRaw: string,
+  now: Date,
+  teacherTimezone: string,
+  visitorTimezone: string
+): TimeSlot[] {
+  const windowStart = toDate(`${dateStr}T${startRaw}:00`, { timeZone: teacherTimezone })
+  const windowEnd = toDate(`${dateStr}T${endRaw}:00`, { timeZone: teacherTimezone })
+  const result: TimeSlot[] = []
+
+  let slotStart = windowStart.getTime()
+  const endMs = windowEnd.getTime()
+
+  while (slotStart + SLOT_DURATION_MS <= endMs) {
+    const slotStartDate = new Date(slotStart)
+    const slotEndDate = new Date(slotStart + SLOT_DURATION_MS)
+
+    // Filter out past slots per increment
+    if (slotStartDate > now) {
+      const slotStartRaw = formatInTimeZone(slotStartDate, teacherTimezone, 'HH:mm')
+      const slotEndRaw = formatInTimeZone(slotEndDate, teacherTimezone, 'HH:mm')
+
+      result.push({
+        slotId: `${dateStr}-${slotStartRaw}`,
+        startDisplay: formatInTimeZone(slotStartDate, visitorTimezone, 'h:mm a'),
+        endDisplay: formatInTimeZone(slotEndDate, visitorTimezone, 'h:mm a'),
+        startRaw: slotStartRaw,
+        endRaw: slotEndRaw,
+      })
+    }
+
+    slotStart += SLOT_DURATION_MS
+  }
+
+  return result
+}
+
 /**
  * Generate display time slots for a given date.
  *
@@ -41,6 +96,9 @@ export interface TimeSlot {
  * - If overrides match but the array of matching rows is empty after filtering,
  *   return [] (explicitly "no availability" for this date).
  * - Otherwise, fall back to recurring `slots` for this date's day-of-week.
+ *
+ * Each availability window is expanded into 30-minute booking increment slots
+ * via `generateSlotsFromWindow()`.
  *
  * @param date           The calendar date to generate slots for
  * @param slots          Recurring weekly availability slots
@@ -65,26 +123,17 @@ export function getSlotsForDate(
   const matchingOverrides = overrides.filter((o) => o.specific_date === dateStr)
 
   if (matchingOverrides.length > 0) {
-    // Override-wins: return only override-derived slots
+    // Override-wins: return only override-derived slots (expanded to 30-min increments)
     return matchingOverrides
       .flatMap((override) => {
         const startRaw = override.start_time.slice(0, 5)
         const endRaw = override.end_time.slice(0, 5)
-        const startDate = toDate(`${dateStr}T${startRaw}:00`, { timeZone: teacherTimezone })
-        if (startDate <= now) return [] // filter out past slots
-        const endDate = toDate(`${dateStr}T${endRaw}:00`, { timeZone: teacherTimezone })
-        return [{
-          slotId: `${dateStr}-${startRaw}`,
-          startDisplay: formatInTimeZone(startDate, visitorTimezone, 'h:mm a'),
-          endDisplay: formatInTimeZone(endDate, visitorTimezone, 'h:mm a'),
-          startRaw,
-          endRaw,
-        }]
+        return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone)
       })
       .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
   }
 
-  // No overrides for this date — fall back to recurring slots
+  // No overrides for this date — fall back to recurring slots (expanded to 30-min increments)
   const dayOfWeek = date.getDay()
   const matching = slots.filter((s) => s.day_of_week === dayOfWeek)
 
@@ -92,16 +141,7 @@ export function getSlotsForDate(
     .flatMap((slot) => {
       const startRaw = slot.start_time.slice(0, 5)
       const endRaw = slot.end_time.slice(0, 5)
-      const startDate = toDate(`${dateStr}T${startRaw}:00`, { timeZone: teacherTimezone })
-      if (startDate <= now) return [] // filter out past slots
-      const endDate = toDate(`${dateStr}T${endRaw}:00`, { timeZone: teacherTimezone })
-      return [{
-        slotId: slot.id,
-        startDisplay: formatInTimeZone(startDate, visitorTimezone, 'h:mm a'),
-        endDisplay: formatInTimeZone(endDate, visitorTimezone, 'h:mm a'),
-        startRaw,
-        endRaw,
-      }]
+      return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone)
     })
     .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
 }

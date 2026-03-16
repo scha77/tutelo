@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
+import { computeSessionAmount } from '@/lib/utils/booking'
 
 /**
  * POST /api/direct-booking/create-intent
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
 
   // 5. Create PaymentIntent with manual capture (authorize only — captured on session completion)
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-  const amountInCents = Math.round((teacher.hourly_rate ?? 0) * 100)
+  const amountInCents = computeSessionAmount(startTime, endTime, teacher.hourly_rate ?? 0)
 
   // Stripe minimum is 50 cents; guard against unset hourly_rate
   if (amountInCents < 50) {
