@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ConfirmedSessionCard } from '@/components/dashboard/ConfirmedSessionCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
-import { markSessionComplete } from '@/actions/bookings'
+import { markSessionComplete, cancelSession } from '@/actions/bookings'
 
 export default async function SessionsPage() {
   const supabase = await createClient()
@@ -60,6 +60,7 @@ export default async function SessionsPage() {
                   booking={booking}
                   teacherTimezone={teacherTimezone}
                   markCompleteAction={markSessionComplete}
+                  cancelSessionAction={cancelSession}
                 />
               </AnimatedListItem>
             ))}

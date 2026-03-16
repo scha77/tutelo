@@ -153,6 +153,61 @@ export async function markSessionComplete(
   return { success: true }
 }
 
+export async function cancelSession(
+  bookingId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient()
+
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const userId = claimsData?.claims?.sub
+  if (!userId) return { error: 'Not authenticated' }
+
+  const { data: teacher, error: teacherError } = await supabase
+    .from('teachers')
+    .select('id')
+    .eq('user_id', userId)
+    .single()
+
+  if (teacherError || !teacher) return { error: 'Teacher not found' }
+
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('id, stripe_payment_intent')
+    .eq('id', bookingId)
+    .eq('teacher_id', teacher.id)
+    .eq('status', 'confirmed')
+    .maybeSingle()
+
+  if (!booking) return { error: 'Booking not found or not in confirmed state' }
+
+  // Void the Stripe PaymentIntent if present (releases hold on parent's card)
+  if (booking.stripe_payment_intent) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+      await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
+    } catch (err) {
+      console.error(`[cancelSession] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
+      // Non-blocking: PI authorization will auto-expire; proceed with DB update
+    }
+  } else {
+    console.warn(`[cancelSession] Booking ${bookingId} has no stripe_payment_intent — skipping Stripe void`)
+  }
+
+  // Update booking status
+  await supabase
+    .from('bookings')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('id', bookingId)
+
+  // Send cancellation email to parent (and teacher) — fire and forget
+  const { sendCancellationEmail } = await import('@/lib/email')
+  sendCancellationEmail(bookingId).catch(console.error)
+
+  revalidatePath('/dashboard/sessions')
+  revalidatePath('/dashboard', 'layout')
+  return { success: true }
+}
+
 export async function declineBooking(
   bookingId: string
 ): Promise<{ success: true } | { error: string }> {

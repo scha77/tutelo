@@ -103,3 +103,6 @@
 - "Editor state is Map<number, {start_time, end_time}[]> — grouped by day_of_week, replacing the Set<string> toggle key pattern from the old 1-hour grid"
 - "computeSessionAmount extracted to src/lib/utils/booking.ts as pure function — decouples payment math from route handler for testability; create-intent imports it"
 - "Payment proration: create-intent computes amountInCents from (endTime - startTime) / 60 * hourlyRate * 100 — no longer assumes 1-hour sessions; 30-min slot costs half the hourly rate"
+- "cancelSession calls existing sendCancellationEmail (both parties emailed) rather than forking a parent-only variant — accepts teacher gets stale 'expired' copy until CancellationEmail gets a reason prop in a follow-up"
+- "cancelSession uses window.confirm for destructive action confirmation — lightweight, no extra component dependency; sufficient for MVP"
+- "Stripe PI cancel failure is non-blocking — try/catch logs error, DB still updates to cancelled; authorization auto-expires after 7 days as Stripe fallback"

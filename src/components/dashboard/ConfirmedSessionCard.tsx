@@ -16,28 +16,49 @@ interface ConfirmedSessionCardProps {
   }
   teacherTimezone: string
   markCompleteAction: (id: string) => Promise<{ success?: true; error?: string }>
+  cancelSessionAction: (id: string) => Promise<{ success?: true; error?: string }>
 }
 
 export function ConfirmedSessionCard({
   booking,
   teacherTimezone,
   markCompleteAction,
+  cancelSessionAction,
 }: ConfirmedSessionCardProps) {
-  const [isPending, startTransition] = useTransition()
+  const [isCompletePending, startCompleteTransition] = useTransition()
+  const [isCancelPending, startCancelTransition] = useTransition()
   const [, setDone] = useState(false)
+
+  const anyPending = isCompletePending || isCancelPending
 
   // Format booking date/time in teacher's timezone
   const dt = new Date(`${booking.booking_date}T${booking.start_time.slice(0, 5)}`)
   const formattedDateTime = formatInTimeZone(dt, teacherTimezone, "EEE, MMM d · h:mm a")
 
   function handleMarkComplete() {
-    startTransition(async () => {
+    startCompleteTransition(async () => {
       const result = await markCompleteAction(booking.id)
       if (result.error) {
         toast.error(`Failed to mark complete: ${result.error}`)
       } else {
         setDone(true)
         toast.success('Session marked complete — payment captured!')
+      }
+    })
+  }
+
+  function handleCancelSession() {
+    const confirmed = window.confirm(
+      'Cancel this session? The parent will be notified and the payment authorization will be released.'
+    )
+    if (!confirmed) return
+
+    startCancelTransition(async () => {
+      const result = await cancelSessionAction(booking.id)
+      if (result.error) {
+        toast.error(`Failed to cancel: ${result.error}`)
+      } else {
+        toast.success('Session cancelled — parent notified')
       }
     })
   }
@@ -66,15 +87,24 @@ export function ConfirmedSessionCard({
         {booking.parent_email}
       </a>
 
-      {/* Mark Complete button */}
-      <div className="mt-4">
+      {/* Action buttons */}
+      <div className="mt-4 flex items-center gap-2">
         <AnimatedButton className="inline-block">
           <button
             onClick={handleMarkComplete}
-            disabled={isPending}
+            disabled={anyPending}
             className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? 'Capturing payment…' : 'Mark Complete'}
+            {isCompletePending ? 'Capturing payment…' : 'Mark Complete'}
+          </button>
+        </AnimatedButton>
+        <AnimatedButton className="inline-block">
+          <button
+            onClick={handleCancelSession}
+            disabled={anyPending}
+            className="rounded-md border border-red-300 bg-transparent px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCancelPending ? 'Cancelling…' : 'Cancel Session'}
           </button>
         </AnimatedButton>
       </div>

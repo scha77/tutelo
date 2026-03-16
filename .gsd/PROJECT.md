@@ -14,7 +14,8 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
-- All 76 requirements validated (59 MVP from M001/M002 + 17 polish from M003)
+- All 81 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004)
+- **Availability & Scheduling Overhaul (M004):** 5-minute granularity recurring editor, per-date override scheduling, override-wins-recurring precedence on booking calendar, 30-min booking slot expansion, duration-prorated payments, one-click session cancellation with email notification
 - Branded marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, interactive teacher mock, and CTA
 - Animation system (motion v12.36.0) active across 6 surfaces: landing scroll reveals, page transitions, onboarding step slides, dashboard card staggers, profile section fades, button micro-interactions
 - Mobile dashboard with bottom tab bar (7 tabs) and header with logo
@@ -23,9 +24,15 @@ Tagline: "Shopify for teacher side hustles."
 - Brand identity applied globally (#3b4d3e sage green, #f6f5f0 warm off-white, Tutelo logo in all nav surfaces)
 - Stripe in test mode — switch to live keys before real payments
 - Crons running daily (Vercel Hobby plan)
-- M003 code ready; production deploy pending (push to git remote or `vercel deploy --prod`)
+- M004 code ready; production deploy pending (push to git remote or `vercel deploy --prod`)
 
 See `LAUNCH.md` for production environment documentation.
+
+## Key Utilities (M004+)
+
+- `src/lib/utils/time.ts` — `generate5MinOptions()`, `formatTimeLabel()`, `validateNoOverlap()` — pure time utilities for availability editor
+- `src/lib/utils/slots.ts` — `getSlotsForDate()`, `generateSlotsFromWindow()` — override-wins-recurring precedence, 30-min slot expansion
+- `src/lib/utils/booking.ts` — `computeSessionAmount()` — duration-prorated payment calculation
 
 ## Architecture / Key Patterns
 
@@ -33,7 +40,7 @@ See `LAUNCH.md` for production environment documentation.
 - **Auth:** Supabase Auth (Google SSO + email/password). `getUser()` for verified identity checks. `getClaims()` unreliable on POST re-renders in Next.js 16.
 - **Protected routes:** API route handlers (not server actions + redirect()) for any action needing cookies under the dashboard layout — Next.js 16 server-action auth bug.
 - **Proxy:** `src/proxy.ts` handles token refresh only, no auth redirects. `middleware.ts` is a re-export shim.
-- **Availability:** `TIME` columns (no tz) in `availability` table, interpreted relative to `teachers.timezone`. Recurring weekly, 1-hour blocks currently.
+- **Availability:** `TIME` columns (no tz) in `availability` table, interpreted relative to `teachers.timezone`. Recurring weekly with 5-min granularity time ranges. Per-date overrides in `availability_overrides` table with override-wins-recurring precedence. Booking calendar shows 30-min slots within availability windows. Duration-prorated payments via `computeSessionAmount()`.
 - **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`. New signups auto-populate social_email.
 - **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations.
 - **Animations:** Shared constants in `src/lib/animation.ts`. Thin animated wrapper pattern (AnimatedSection, AnimatedProfile, AnimatedList, AnimatedButton) keeps RSC data-fetching separate from client animation shells. Page transitions via `template.tsx` + `PageTransition` component.
@@ -55,8 +62,8 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M001:** Migration — All 59 requirements implemented and validated with 105 passing tests
 - [x] **M002:** Production Launch — Deployed to tutelo.app; all flows verified end-to-end on live URL
 - [x] **M003:** Landing Page & Polish — Marketing landing page, brand identity, UI animations, mobile dashboard, OG tags, social_email fix
-- [ ] **M004:** Availability & Scheduling Overhaul — 5-min granularity, per-date overrides, weeks-in-advance planning, redesigned editor, last-minute cancellation
+- [x] **M004:** Availability & Scheduling Overhaul — 5-min granularity, per-date overrides, weeks-in-advance planning, redesigned editor, last-minute cancellation
 - [ ] **M005:** Trust & Communication — Teacher verification system, SMS notifications, SMS cancellation alerts
 
 ---
-*Last updated: 2026-03-11 after M003 completion*
+*Last updated: 2026-03-11 after M004 completion*

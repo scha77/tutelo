@@ -678,61 +678,61 @@ Review prompt is delivered via email after session completion
 ### AVAIL-04 — 5-minute granularity for availability slots
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Teachers can set availability in 5-minute increments instead of 1-hour blocks.
 - Why it matters: Teachers with tight schedules need precise control over their available windows.
 - Source: user
-- Primary owning slice: M004
-- Supporting slices: none
-- Validation: unmapped
+- Primary owning slice: M004/S01
+- Supporting slices: M004/S03
+- Validated by: M004 — generate5MinOptions() produces 288 HH:MM values; AvailabilityEditor rewritten with 5-min Select dropdowns; 25 unit tests pass; browser-verified save round-trip
 - Notes: Requires DB schema change and migration of existing availability data.
 
 ### AVAIL-05 — Per-date availability overrides (not just recurring weekly)
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Teachers can set availability for specific dates, overriding their recurring weekly pattern.
 - Why it matters: Real life isn't perfectly recurring — teachers have school events, holidays, personal commitments.
 - Source: user
-- Primary owning slice: M004
-- Supporting slices: none
-- Validation: unmapped
+- Primary owning slice: M004/S02
+- Supporting slices: M004/S03
+- Validated by: M004 — availability_overrides table (migration 0007), saveOverrides/deleteOverridesForDate server actions, Specific Dates tab with Calendar date picker, override-wins-recurring precedence in getSlotsForDate (6 unit tests)
 - Notes: New table or column needed. Current schema is purely recurring weekly.
 
 ### AVAIL-06 — Teachers can set availability weeks in advance
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Teachers can plan and publish their availability multiple weeks ahead to enable advance booking.
 - Why it matters: Parents want to book ahead. Teachers want to plan their tutoring schedule alongside their school schedule.
 - Source: user
-- Primary owning slice: M004
+- Primary owning slice: M004/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validated by: M004 — Per-date overrides enable weeks-in-advance planning; Calendar date picker allows selecting any future date; override query fetches 90 days ahead; booking calendar supports future month navigation
 - Notes: Related to AVAIL-05 — per-date overrides enable week-by-week planning.
 
 ### AVAIL-07 — Redesigned availability editor with intuitive UX
 
 - Class: quality-attribute
-- Status: deferred
+- Status: validated
 - Description: The availability editor is rebuilt to be super intuitive — easy to navigate, fast to set hours, visually clear.
 - Why it matters: Current editor is a basic grid of 1-hour blocks. Needs to support 5-min granularity without being overwhelming.
 - Source: user
-- Primary owning slice: M004
-- Supporting slices: none
-- Validation: unmapped
+- Primary owning slice: M004/S01
+- Supporting slices: M004/S02
+- Validated by: M004 — Complete rewrite of AvailabilityEditor with per-day time-range pickers, Radix Tabs shell (Weekly Schedule + Specific Dates), hour-grouped Select dropdowns, client-side overlap validation, toast feedback; browser-verified
 - Notes: Must support both recurring weekly and per-date override workflows.
 
 ### CANCEL-01 — Teacher can send last-minute cancellation notification to parent (email)
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Teacher can trigger an immediate cancellation notification to the parent via email when they can't make a session.
 - Why it matters: Life happens. Teachers need a fast, one-tap way to notify parents of cancellations.
 - Source: user
-- Primary owning slice: M004
+- Primary owning slice: M004/S04
 - Supporting slices: none
-- Validation: unmapped
+- Validated by: M004 — cancelSession server action with Stripe PI void + sendCancellationEmail dispatch (8 unit tests); Cancel Session button on ConfirmedSessionCard with confirmation dialog and toast feedback
 - Notes: Email-only in M004. SMS added in M005.
 
 ### VERIFY-01 — Teacher identity verification system
@@ -806,11 +806,11 @@ Review prompt is delivered via email after session completion
 | SEO-01 | differentiator | validated | M003/S04 | none | M003 — generateMetadata + OG image route |
 | SEO-02 | launchability | validated | M003/S01 | none | M003 — landing page OG tags |
 | FIX-01 | continuity | validated | M003/S04 | none | M003 — social_email from getUser() |
-| AVAIL-04 | core-capability | deferred | M004 | none | unmapped |
-| AVAIL-05 | core-capability | deferred | M004 | none | unmapped |
-| AVAIL-06 | core-capability | deferred | M004 | none | unmapped |
-| AVAIL-07 | quality-attribute | deferred | M004 | none | unmapped |
-| CANCEL-01 | core-capability | deferred | M004 | none | unmapped |
+| AVAIL-04 | core-capability | validated | M004/S01 | M004/S03 | M004 — 5-min editor + 25 tests |
+| AVAIL-05 | core-capability | validated | M004/S02 | M004/S03 | M004 — overrides table + precedence logic |
+| AVAIL-06 | core-capability | validated | M004/S02 | none | M004 — per-date overrides + 90-day window |
+| AVAIL-07 | quality-attribute | validated | M004/S01 | M004/S02 | M004 — editor rewrite + Tabs shell |
+| CANCEL-01 | core-capability | validated | M004/S04 | none | M004 — cancelSession + 8 tests |
 | VERIFY-01 | differentiator | deferred | M005 | none | unmapped |
 | SMS-01 | core-capability | deferred | M005 | none | unmapped |
 | SMS-02 | core-capability | deferred | M005 | none | unmapped |
@@ -819,6 +819,6 @@ Review prompt is delivered via email after session completion
 ## Coverage Summary
 
 - Active requirements: 0
-- Validated: 76 (59 from M001/M002 + 17 from M003)
-- Deferred: 9 (M004: 5, M005: 4)
+- Validated: 81 (59 from M001/M002 + 17 from M003 + 5 from M004)
+- Deferred: 4 (M005: 4)
 - Unmapped active requirements: 0

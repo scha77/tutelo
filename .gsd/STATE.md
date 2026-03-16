@@ -1,8 +1,8 @@
 # GSD State
 
 **Active Milestone:** M004 — Availability & Scheduling Overhaul
-**Active Slice:** S04 — Last-Minute Session Cancellation
-**Phase:** planning
+**Active Slice:** None
+**Phase:** completing-milestone
 **Requirements Status:** 0 active · 76 validated · 9 deferred · 0 out of scope
 
 ## Milestone Registry
@@ -19,4 +19,4 @@
 - None
 
 ## Next Action
-Plan slice S04 (Last-Minute Session Cancellation).
+All slices complete in M004. Write milestone summary.

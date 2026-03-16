@@ -69,7 +69,7 @@ This milestone is complete only when all are true:
   > After this: A teacher can switch to a "Specific Dates" tab in the editor, pick a future date, set custom time ranges for that date, and save. The teacher's public profile page shows override availability for that date instead of the recurring pattern.
 - [x] **S03: Booking Calendar Integration** `risk:medium` `depends:[S01,S02]`
   > After this: A parent viewing a teacher's page sees bookable time slots that reflect both recurring availability and per-date overrides with correct precedence — override wins for dates where overrides exist.
-- [ ] **S04: Last-Minute Session Cancellation** `risk:low` `depends:[]`
+- [x] **S04: Last-Minute Session Cancellation** `risk:low` `depends:[]`
   > After this: A teacher can click "Cancel Session" on a confirmed session card in their dashboard, which cancels the booking and sends an immediate cancellation email to the parent.
 
 ## Boundary Map
