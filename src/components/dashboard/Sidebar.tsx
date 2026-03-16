@@ -3,25 +3,16 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, Inbox, CalendarCheck, Users, FileText, Calendar, Settings, LayoutDashboard, LogOut } from 'lucide-react'
+import { ExternalLink, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/actions/auth'
+import { navItems, isActivePath } from '@/lib/nav'
 
 interface SidebarProps {
   teacherName: string
   teacherSlug: string
   pendingCount: number
 }
-
-const navItems = [
-  { href: '/dashboard',              label: 'Overview',     icon: LayoutDashboard },
-  { href: '/dashboard/requests',     label: 'Requests',     icon: Inbox           },
-  { href: '/dashboard/sessions',     label: 'Sessions',     icon: CalendarCheck   },
-  { href: '/dashboard/students',     label: 'Students',     icon: Users           },
-  { href: '/dashboard/page',         label: 'Page',         icon: FileText        },
-  { href: '/dashboard/availability', label: 'Availability', icon: Calendar        },
-  { href: '/dashboard/settings',     label: 'Settings',     icon: Settings        },
-]
 
 export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps) {
   const pathname = usePathname()
@@ -56,9 +47,7 @@ export function Sidebar({ teacherName, teacherSlug, pendingCount }: SidebarProps
       <nav className="flex-1 p-3">
         <ul className="space-y-1">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname === href || pathname.startsWith(href + '/')
+            const isActive = isActivePath(pathname, href)
             return (
               <li key={href}>
                 <Link

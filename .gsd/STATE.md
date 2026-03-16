@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M003 — Landing Page & Polish
-**Active Slice:** S03 — Mobile Dashboard & Responsive Polish
+**Active Slice:** S04 — OG Tags, Email Fix & Deploy
 **Phase:** planning
 **Requirements Status:** 17 active · 59 validated · 9 deferred · 0 out of scope
 
@@ -19,4 +19,4 @@
 - None
 
 ## Next Action
-Plan slice S03 (Mobile Dashboard & Responsive Polish).
+Plan slice S04 (OG Tags, Email Fix & Deploy).

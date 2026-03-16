@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { MobileHeader } from '@/components/dashboard/MobileHeader'
+import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
 
 export default async function DashboardLayout({
   children,
@@ -46,7 +48,14 @@ export default async function DashboardLayout({
         teacherSlug={teacher.slug}
         pendingCount={pending}
       />
-      <main className="flex-1 overflow-auto">
+
+      {/* Mobile header — fixed top bar, hidden on desktop */}
+      <MobileHeader
+        teacherName={teacher.full_name}
+        teacherSlug={teacher.slug}
+      />
+
+      <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
         {!teacher.stripe_charges_enabled && (
           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
             <p className="text-sm text-amber-800 font-medium">
@@ -64,6 +73,9 @@ export default async function DashboardLayout({
         )}
         {children}
       </main>
+
+      {/* Mobile bottom nav — fixed bottom bar, hidden on desktop */}
+      <MobileBottomNav pendingCount={pending} />
     </div>
   )
 }

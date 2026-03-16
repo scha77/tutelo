@@ -61,7 +61,7 @@ This milestone is complete only when all are true:
 - [x] **S02: Animation System & App-Wide Polish** `risk:medium` `depends:[S01]`
   > After this: Navigate the app and see smooth animations everywhere — landing page scroll reveals, page transitions, onboarding step slides, dashboard card animations, profile section fades, and micro-interactions on buttons/toggles/forms.
 
-- [ ] **S03: Mobile Dashboard & Responsive Polish** `risk:low` `depends:[S01]`
+- [x] **S03: Mobile Dashboard & Responsive Polish** `risk:low` `depends:[S01]`
   > After this: Open the dashboard on a phone-sized viewport and navigate via a bottom tab bar. All dashboard pages accessible. Logo visible in mobile header.
 
 - [ ] **S04: OG Tags, Email Fix & Deploy** `risk:low` `depends:[S01,S02,S03]`

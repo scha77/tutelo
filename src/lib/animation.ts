@@ -113,6 +113,17 @@ export const slideStep: Variants = {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Slide from bottom — slideFromBottom                                */
+/* ------------------------------------------------------------------ */
+
+/** Slide + fade from below — used for mobile bottom nav entrance. */
+export const slideFromBottom = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { ...fastTransition },
+} as const
+
+/* ------------------------------------------------------------------ */
 /*  Micro-interactions — microPress                                    */
 /* ------------------------------------------------------------------ */
 

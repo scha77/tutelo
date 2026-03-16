@@ -85,3 +85,6 @@
 - "template.tsx (not layout.tsx) for page transitions — template remounts on every App Router navigation, giving AnimatePresence the key change it needs; layout persists (sidebar stays stable)"
 - "Animation constants centralized in src/lib/animation.ts — all variants, durations, easings, and viewport config shared across all surfaces for consistency"
 - "AnimatePresence imported from 'motion/react' (not 'motion/react-client') — motion v12 only exports HTML element factories from react-client; orchestration components like AnimatePresence live in the main react entrypoint"
+- "navItems extracted to src/lib/nav.ts (shared between Sidebar and MobileBottomNav) — single source of truth prevents nav item drift between desktop and mobile"
+- "MobileBottomNav uses icon-only layout for all 7 tabs at 375px — ~53px per tab is tight but workable; labels omitted to prevent overflow"
+- "MobileHeader is a separate component from MobileBottomNav — header shows logo+name (top), nav shows tabs (bottom); cleaner separation than combining into one component"
