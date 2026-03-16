@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Instagram, Mail, Globe } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -9,6 +10,54 @@ import { BookNowCTA } from '@/components/profile/BookNowCTA'
 import { ReviewsSection } from '@/components/profile/ReviewsSection'
 import { AnimatedProfile } from '@/components/profile/AnimatedProfile'
 import { submitBookingRequest } from '@/actions/bookings'
+
+// SEO-01: Dynamic OG metadata for teacher profile pages
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+
+  const supabase = await createClient()
+  const { data: teacher } = await supabase
+    .from('teachers')
+    .select('full_name, subjects, school, city, state, photo_url')
+    .eq('slug', slug)
+    .single()
+
+  if (!teacher) {
+    return {
+      title: 'Tutelo',
+      description:
+        'Tutelo helps classroom teachers launch professional tutoring pages in minutes — manage bookings, share your link, and grow your practice.',
+    }
+  }
+
+  const subjectList = teacher.subjects?.length
+    ? teacher.subjects.join(', ')
+    : 'various subjects'
+  const locationParts = [teacher.city, teacher.state].filter(Boolean)
+  const location = locationParts.length ? ` in ${locationParts.join(', ')}` : ''
+
+  const title = `${teacher.full_name} — Tutoring on Tutelo`
+  const description = `Book tutoring sessions with ${teacher.full_name} for ${subjectList}${location}. ${teacher.school ? `Teacher at ${teacher.school}. ` : ''}Schedule easily on Tutelo.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  }
+}
 
 // VIS-02: Graceful draft state — NOT a 404
 function DraftPage() {

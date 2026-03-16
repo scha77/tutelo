@@ -64,7 +64,7 @@ This milestone is complete only when all are true:
 - [x] **S03: Mobile Dashboard & Responsive Polish** `risk:low` `depends:[S01]`
   > After this: Open the dashboard on a phone-sized viewport and navigate via a bottom tab bar. All dashboard pages accessible. Logo visible in mobile header.
 
-- [ ] **S04: OG Tags, Email Fix & Deploy** `risk:low` `depends:[S01,S02,S03]`
+- [x] **S04: OG Tags, Email Fix & Deploy** `risk:low` `depends:[S01,S02,S03]`
   > After this: Share a teacher's tutelo.app/ms-johnson link and see a personalized preview. Sign up as a new teacher and social_email is auto-populated. Everything deployed to production.
 
 ## Boundary Map

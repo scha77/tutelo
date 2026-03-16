@@ -35,12 +35,27 @@ export async function saveWizardStep(
     const slug = data.full_name
       ? await findUniqueSlug(data.full_name, supabase)
       : 'teacher'
+
+    // Auto-populate social_email from auth email so new teachers receive
+    // booking notifications even if they never visit Page Settings.
+    // Works for both email/password and Google OAuth signup.
+    let authEmail: string | null = null
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      authEmail = userData?.user?.email ?? null
+    } catch {
+      // getUser() failure is non-critical — fall back to null (same as prior behavior)
+    }
+
     const { error } = await supabase.from('teachers').insert({
       user_id: userId,
       slug,
       full_name: data.full_name ?? '',
       wizard_step: step,
       ...data,
+      // Auto-set social_email from auth email (social_email is not in FullOnboardingData,
+      // so it won't come from the wizard — auth email is always the right default here)
+      social_email: authEmail,
     })
     if (error) return { error: error.message }
   } else {

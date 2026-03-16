@@ -88,3 +88,6 @@
 - "navItems extracted to src/lib/nav.ts (shared between Sidebar and MobileBottomNav) — single source of truth prevents nav item drift between desktop and mobile"
 - "MobileBottomNav uses icon-only layout for all 7 tabs at 375px — ~53px per tab is tight but workable; labels omitted to prevent overflow"
 - "MobileHeader is a separate component from MobileBottomNav — header shows logo+name (top), nav shows tabs (bottom); cleaner separation than combining into one component"
+- "opengraph-image.tsx uses direct @supabase/supabase-js createClient (not server.ts createClient) — edge runtime cannot access cookies() from next/headers; anonymous public read is sufficient for OG image generation"
+- "generateMetadata() in [slug]/page.tsx shares the same Supabase query pattern as the page component — Next.js deduplicates within the same request lifecycle; no caching optimization needed"
+- "social_email auto-population uses getUser() not getClaims() — getUser() makes verified API call, works for both email/password and Google OAuth, consistent with dashboard layout auth pattern"

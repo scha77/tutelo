@@ -2,211 +2,145 @@
 
 ## Active
 
+(No active requirements — all M003 requirements validated.)
+
+## Validated
+
 ### LAND-01 — Marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, and CTA
 
 - Class: launchability
-- Status: active
-- Description: Replace the Next.js default page with a polished marketing landing page. Sections: hero (professional identity + zero risk messaging), how-it-works (3-step visual), problem/solution contrast (Venmo/texting chaos vs. Tutelo), and a prominent CTA.
-- Why it matters: The homepage is the first thing anyone sees. Currently shows "To get started, edit the page.tsx file."
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: Teacher-only audience. Parents arrive via teacher slug links.
+- Primary Slice: M003/S01
+- Validated by: M003 — landing page built with 6 section components; npm run build passes
 
 ### LAND-02 — Interactive teacher page mock/preview on landing page
 
 - Class: differentiator
-- Status: active
-- Description: An animated mock of a teacher's public page visible on the landing page, showing visitors what the product looks like before they sign up.
-- Why it matters: Seeing the real product is the strongest conversion signal — "this is what I'll get."
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: Should be interactive/animated, not a static screenshot.
+- Primary Slice: M003/S01
+- Validated by: M003 — TeacherMockSection is 'use client' with interactive hover/transition effects
 
 ### LAND-03 — "Start your page" CTA links to signup flow
 
 - Class: primary-user-loop
-- Status: active
-- Description: The main call-to-action on the landing page is "Start your page" and links directly to the signup/onboarding flow.
-- Why it matters: Shortest path to value — teacher creates their page immediately.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S01
+- Validated by: M003 — CTA in HeroSection and CTASection links to /login
 
 ### LAND-04 — Landing page uses brand identity (#3b4d3e primary, #f6f5f0 secondary, Tutelo logo)
 
 - Class: quality-attribute
-- Status: active
-- Description: Landing page uses the established Tutelo brand palette: primary sage green #3b4d3e, secondary warm off-white #f6f5f0, and the Tutelo "T" logo.
-- Why it matters: Brand coherence from first impression.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: Logo file at public/logo.png
+- Primary Slice: M003/S01
+- Validated by: M003 — Brand CSS custom properties in globals.css; logo in NavBar, Sidebar, MobileHeader
 
 ### LAND-05 — Landing page highlights shareable slug links as key value prop
 
 - Class: differentiator
-- Status: active
-- Description: The landing page explicitly showcases the shareable tutelo.app/ms-johnson URL as a core feature — mentioning it can be placed in emails, newsletters, social bios, etc.
-- Why it matters: The vanity URL is a key differentiator vs. marketplaces. Teachers need to see this upfront.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S01
+- Validated by: M003 — Slug URL showcased in HeroSection, ProblemSolutionSection, TeacherMockSection, CTASection
 
 ### ANIM-01 — Smooth scroll-triggered section reveals on landing page
 
 - Class: quality-attribute
-- Status: active
-- Description: Landing page sections fade in and slide up as the user scrolls, creating a modern, alive feel.
-- Why it matters: Subtle animations make the page feel polished and professional without being distracting.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: M003/S01
-- Validation: mapped
-- Notes: Framer Motion. Style: subtle & smooth.
+- Primary Slice: M003/S02
+- Validated by: M003 — AnimatedSection wrapper with fadeSlideUp + whileInView viewport once on all 5 sections
 
 ### ANIM-02 — Animated page transitions between routes
 
 - Class: quality-attribute
-- Status: active
-- Description: Smooth transitions when navigating between pages (dashboard, onboarding, profile).
-- Why it matters: Eliminates jarring page flashes; makes the app feel like a native application.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: Must not break Next.js routing or SSR.
+- Primary Slice: M003/S02
+- Validated by: M003 — PageTransition + template.tsx at root and dashboard levels with pageFade variant
 
 ### ANIM-03 — Onboarding wizard step transitions
 
 - Class: quality-attribute
-- Status: active
-- Description: Slide/fade transitions between the 3 onboarding wizard steps.
-- Why it matters: Onboarding is the first interactive experience — smooth steps feel guided and professional.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S02
+- Validated by: M003 — OnboardingWizard uses AnimatePresence + slideStep with directionRef
 
 ### ANIM-04 — Dashboard card and list animations
 
 - Class: quality-attribute
-- Status: active
-- Description: Dashboard cards, lists, and status changes animate smoothly (staggered enters, booking accept/decline transitions).
-- Why it matters: Makes the dashboard feel responsive and alive instead of static page loads.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S02
+- Validated by: M003 — AnimatedList/AnimatedListItem on dashboard pages; StatsBar stagger animation
 
 ### ANIM-05 — Teacher profile /[slug] page section entrance animations
 
 - Class: quality-attribute
-- Status: active
-- Description: Sections on the public teacher profile page animate in on load for a polished first impression.
-- Why it matters: This is what parents see — it needs to feel professional and trustworthy.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S02
+- Validated by: M003 — AnimatedProfile wrapper on hero, credentials, about, reviews with sequential delays
 
 ### ANIM-06 — Micro-interactions: button hovers, toggle animations, form focus states
 
 - Class: quality-attribute
-- Status: active
-- Description: Small animation details throughout: button hover/press effects, toggle switches, form field focus transitions.
-- Why it matters: The cumulative effect of micro-interactions is what makes an app feel "modern."
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: Should be subtle — not distracting or bouncy.
+- Primary Slice: M003/S02
+- Validated by: M003 — AnimatedButton wrapper with microPress on landing CTAs and dashboard action buttons
 
 ### MOBILE-01 — Mobile bottom navigation bar replacing hidden sidebar on dashboard
 
 - Class: core-capability
-- Status: active
-- Description: On mobile viewports, replace the hidden desktop sidebar with a thumb-friendly bottom tab bar for dashboard navigation.
-- Why it matters: Dashboard is currently desktop-only. Teachers will use their phones.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S03
-- Supporting slices: none
-- Validation: mapped
-- Notes: App-like feel. Bottom nav is the standard mobile pattern.
+- Primary Slice: M003/S03
+- Validated by: M003 — MobileBottomNav with 7 icon-only tabs + sign out verified at 375px/390px viewports
 
 ### BRAND-01 — Global brand palette applied to app
 
 - Class: quality-attribute
-- Status: active
-- Description: Primary #3b4d3e (sage green), secondary #f6f5f0 (warm off-white), and derived accent tones applied to the global stylesheet, UI components, and all key surfaces.
-- Why it matters: Cohesive visual identity across the entire product.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: M003/S02, M003/S03
-- Validation: mapped
-- Notes: Must not break teacher accent color customization on their profile pages.
+- Primary Slice: M003/S01
+- Validated by: M003 — --primary=#3b4d3e in :root; --accent untouched; teacher accent_color still applied on [slug] page
 
 ### BRAND-02 — Tutelo logo integrated into navigation/header across the app
 
 - Class: quality-attribute
-- Status: active
-- Description: The Tutelo "T" logo appears in the app navigation — landing page header, dashboard sidebar, and any other nav surfaces.
-- Why it matters: Brand recognition and professional identity.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S01
-- Supporting slices: M003/S03
-- Validation: mapped
-- Notes: Logo at public/logo.png (4000x4000 PNG).
+- Primary Slice: M003/S01
+- Validated by: M003 — Logo in NavBar (landing), Sidebar (desktop), MobileHeader (mobile)
 
 ### SEO-01 — Dynamic OG meta tags on teacher /[slug] pages
 
 - Class: differentiator
-- Status: active
-- Description: Each teacher's public page generates dynamic Open Graph tags: teacher name, photo, subjects, school — so links shared on social media or in emails show a personalized preview.
-- Why it matters: Teachers sharing their links in newsletters, emails, and social will get rich previews instead of generic Tutelo branding.
+- Status: validated
 - Source: user
-- Primary owning slice: M003/S04
-- Supporting slices: none
-- Validation: mapped
-- Notes: Use Next.js generateMetadata().
+- Primary Slice: M003/S04
+- Validated by: M003 — generateMetadata() + opengraph-image.tsx; 4 unit tests pass
 
 ### SEO-02 — Proper OG meta tags on landing page
 
 - Class: launchability
-- Status: active
-- Description: The landing page at tutelo.app/ has proper Open Graph tags (title, description, brand image) for social sharing.
-- Why it matters: When the URL is shared, it should show a professional preview.
+- Status: validated
 - Source: inferred
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: none
+- Primary Slice: M003/S01
+- Validated by: M003 — Landing page metadata export with openGraph title, description, type, image
 
 ### FIX-01 — Auto-populate social_email from signup email
 
 - Class: continuity
-- Status: active
-- Description: When a teacher signs up, auto-set social_email to their auth email so booking notifications work by default. Teacher can change it later in settings.
-- Why it matters: Currently teachers who complete onboarding but never visit Page settings silently miss all booking notification emails.
+- Status: validated
 - Source: execution
-- Primary owning slice: M003/S04
-- Supporting slices: none
-- Validation: mapped
-- Notes: Surfaced as candidate ONBOARD-08 during M002. Zero-friction fix.
-
-## Validated
+- Primary Slice: M003/S04
+- Validated by: M003 — saveWizardStep INSERT sets social_email from getUser().email; 5 unit tests pass
 
 ### AUTH-01 — Teacher or parent can sign up with email + password or Google SSO
 
@@ -855,23 +789,23 @@ Review prompt is delivered via email after session completion
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| LAND-01 | launchability | active | M003/S01 | none | mapped |
-| LAND-02 | differentiator | active | M003/S01 | none | mapped |
-| LAND-03 | primary-user-loop | active | M003/S01 | none | mapped |
-| LAND-04 | quality-attribute | active | M003/S01 | none | mapped |
-| LAND-05 | differentiator | active | M003/S01 | none | mapped |
-| ANIM-01 | quality-attribute | active | M003/S02 | M003/S01 | mapped |
-| ANIM-02 | quality-attribute | active | M003/S02 | none | mapped |
-| ANIM-03 | quality-attribute | active | M003/S02 | none | mapped |
-| ANIM-04 | quality-attribute | active | M003/S02 | none | mapped |
-| ANIM-05 | quality-attribute | active | M003/S02 | none | mapped |
-| ANIM-06 | quality-attribute | active | M003/S02 | none | mapped |
-| MOBILE-01 | core-capability | active | M003/S03 | none | mapped |
-| BRAND-01 | quality-attribute | active | M003/S01 | M003/S02, M003/S03 | mapped |
-| BRAND-02 | quality-attribute | active | M003/S01 | M003/S03 | mapped |
-| SEO-01 | differentiator | active | M003/S04 | none | mapped |
-| SEO-02 | launchability | active | M003/S01 | none | mapped |
-| FIX-01 | continuity | active | M003/S04 | none | mapped |
+| LAND-01 | launchability | validated | M003/S01 | none | M003 — landing page built |
+| LAND-02 | differentiator | validated | M003/S01 | none | M003 — interactive TeacherMockSection |
+| LAND-03 | primary-user-loop | validated | M003/S01 | none | M003 — CTA links to /login |
+| LAND-04 | quality-attribute | validated | M003/S01 | none | M003 — brand CSS + logo |
+| LAND-05 | differentiator | validated | M003/S01 | none | M003 — slug URLs in multiple sections |
+| ANIM-01 | quality-attribute | validated | M003/S02 | M003/S01 | M003 — AnimatedSection scroll reveals |
+| ANIM-02 | quality-attribute | validated | M003/S02 | none | M003 — template.tsx page transitions |
+| ANIM-03 | quality-attribute | validated | M003/S02 | none | M003 — OnboardingWizard AnimatePresence |
+| ANIM-04 | quality-attribute | validated | M003/S02 | none | M003 — AnimatedList stagger |
+| ANIM-05 | quality-attribute | validated | M003/S02 | none | M003 — AnimatedProfile fades |
+| ANIM-06 | quality-attribute | validated | M003/S02 | none | M003 — AnimatedButton micro-interactions |
+| MOBILE-01 | core-capability | validated | M003/S03 | none | M003 — MobileBottomNav 7 tabs |
+| BRAND-01 | quality-attribute | validated | M003/S01 | M003/S02, M003/S03 | M003 — global palette, accent preserved |
+| BRAND-02 | quality-attribute | validated | M003/S01 | M003/S03 | M003 — logo in all nav surfaces |
+| SEO-01 | differentiator | validated | M003/S04 | none | M003 — generateMetadata + OG image route |
+| SEO-02 | launchability | validated | M003/S01 | none | M003 — landing page OG tags |
+| FIX-01 | continuity | validated | M003/S04 | none | M003 — social_email from getUser() |
 | AVAIL-04 | core-capability | deferred | M004 | none | unmapped |
 | AVAIL-05 | core-capability | deferred | M004 | none | unmapped |
 | AVAIL-06 | core-capability | deferred | M004 | none | unmapped |
@@ -884,8 +818,7 @@ Review prompt is delivered via email after session completion
 
 ## Coverage Summary
 
-- Active requirements: 17 (M003)
-- Mapped to slices: 17
-- Validated: 59 (from M001/M002)
+- Active requirements: 0
+- Validated: 76 (59 from M001/M002 + 17 from M003)
 - Deferred: 9 (M004: 5, M005: 4)
 - Unmapped active requirements: 0
