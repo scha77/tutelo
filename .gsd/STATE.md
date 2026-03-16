@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M004 — Availability & Scheduling Overhaul
-**Active Slice:** S02 — Per-Date Override Availability
+**Active Slice:** S03 — Booking Calendar Integration
 **Phase:** planning
 **Requirements Status:** 0 active · 76 validated · 9 deferred · 0 out of scope
 
@@ -19,4 +19,4 @@
 - None
 
 ## Next Action
-Plan slice S02 (Per-Date Override Availability).
+Plan slice S03 (Booking Calendar Integration).

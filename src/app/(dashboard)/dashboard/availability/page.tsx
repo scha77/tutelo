@@ -10,11 +10,16 @@ export default async function DashboardAvailabilityPage() {
 
   const { data: teacher } = await supabase
     .from('teachers')
-    .select('id, availability(*)')
+    .select('id, availability(*), availability_overrides(*)')
     .eq('user_id', userId)
     .maybeSingle()
 
   if (!teacher) redirect('/onboarding')
 
-  return <AvailabilityEditor initialSlots={teacher.availability ?? []} />
+  return (
+    <AvailabilityEditor
+      initialSlots={teacher.availability ?? []}
+      initialOverrides={teacher.availability_overrides ?? []}
+    />
+  )
 }

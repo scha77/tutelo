@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Globe, CheckCircle2 } from 'lucide-react'
-import { formatInTimeZone, toDate } from 'date-fns-tz'
 import {
   addMonths,
   subMonths,
@@ -31,26 +30,13 @@ import {
 import { InlineAuthForm } from '@/components/auth/InlineAuthForm'
 import { PaymentStep } from '@/components/profile/PaymentStep'
 import { createClient } from '@/lib/supabase/client'
+import { getSlotsForDate } from '@/lib/utils/slots'
+import type { AvailabilitySlot, TimeSlot } from '@/lib/utils/slots'
 import type { BookingResult } from '@/actions/bookings'
-
-interface AvailabilitySlot {
-  id: string
-  teacher_id: string
-  day_of_week: number
-  start_time: string // DB returns "HH:MM:SS"
-  end_time: string
-}
-
-interface TimeSlot {
-  slotId: string
-  startDisplay: string
-  endDisplay: string
-  startRaw: string // "HH:MM" — teacher-timezone time for DB storage
-  endRaw: string   // "HH:MM" — teacher-timezone time for DB storage
-}
 
 interface BookingCalendarProps {
   slots: AvailabilitySlot[]
+  overrides: Array<{ specific_date: string; start_time: string; end_time: string }>
   teacherTimezone: string
   teacherName: string
   accentColor: string
@@ -64,40 +50,9 @@ interface BookingCalendarProps {
 
 const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
-function getSlotsForDate(
-  date: Date,
-  slots: AvailabilitySlot[],
-  teacherTimezone: string,
-  visitorTimezone: string
-): TimeSlot[] {
-  const dayOfWeek = date.getDay()
-  const matching = slots.filter((s) => s.day_of_week === dayOfWeek)
-
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const now = new Date()
-
-  return matching
-    .flatMap((slot) => {
-      const startRaw = slot.start_time.slice(0, 5)
-      const endRaw = slot.end_time.slice(0, 5)
-      const startDate = toDate(`${year}-${month}-${day}T${startRaw}:00`, { timeZone: teacherTimezone })
-      if (startDate <= now) return [] // filter out past slots
-      const endDate = toDate(`${year}-${month}-${day}T${endRaw}:00`, { timeZone: teacherTimezone })
-      return [{
-        slotId: slot.id,
-        startDisplay: formatInTimeZone(startDate, visitorTimezone, 'h:mm a'),
-        endDisplay: formatInTimeZone(endDate, visitorTimezone, 'h:mm a'),
-        startRaw,
-        endRaw,
-      }]
-    })
-    .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
-}
-
 export function BookingCalendar({
   slots,
+  overrides,
   teacherTimezone,
   teacherName,
   accentColor,
@@ -147,6 +102,13 @@ export function BookingCalendar({
     [slots]
   )
 
+  // Set of YYYY-MM-DD strings that have override rows — used to make
+  // those dates selectable even if no recurring slot exists for that day-of-week
+  const overrideDatesSet = useMemo(
+    () => new Set(overrides.map((o) => o.specific_date)),
+    [overrides]
+  )
+
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth)
     const monthEnd = endOfMonth(currentMonth)
@@ -158,11 +120,14 @@ export function BookingCalendar({
 
   const timeSlotsForDay = useMemo(() => {
     if (!selectedDate) return []
-    return getSlotsForDate(selectedDate, slots, teacherTimezone, visitorTimezone)
-  }, [selectedDate, slots, teacherTimezone, visitorTimezone])
+    return getSlotsForDate(selectedDate, slots, teacherTimezone, visitorTimezone, overrides)
+  }, [selectedDate, slots, teacherTimezone, visitorTimezone, overrides])
 
   function isAvailable(date: Date) {
-    return !isBefore(date, today) && availableDays.has(date.getDay())
+    if (isBefore(date, today)) return false
+    if (availableDays.has(date.getDay())) return true
+    // Also selectable if an override exists for this specific date
+    return overrideDatesSet.has(format(date, 'yyyy-MM-dd'))
   }
 
   function handleDateClick(date: Date) {

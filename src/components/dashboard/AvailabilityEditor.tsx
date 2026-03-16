@@ -3,7 +3,8 @@
 import { useState, useTransition, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import { Tabs } from 'radix-ui'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, CalendarIcon, Undo2 } from 'lucide-react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -14,7 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { updateAvailability } from '@/actions/availability'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { updateAvailability, saveOverrides, deleteOverridesForDate } from '@/actions/availability'
 import {
   generate5MinOptions,
   formatTimeLabel,
@@ -32,8 +39,17 @@ interface AvailabilitySlot {
   end_time: string
 }
 
+interface OverrideSlot {
+  id: string
+  teacher_id: string
+  specific_date: string
+  start_time: string
+  end_time: string
+}
+
 export interface AvailabilityEditorProps {
   initialSlots: AvailabilitySlot[]
+  initialOverrides?: OverrideSlot[]
 }
 
 interface TimeRange {
@@ -87,6 +103,35 @@ function hourOf(hhmm: string): number {
   return parseInt(hhmm.split(':')[0], 10)
 }
 
+/** Format YYYY-MM-DD to a local Date object (avoids timezone shift from new Date(string)) */
+function parseDateString(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+/** Format Date to YYYY-MM-DD */
+function toDateString(date: Date): string {
+  return format(date, 'yyyy-MM-dd')
+}
+
+/** Group override slots by specific_date into Map<dateString, TimeRange[]> */
+function buildOverrideState(overrides: OverrideSlot[]): Map<string, TimeRange[]> {
+  const map = new Map<string, TimeRange[]>()
+  for (const o of overrides) {
+    const dateKey = o.specific_date
+    if (!map.has(dateKey)) map.set(dateKey, [])
+    map.get(dateKey)!.push({
+      start_time: normalizeTime(o.start_time),
+      end_time: normalizeTime(o.end_time),
+    })
+  }
+  // Sort each date's windows
+  for (const ranges of map.values()) {
+    ranges.sort((a, b) => a.start_time.localeCompare(b.start_time))
+  }
+  return map
+}
+
 // ── Grouped time options (memoized structure) ──────────────────────────
 
 interface HourGroup {
@@ -120,14 +165,25 @@ function buildHourGroups(allOptions: string[]): HourGroup[] {
 
 // ── Component ──────────────────────────────────────────────────────────
 
-export function AvailabilityEditor({ initialSlots }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ initialSlots, initialOverrides = [] }: AvailabilityEditorProps) {
   const [schedule, setSchedule] = useState<Map<number, TimeRange[]>>(
     () => buildInitialState(initialSlots)
   )
+  const [overrides, setOverrides] = useState<Map<string, TimeRange[]>>(
+    () => buildOverrideState(initialOverrides)
+  )
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const allTimeOptions = useMemo(() => generate5MinOptions(), [])
   const hourGroups = useMemo(() => buildHourGroups(allTimeOptions), [allTimeOptions])
+
+  // Sorted list of override date strings for the sidebar
+  const overrideDates = useMemo(
+    () => Array.from(overrides.keys()).sort(),
+    [overrides]
+  )
 
   // ── State updaters ─────────────────────────────────────────────────
 
@@ -163,6 +219,113 @@ export function AvailabilityEditor({ initialSlots }: AvailabilityEditorProps) {
     },
     []
   )
+
+  // ── Override state updaters ─────────────────────────────────────────
+
+  const selectOrAddDate = useCallback((date: Date) => {
+    const dateStr = toDateString(date)
+    setSelectedDate(dateStr)
+    // If this date doesn't exist yet in overrides, add it with a default window
+    setOverrides((prev) => {
+      if (prev.has(dateStr)) return prev
+      const next = new Map(prev)
+      next.set(dateStr, [{ start_time: '09:00', end_time: '17:00' }])
+      return next
+    })
+    setCalendarOpen(false)
+  }, [])
+
+  const addOverrideWindow = useCallback((dateStr: string) => {
+    setOverrides((prev) => {
+      const next = new Map(prev)
+      const ranges = [...(next.get(dateStr) ?? [])]
+      ranges.push({ start_time: '09:00', end_time: '17:00' })
+      next.set(dateStr, ranges)
+      return next
+    })
+  }, [])
+
+  const removeOverrideWindow = useCallback((dateStr: string, index: number) => {
+    setOverrides((prev) => {
+      const next = new Map(prev)
+      const ranges = [...(next.get(dateStr) ?? [])]
+      ranges.splice(index, 1)
+      next.set(dateStr, ranges)
+      return next
+    })
+  }, [])
+
+  const updateOverrideField = useCallback(
+    (dateStr: string, index: number, field: 'start_time' | 'end_time', value: string) => {
+      setOverrides((prev) => {
+        const next = new Map(prev)
+        const ranges = [...(next.get(dateStr) ?? [])]
+        ranges[index] = { ...ranges[index], [field]: value }
+        next.set(dateStr, ranges)
+        return next
+      })
+    },
+    []
+  )
+
+  const handleSaveOverride = useCallback((dateStr: string) => {
+    const windows: TimeWindow[] = overrides.get(dateStr) ?? []
+
+    // Validate overlaps (empty is valid — means "unavailable")
+    if (windows.length > 0) {
+      const result = validateNoOverlap(windows)
+      if (!result.valid) {
+        toast.error(result.error!)
+        return
+      }
+    }
+
+    startTransition(async () => {
+      const result = await saveOverrides(dateStr, windows)
+      if (result.error) {
+        toast.error(`Failed to save override: ${result.error}`)
+      } else {
+        const label = windows.length === 0
+          ? 'Marked as unavailable'
+          : `Saved ${windows.length} window${windows.length !== 1 ? 's' : ''}`
+        toast.success(`${label} for ${format(parseDateString(dateStr), 'MMM d, yyyy')}`)
+      }
+    })
+  }, [overrides, startTransition])
+
+  const handleRevertToRecurring = useCallback((dateStr: string) => {
+    startTransition(async () => {
+      const result = await deleteOverridesForDate(dateStr)
+      if (result.error) {
+        toast.error(`Failed to revert: ${result.error}`)
+      } else {
+        setOverrides((prev) => {
+          const next = new Map(prev)
+          next.delete(dateStr)
+          return next
+        })
+        if (selectedDate === dateStr) setSelectedDate(null)
+        toast.success(`Reverted ${format(parseDateString(dateStr), 'MMM d, yyyy')} to recurring schedule`)
+      }
+    })
+  }, [selectedDate, startTransition])
+
+  const handleMarkUnavailable = useCallback((dateStr: string) => {
+    // Set windows to empty array locally, then save
+    setOverrides((prev) => {
+      const next = new Map(prev)
+      next.set(dateStr, [])
+      return next
+    })
+    startTransition(async () => {
+      const result = await saveOverrides(dateStr, [])
+      if (result.error) {
+        toast.error(`Failed to mark unavailable: ${result.error}`)
+      } else {
+        toast.success(`Marked ${format(parseDateString(dateStr), 'MMM d, yyyy')} as unavailable`)
+      }
+    })
+  }, [startTransition])
 
   // ── Save handler ───────────────────────────────────────────────────
 
@@ -232,9 +395,7 @@ export function AvailabilityEditor({ initialSlots }: AvailabilityEditorProps) {
           </Tabs.Trigger>
           <Tabs.Trigger
             value="overrides"
-            disabled
-            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground opacity-50 cursor-not-allowed"
-            data-disabled
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors"
           >
             Specific Dates
           </Tabs.Trigger>
@@ -260,9 +421,82 @@ export function AvailabilityEditor({ initialSlots }: AvailabilityEditorProps) {
         </Tabs.Content>
 
         <Tabs.Content value="overrides" className="mt-6">
-          <p className="text-sm text-muted-foreground">
-            Override scheduling for specific dates coming soon.
-          </p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-4">
+              {/* Date picker */}
+              <div className="space-y-3 min-w-[220px]">
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal gap-2">
+                      <CalendarIcon className="size-4" />
+                      Pick a date
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate ? parseDateString(selectedDate) : undefined}
+                      onSelect={(date) => date && selectOrAddDate(date)}
+                      disabled={{ before: new Date() }}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* List of override dates */}
+                {overrideDates.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Override dates</p>
+                    {overrideDates.map((dateStr) => {
+                      const windows = overrides.get(dateStr) ?? []
+                      const isSelected = selectedDate === dateStr
+                      return (
+                        <button
+                          key={dateStr}
+                          onClick={() => setSelectedDate(dateStr)}
+                          className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                            isSelected
+                              ? 'bg-primary text-primary-foreground'
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <span className="font-medium">
+                            {format(parseDateString(dateStr), 'MMM d, yyyy')}
+                          </span>
+                          <span className={`block text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            {windows.length === 0
+                              ? 'Unavailable'
+                              : `${windows.length} window${windows.length !== 1 ? 's' : ''}`}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Per-date editor */}
+              <div className="flex-1 min-h-[200px]">
+                {selectedDate ? (
+                  <OverrideDateEditor
+                    dateStr={selectedDate}
+                    windows={overrides.get(selectedDate) ?? []}
+                    hourGroups={hourGroups}
+                    isPending={isPending}
+                    onAddWindow={addOverrideWindow}
+                    onRemoveWindow={removeOverrideWindow}
+                    onUpdateField={updateOverrideField}
+                    onSave={handleSaveOverride}
+                    onRevert={handleRevertToRecurring}
+                    onMarkUnavailable={handleMarkUnavailable}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground border border-dashed border-border rounded-lg">
+                    Select a date to set custom availability
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </Tabs.Content>
       </Tabs.Root>
 
@@ -272,6 +506,124 @@ export function AvailabilityEditor({ initialSlots }: AvailabilityEditorProps) {
         </p>
         <Button onClick={handleSave} disabled={isPending}>
           {isPending ? 'Saving...' : 'Save Availability'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ── Override Date Editor sub-component ─────────────────────────────────
+
+interface OverrideDateEditorProps {
+  dateStr: string
+  windows: TimeRange[]
+  hourGroups: HourGroup[]
+  isPending: boolean
+  onAddWindow: (dateStr: string) => void
+  onRemoveWindow: (dateStr: string, index: number) => void
+  onUpdateField: (dateStr: string, index: number, field: 'start_time' | 'end_time', value: string) => void
+  onSave: (dateStr: string) => void
+  onRevert: (dateStr: string) => void
+  onMarkUnavailable: (dateStr: string) => void
+}
+
+function OverrideDateEditor({
+  dateStr,
+  windows,
+  hourGroups,
+  isPending,
+  onAddWindow,
+  onRemoveWindow,
+  onUpdateField,
+  onSave,
+  onRevert,
+  onMarkUnavailable,
+}: OverrideDateEditorProps) {
+  return (
+    <div className="space-y-4 border border-border rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">
+          {format(parseDateString(dateStr), 'EEEE, MMMM d, yyyy')}
+        </h3>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onRevert(dateStr)}
+            disabled={isPending}
+            className="text-xs gap-1 text-muted-foreground hover:text-destructive"
+          >
+            <Undo2 className="size-3.5" />
+            Revert to recurring
+          </Button>
+        </div>
+      </div>
+
+      {windows.length === 0 ? (
+        <p className="text-xs text-muted-foreground pl-1">
+          Marked as unavailable — no time windows for this date.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {windows.map((range, rangeIndex) => (
+            <div key={`${dateStr}-${rangeIndex}`} className="flex items-center gap-2">
+              <TimeSelect
+                value={range.start_time}
+                hourGroups={hourGroups}
+                onValueChange={(v) => onUpdateField(dateStr, rangeIndex, 'start_time', v)}
+                ariaLabel={`Override start time for window ${rangeIndex + 1}`}
+              />
+              <span className="text-sm text-muted-foreground">to</span>
+              <TimeSelect
+                value={range.end_time}
+                hourGroups={hourGroups}
+                onValueChange={(v) => onUpdateField(dateStr, rangeIndex, 'end_time', v)}
+                ariaLabel={`Override end time for window ${rangeIndex + 1}`}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemoveWindow(dateStr, rangeIndex)}
+                className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                aria-label={`Remove override window ${rangeIndex + 1}`}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onAddWindow(dateStr)}
+          className="text-xs gap-1"
+        >
+          <Plus className="size-3.5" />
+          Add time window
+        </Button>
+        {windows.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMarkUnavailable(dateStr)}
+            disabled={isPending}
+            className="text-xs text-muted-foreground"
+          >
+            Mark as unavailable
+          </Button>
+        )}
+      </div>
+
+      <div className="flex justify-end border-t border-border pt-3">
+        <Button
+          size="sm"
+          onClick={() => onSave(dateStr)}
+          disabled={isPending}
+        >
+          {isPending ? 'Saving...' : 'Save Override'}
         </Button>
       </div>
     </div>

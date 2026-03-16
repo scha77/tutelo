@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Instagram, Mail, Globe } from 'lucide-react'
+import { format, addDays, startOfToday } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
@@ -148,6 +149,17 @@ export default async function TeacherProfilePage({
     return <DraftPage />
   }
 
+  // S02-T03: Fetch override availability for the next 90 days
+  const today = startOfToday()
+  const { data: overrides } = await supabase
+    .from('availability_overrides')
+    .select('specific_date, start_time, end_time')
+    .eq('teacher_id', teacher.id)
+    .gte('specific_date', format(today, 'yyyy-MM-dd'))
+    .lte('specific_date', format(addDays(today, 90), 'yyyy-MM-dd'))
+    .order('specific_date')
+    .order('start_time')
+
   // REVIEW-02: Fetch submitted reviews for public profile display
   const { data: reviews } = await supabase
     .from('reviews')
@@ -170,6 +182,7 @@ export default async function TeacherProfilePage({
       </AnimatedProfile>
       <BookingCalendar
         slots={teacher.availability ?? []}
+        overrides={overrides ?? []}
         teacherTimezone={teacher.timezone}
         teacherName={teacher.full_name}
         accentColor={teacher.accent_color}

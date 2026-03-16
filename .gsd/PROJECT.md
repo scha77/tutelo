@@ -40,6 +40,12 @@ See `LAUNCH.md` for production environment documentation.
 - **Navigation:** Shared nav items in `src/lib/nav.ts` consumed by both desktop Sidebar and mobile MobileBottomNav. Mobile header (MobileHeader) shows logo + teacher name.
 - **OG Images:** File-based `opengraph-image.tsx` route using edge-safe Supabase client (no cookies). `generateMetadata()` for dynamic OG tags on teacher pages.
 
+## Test Accounts
+
+| Email | Password | Role | Notes |
+|---|---|---|---|
+| soosup.cha+test@gmail.com | testing123 | Teacher | Has completed onboarding; use for dashboard/availability/booking flows |
+
 ## Capability Contract
 
 See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement status, and coverage mapping.
