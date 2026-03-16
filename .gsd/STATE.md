@@ -1,26 +1,22 @@
 # GSD State
 
-**Active Milestone:** None
+**Active Milestone:** M005 — M005
 **Active Slice:** None
-**Phase:** idle
-**Requirements Status:** 0 active · 81 validated · 4 deferred · 0 out of scope
+**Phase:** pre-planning
+**Requirements Status:** 0 active · 76 validated · 9 deferred · 0 out of scope
 
 ## Milestone Registry
 - ✅ **M001:** Migration
 - ✅ **M002:** Production Launch
 - ✅ **M003:** Landing Page & Polish
 - ✅ **M004:** Availability & Scheduling Overhaul
-- ⬜ **M005:** Trust & Communication
+- 🔄 **M005:** M005
 
 ## Recent Decisions
-- Separate availability_overrides table (not nullable column) for per-date overrides
-- Override-wins-recurring precedence: if any override row exists for a date, recurring is fully ignored
-- 30-min booking slot increments within availability windows
-- computeSessionAmount for duration-prorated payments
-- cancelSession calls sendCancellationEmail (both parties) — teacher copy cosmetic fix deferred
+- None recorded
 
 ## Blockers
 - None
 
 ## Next Action
-M004 complete. Next milestone is M005 (Trust & Communication).
+Plan milestone M005.
