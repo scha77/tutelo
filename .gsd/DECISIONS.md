@@ -97,3 +97,7 @@
 - "Booking calendar presents slots at 30-min booking increments within availability windows — balances 5-min availability precision with parent-facing usability (no 36-button slot list for a 3-hour window)"
 - "S04 (cancellation) is independent of S01–S03 (availability) — can be built in parallel; no shared schema or component dependencies"
 - "Multiple time windows per day supported in editor — teachers may have split schedules (8–11 AM + 3–5 PM); each day gets a list of non-overlapping ranges"
+- "Time utilities extracted to src/lib/utils/time.ts — generate5MinOptions, formatTimeLabel, validateNoOverlap are pure functions reused by recurring editor (S01) and override editor (S02)"
+- "Select dropdowns grouped by hour for 288 time options — SelectGroup + SelectLabel headers ('8 AM', '9 AM') to improve usability over flat 288-item list"
+- "availability_overrides migration shipped in S01 (not S02) — additive table creation is zero-risk, gets schema work out of the way before editor work"
+- "Editor state is Map<number, {start_time, end_time}[]> — grouped by day_of_week, replacing the Set<string> toggle key pattern from the old 1-hour grid"

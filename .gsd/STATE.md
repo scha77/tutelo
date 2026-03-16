@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M004 — Availability & Scheduling Overhaul
-**Active Slice:** S01 — Recurring Availability Editor with 5-Min Granularity
+**Active Slice:** S02 — Per-Date Override Availability
 **Phase:** planning
 **Requirements Status:** 0 active · 76 validated · 9 deferred · 0 out of scope
 
@@ -19,4 +19,4 @@
 - None
 
 ## Next Action
-Plan slice S01 (Recurring Availability Editor with 5-Min Granularity).
+Plan slice S02 (Per-Date Override Availability).

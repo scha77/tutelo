@@ -8,7 +8,10 @@ const AvailabilitySlotSchema = z.object({
   day_of_week: z.number().int().min(0).max(6),
   start_time: z.string().regex(/^\d{2}:\d{2}$/),
   end_time: z.string().regex(/^\d{2}:\d{2}$/),
-})
+}).refine(
+  (s) => s.end_time > s.start_time,
+  { message: 'End time must be after start time' }
+)
 
 const UpdateAvailabilitySchema = z.array(AvailabilitySlotSchema)
 

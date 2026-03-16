@@ -63,7 +63,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Recurring Availability Editor with 5-Min Granularity** `risk:high` `depends:[]`
+- [x] **S01: Recurring Availability Editor with 5-Min Granularity** `risk:high` `depends:[]`
   > After this: A teacher can open the redesigned availability editor, set time ranges like 3:30–4:45 PM for each day of the week, save, and see them persisted — replacing the 1-hour block grid entirely.
 - [ ] **S02: Per-Date Override Availability** `risk:medium` `depends:[S01]`
   > After this: A teacher can switch to a "Specific Dates" tab in the editor, pick a future date, set custom time ranges for that date, and save. The teacher's public profile page shows override availability for that date instead of the recurring pattern.
