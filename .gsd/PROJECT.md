@@ -15,6 +15,16 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - All 81 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004)
+- **M005 in progress — S01 and S02 complete:**
+  - `src/lib/sms.ts` — Twilio-backed `sendSmsReminder` and `sendSmsCancellation` functions, opt-in gated
+  - Teacher phone + SMS opt-in collected in onboarding wizard (WizardStep1) and account settings
+  - Parent phone + SMS opt-in collected on booking form (both deferred and direct paths); stored on bookings row
+  - SMS reminder cron extended to send texts alongside emails for opted-in recipients
+  - `cancelSession` sends SMS alongside cancellation email for opted-in parents
+  - DB migration 0008 adds `phone_number`, `sms_opt_in`, `verified_at` to teachers; `parent_phone`, `parent_sms_opt_in` to bookings
+  - shadcn/ui Checkbox component added to project
+  - 402 tests passing; build clean
+  - S03 (school email verification + badge gating) is next and independent
 - **Availability & Scheduling Overhaul (M004):** 5-minute granularity recurring editor, per-date override scheduling, override-wins-recurring precedence on booking calendar, 30-min booking slot expansion, duration-prorated payments, one-click session cancellation with email notification
 - Branded marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, interactive teacher mock, and CTA
 - Animation system (motion v12.36.0) active across 6 surfaces: landing scroll reveals, page transitions, onboarding step slides, dashboard card staggers, profile section fades, button micro-interactions
@@ -24,7 +34,7 @@ Tagline: "Shopify for teacher side hustles."
 - Brand identity applied globally (#3b4d3e sage green, #f6f5f0 warm off-white, Tutelo logo in all nav surfaces)
 - Stripe in test mode — switch to live keys before real payments
 - Crons running daily (Vercel Hobby plan)
-- M004 code ready; production deploy pending (push to git remote or `vercel deploy --prod`)
+- M005 S01+S02 code ready; production deploy pending
 
 See `LAUNCH.md` for production environment documentation.
 
@@ -33,6 +43,8 @@ See `LAUNCH.md` for production environment documentation.
 - `src/lib/utils/time.ts` — `generate5MinOptions()`, `formatTimeLabel()`, `validateNoOverlap()` — pure time utilities for availability editor
 - `src/lib/utils/slots.ts` — `getSlotsForDate()`, `generateSlotsFromWindow()` — override-wins-recurring precedence, 30-min slot expansion
 - `src/lib/utils/booking.ts` — `computeSessionAmount()` — duration-prorated payment calculation
+- `src/lib/sms.ts` — `sendSmsReminder(bookingId)`, `sendSmsCancellation(...)` — Twilio-backed SMS, opt-in gated (M005/S01)
+- `src/components/ui/checkbox.tsx` — shadcn/ui Checkbox component (M005/S02)
 
 ## Architecture / Key Patterns
 
@@ -66,4 +78,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [ ] **M005:** Trust & Communication — Teacher verification system, SMS notifications, SMS cancellation alerts
 
 ---
-*Last updated: 2026-03-11 after M004 completion*
+*Last updated: 2026-03-17 after M005/S02 completion*
