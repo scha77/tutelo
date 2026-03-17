@@ -14,31 +14,23 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
-- All 81 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004)
-- **M005 in progress — S01 and S02 complete:**
-  - `src/lib/sms.ts` — Twilio-backed `sendSmsReminder` and `sendSmsCancellation` functions, opt-in gated
-  - Teacher phone + SMS opt-in collected in onboarding wizard (WizardStep1) and account settings
-  - Parent phone + SMS opt-in collected on booking form (both deferred and direct paths); stored on bookings row
-  - SMS reminder cron extended to send texts alongside emails for opted-in recipients
-  - `cancelSession` sends SMS alongside cancellation email for opted-in parents
-  - DB migration 0008 adds `phone_number`, `sms_opt_in`, `verified_at` to teachers; `parent_phone`, `parent_sms_opt_in` to bookings
-  - shadcn/ui Checkbox component added to project
-  - 402 tests passing; build clean
-  - S03 complete: school email verification flow end-to-end — token generation, Resend email delivery, /api/verify-email route stamps verified_at, CredentialsBar badge gated on real DB state; 9 unit tests pass; build clean
-  - All 3 slices complete — M005 milestone achieved
-- DB migration 0010 adds `school_email_verification_token`, `school_email_verification_expires_at` to teachers with partial index
-- **M005 COMPLETE** — all slices done, build clean, milestone criteria met
-- S03 (school email verification + badge gating) is next and independent
-- **Availability & Scheduling Overhaul (M004):** 5-minute granularity recurring editor, per-date override scheduling, override-wins-recurring precedence on booking calendar, 30-min booking slot expansion, duration-prorated payments, one-click session cancellation with email notification
-- Branded marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, interactive teacher mock, and CTA
-- Animation system (motion v12.36.0) active across 6 surfaces: landing scroll reveals, page transitions, onboarding step slides, dashboard card staggers, profile section fades, button micro-interactions
-- Mobile dashboard with bottom tab bar (7 tabs) and header with logo
-- Dynamic OG meta tags on teacher /[slug] pages (personalized 1200×630 PNG previews)
-- social_email auto-populated from auth email on new teacher signup
+- All 85 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005)
+- 411 tests passing; build clean
+- **Trust & Communication (M005 — complete):**
+  - Twilio-backed SMS pipeline: `sendSmsReminder` and `sendSmsCancellation` in `src/lib/sms.ts`, all sends gated on explicit opt-in
+  - Teacher phone + SMS opt-in collected in onboarding wizard and account settings
+  - Parent phone + TCPA-compliant SMS consent collected on booking form (both deferred and direct paths)
+  - Session reminder cron sends SMS alongside email for opted-in recipients
+  - `cancelSession` sends SMS alongside cancellation email in the same request
+  - School email verification flow: token-based pipeline from settings UI through Resend email to verified_at stamp
+  - "Verified Teacher" badge on CredentialsBar gated on `verified_at IS NOT NULL` (no hardcoded badge)
+  - DB migrations 0008 (phone/opt-in/verified_at columns) and 0010 (verification token columns with partial index)
+  - **Note:** SMS delivery to non-test numbers requires A2P 10DLC registration (2–4 weeks) or toll-free number — code is complete and testable
+- **Availability & Scheduling (M004):** 5-minute granularity recurring editor, per-date override scheduling, override-wins-recurring precedence, 30-min booking slots, duration-prorated payments, one-click cancellation with email
+- **Landing Page & Polish (M003):** Branded marketing landing page, animation system (6 surfaces), mobile bottom tab bar, dynamic OG meta tags, social_email auto-populate
 - Brand identity applied globally (#3b4d3e sage green, #f6f5f0 warm off-white, Tutelo logo in all nav surfaces)
 - Stripe in test mode — switch to live keys before real payments
 - Crons running daily (Vercel Hobby plan)
-- M005 S01+S02 code ready; production deploy pending
 
 See `LAUNCH.md` for production environment documentation.
 
@@ -48,6 +40,7 @@ See `LAUNCH.md` for production environment documentation.
 - `src/lib/utils/slots.ts` — `getSlotsForDate()`, `generateSlotsFromWindow()` — override-wins-recurring precedence, 30-min slot expansion
 - `src/lib/utils/booking.ts` — `computeSessionAmount()` — duration-prorated payment calculation
 - `src/lib/sms.ts` — `sendSmsReminder(bookingId)`, `sendSmsCancellation(...)` — Twilio-backed SMS, opt-in gated (M005/S01)
+- `src/lib/verification.ts` — `generateVerificationToken()`, `isTokenExpired()`, `sendVerificationEmail()` — school email verification (M005/S03)
 - `src/components/ui/checkbox.tsx` — shadcn/ui Checkbox component (M005/S02)
 
 ## Architecture / Key Patterns
@@ -58,6 +51,8 @@ See `LAUNCH.md` for production environment documentation.
 - **Proxy:** `src/proxy.ts` handles token refresh only, no auth redirects. `middleware.ts` is a re-export shim.
 - **Availability:** `TIME` columns (no tz) in `availability` table, interpreted relative to `teachers.timezone`. Recurring weekly with 5-min granularity time ranges. Per-date overrides in `availability_overrides` table with override-wins-recurring precedence. Booking calendar shows 30-min slots within availability windows. Duration-prorated payments via `computeSessionAmount()`.
 - **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`. New signups auto-populate social_email.
+- **SMS:** Twilio SDK in `src/lib/sms.ts`. All sends gated on `phone IS NOT NULL AND sms_opt_in = true`. A2P 10DLC registration required for production delivery.
+- **Verification:** School email verification via custom token flow (separate from Supabase Auth). Token gen + Resend email + public callback route stamps `verified_at`.
 - **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations.
 - **Animations:** Shared constants in `src/lib/animation.ts`. Thin animated wrapper pattern (AnimatedSection, AnimatedProfile, AnimatedList, AnimatedButton) keeps RSC data-fetching separate from client animation shells. Page transitions via `template.tsx` + `PageTransition` component.
 - **Navigation:** Shared nav items in `src/lib/nav.ts` consumed by both desktop Sidebar and mobile MobileBottomNav. Mobile header (MobileHeader) shows logo + teacher name.
@@ -79,7 +74,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M002:** Production Launch — Deployed to tutelo.app; all flows verified end-to-end on live URL
 - [x] **M003:** Landing Page & Polish — Marketing landing page, brand identity, UI animations, mobile dashboard, OG tags, social_email fix
 - [x] **M004:** Availability & Scheduling Overhaul — 5-min granularity, per-date overrides, weeks-in-advance planning, redesigned editor, last-minute cancellation
-- [x] **M005:** Trust & Communication — Teacher verification system, SMS notifications, SMS cancellation alerts
+- [x] **M005:** Trust & Communication — School email verification with badge gating, Twilio SMS reminders and cancellation alerts, teacher and parent phone collection with opt-in consent
 
 ---
-*Last updated: 2026-03-17 after M005/S03 completion — M005 milestone complete*
+*Last updated: 2026-03-17 after M005 milestone completion — all 85 requirements validated, 411 tests passing*
