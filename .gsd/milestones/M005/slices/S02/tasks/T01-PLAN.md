@@ -149,3 +149,10 @@ The consent checkbox must start unchecked (TCPA compliance) and only appear when
 
 - `src/components/ui/checkbox.tsx` — new shadcn Checkbox component
 - `src/components/profile/BookingCalendar.tsx` — modified with phone input, consent checkbox, and both submission paths forwarding phone/consent values
+
+## Observability Impact
+
+- **Signals changed:** `submitAction` payload now includes `parent_phone` and `parent_sms_opt_in`; `createPaymentIntent` fetch body now includes `parentPhone` and `parentSmsOptIn`. Both are `undefined`/`false` when phone is empty (no-op for downstream handlers).
+- **Inspection:** Browser DevTools Network tab — inspect the POST body to `/api/direct-booking/create-intent` to see `parentPhone`/`parentSmsOptIn` fields. For the deferred path, inspect the server action payload in React DevTools or server logs.
+- **Failure visibility:** No new failure modes introduced — fields are optional with safe defaults. If the checkbox component fails to render, React error boundary will surface it. No PII logged.
+- **Future agent inspection:** Search `BookingCalendar.tsx` for `phone` and `smsOptIn` state fields; verify they appear in both `submitAction` and `createPaymentIntent` call sites.

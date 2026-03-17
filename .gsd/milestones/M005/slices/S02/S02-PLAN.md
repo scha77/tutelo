@@ -44,7 +44,7 @@
 
 ## Tasks
 
-- [ ] **T01: Add phone + consent UI fields to BookingCalendar and wire both submission paths** `est:45m`
+- [x] **T01: Add phone + consent UI fields to BookingCalendar and wire both submission paths** `est:45m`
   - Why: The booking form currently collects name, subject, email, and notes but has no phone or SMS consent fields. Both the deferred path (`submitAction`) and direct path (`createPaymentIntent` fetch) need to forward these values. This is the user-visible change that enables parent SMS.
   - Files: `src/components/profile/BookingCalendar.tsx`, `src/components/ui/checkbox.tsx`
   - Do: (1) Install shadcn/ui Checkbox component via `npx shadcn@latest add checkbox`. (2) Add `phone: ''` and `smsOptIn: false` to the `form` state object. (3) Add `phone` and `smsOptIn` to the `handleBookAnother` reset. (4) Add an optional phone input field below the Notes textarea, labeled "US phone number (optional)" with placeholder "(555) 555-1234". (5) Add an unchecked-by-default Checkbox below the phone input with label "Send me text message reminders about this session" — only visible when phone field is non-empty. (6) In `handleSubmit` deferred path, add `parent_phone: form.phone.trim() || undefined` and `parent_sms_opt_in: form.phone.trim() ? form.smsOptIn : false` to the `submitAction` call. (7) In `createPaymentIntent`, add the same two fields to the fetch body JSON. (8) Import `Checkbox` from `@/components/ui/checkbox`.

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Globe, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Globe, CheckCircle2, Phone } from 'lucide-react'
 import {
   addMonths,
   subMonths,
@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -73,6 +74,8 @@ export function BookingCalendar({
     subject: subjects.length === 1 ? subjects[0] : (searchParams.get('subject') ?? ''),
     email: '',
     notes: '',
+    phone: '',
+    smsOptIn: false,
   })
   const [submitting, setSubmitting] = useState(false)
   const [bookingConfirmation, setBookingConfirmation] = useState<{
@@ -156,6 +159,8 @@ export function BookingCalendar({
       subject: subjects.length === 1 ? subjects[0] : '',
       email: '',
       notes: '',
+      phone: '',
+      smsOptIn: false,
     })
     setBookingConfirmation(null)
     setErrorMessage(null)
@@ -176,6 +181,8 @@ export function BookingCalendar({
         studentName: form.name,
         subject: form.subject,
         notes: form.notes || undefined,
+        parentPhone: form.phone.trim() || undefined,
+        parentSmsOptIn: form.phone.trim() ? form.smsOptIn : false,
       }),
     })
     setCreatingIntent(false)
@@ -217,6 +224,8 @@ export function BookingCalendar({
         bookingDate: format(selectedDate!, 'yyyy-MM-dd'), // local calendar date, no UTC shift
         startTime: selectedSlot!.startRaw,   // teacher-timezone raw time, NOT display time
         endTime: selectedSlot!.endRaw,
+        parent_phone: form.phone.trim() || undefined,
+        parent_sms_opt_in: form.phone.trim() ? form.smsOptIn : false,
       })
       setSubmitting(false)
       if (result.success) {
@@ -590,6 +599,44 @@ export function BookingCalendar({
                   className="min-h-[100px]"
                 />
               </div>
+
+              {/* Phone — optional */}
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">
+                  US phone number{' '}
+                  <span className="font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    placeholder="(555) 555-1234"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* SMS consent — only shown when phone has content */}
+              {form.phone.trim().length > 0 && (
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={form.smsOptIn}
+                    onCheckedChange={(checked) =>
+                      setForm((f) => ({ ...f, smsOptIn: checked === true }))
+                    }
+                  />
+                  <label
+                    htmlFor="sms-consent"
+                    className="text-sm leading-tight cursor-pointer text-muted-foreground"
+                  >
+                    Send me text message reminders about this session. Msg &amp; data rates may apply. Reply STOP to opt out.
+                  </label>
+                </div>
+              )}
 
               <Button
                 type="submit"
