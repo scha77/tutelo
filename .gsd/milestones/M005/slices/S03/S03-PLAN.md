@@ -52,7 +52,7 @@
   - Verify: `npx vitest run src/__tests__/verification.test.ts` passes; `npm run build` passes
   - Done when: All verification utility tests pass and the library exports are importable without type errors
 
-- [ ] **T02: Build server action and API route for the verification flow** `est:40m`
+- [x] **T02: Build server action and API route for the verification flow** `est:40m`
   - Why: Implements the two backend endpoints: the server action that teachers call to request verification (writes token to DB, sends email), and the public GET route that handles the email link click (validates token, stamps `verified_at`, redirects). Together they form the complete verification pipeline.
   - Files: `src/actions/verification.ts`, `src/app/api/verify-email/route.ts`
   - Do: Create `requestSchoolEmailVerification(email: string)` server action — `'use server'`, auth via `getClaims()`, validate email with `z.string().email()`, generate token + 24h expiry, update teachers row with token/expiry via `createClient()`, call `sendVerificationEmail()`, revalidate `/dashboard/settings`. Create GET route handler at `/api/verify-email/route.ts` — read `?token` param, query teachers by token via `supabaseAdmin` (bypasses RLS), check expiry with `isTokenExpired()`, on success: set `verified_at = new Date().toISOString()` and clear token columns, redirect to `/dashboard/settings?verified=true`; on failure: redirect to `/dashboard/settings?error=invalid`.
