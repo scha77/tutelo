@@ -59,7 +59,7 @@
   - Verify: `npm run build` passes; manual test: calling the action with a valid email writes token to DB; hitting the route with a valid token stamps `verified_at`
   - Done when: Both files compile, the action writes token to DB and calls Resend, the route validates token and stamps `verified_at` with proper redirects
 
-- [ ] **T03: Build SchoolEmailVerification UI and wire into dashboard settings** `est:35m`
+- [x] **T03: Build SchoolEmailVerification UI and wire into dashboard settings** `est:35m`
   - Why: Closes the user-facing loop — teachers need a UI to initiate verification and see their status. The settings page must fetch `verified_at` and render the verification component. Also handles URL param feedback (success/error after redirect from verify-email route).
   - Files: `src/components/dashboard/SchoolEmailVerification.tsx`, `src/app/(dashboard)/dashboard/settings/page.tsx`
   - Do: Create `SchoolEmailVerification` as a `'use client'` component following `AccountSettings` patterns — accepts `isVerified: boolean` prop. Three states: (a) verified — green checkmark + "School email verified" text; (b) unverified — email input + "Send verification link" button with `useTransition` for loading state; (c) after submit — success toast via sonner. Uses `requestSchoolEmailVerification` action. Update `settings/page.tsx` to add `verified_at` to the teacher select query, render `SchoolEmailVerification` below `AccountSettings`, and read `searchParams` for `verified=true` / `error=invalid` to show appropriate toast/message on page load after redirect.

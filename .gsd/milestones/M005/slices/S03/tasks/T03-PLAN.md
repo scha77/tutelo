@@ -87,6 +87,14 @@ Create the user-facing UI for the school email verification flow and wire it int
 - `src/components/profile/CredentialsBar.tsx` — verified badge styling reference (emerald-600, CheckCircle icon)
 - `src/app/(dashboard)/dashboard/settings/page.tsx` — current page structure to extend (currently renders only `<AccountSettings>`)
 
+## Observability Impact
+
+- **URL param feedback:** After email link click, `/dashboard/settings?verified=true` or `?error=invalid|expired` appears in browser URL — visible to both user and agent.
+- **Toast notifications:** `toast.success` / `toast.error` from sonner surface all verification state transitions to the user.
+- **Server action errors:** `requestSchoolEmailVerification` returns `{ error: string }` — displayed via `toast.error` in the UI, making failures user-visible.
+- **Inspection:** Check `verified_at` column in `teachers` table to confirm verification status. UI reflects this as green checkmark vs. email input form.
+- **Failure visibility:** Network tab shows POST to server action endpoint; console errors surface if action import or call fails.
+
 ## Expected Output
 
 - `src/components/dashboard/SchoolEmailVerification.tsx` — client component with verified/unverified states
