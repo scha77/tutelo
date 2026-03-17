@@ -75,6 +75,26 @@ All dashboard pages and server-side auth checks should use `supabase.auth.getUse
 
 ---
 
+## Resend Mock Pattern for Vitest
+
+When mocking the `resend` package in Vitest, use a **class-based mock** in `vi.hoisted()` because `Resend` is instantiated with `new` at module scope. Using `vi.fn().mockReturnValue(...)` produces a plain function that isn't constructable — `new Resend(...)` throws `TypeError: value is not a constructor`.
+
+**Correct pattern:**
+```ts
+const { MockResend, emailsSendMock } = vi.hoisted(() => {
+  const emailsSendMock = vi.fn().mockResolvedValue({ id: 'email_test_123' })
+  class MockResend {
+    emails = { send: emailsSendMock }
+  }
+  return { MockResend, emailsSendMock }
+})
+vi.mock('resend', () => ({ Resend: MockResend }))
+```
+
+This differs from the Twilio mock pattern in `sms.test.ts` because Twilio uses a default export function call (`twilio(sid, token)`), not `new Twilio(...)`.
+
+---
+
 ## Server Action Auth Limitation
 
 Server actions under the dashboard layout can fail auth on Next.js 16 POST re-renders because cookies are not forwarded correctly. Known workaround: convert to API route handler pattern (POST endpoint + client-side fetch). `connectStripe` was already converted. Other server actions (`bookings.ts`, `availability.ts`, `profile.ts`) still use `getClaims()` — they work when called from pages but can fail on layout re-renders.

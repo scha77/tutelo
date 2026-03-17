@@ -45,7 +45,7 @@
 
 ## Tasks
 
-- [ ] **T01: Add verification token migration, library, email template, and unit tests** `est:45m`
+- [x] **T01: Add verification token migration, library, email template, and unit tests** `est:45m`
   - Why: Establishes the foundation — DB columns for token storage, pure verification logic (token generation, expiry checking, email sending), the email template, and unit tests that prove the logic works. All downstream tasks depend on this.
   - Files: `supabase/migrations/0010_email_verification_tokens.sql`, `src/lib/verification.ts`, `src/emails/SchoolVerificationEmail.tsx`, `src/__tests__/verification.test.ts`
   - Do: Create migration 0010 adding `school_email_verification_token TEXT` and `school_email_verification_expires_at TIMESTAMPTZ` to teachers table with a partial index on token. Create `verification.ts` with `generateVerificationToken()` (returns `crypto.randomUUID()`), `isTokenExpired(expiresAt: string | Date): boolean`, and `sendVerificationEmail(toEmail: string, token: string): Promise<void>` (uses Resend with `SchoolVerificationEmail` template). Create `SchoolVerificationEmail.tsx` following `SessionReminderEmail.tsx` pattern — simple layout with a CTA button linking to `/api/verify-email?token=<token>`. Write unit tests for token generation (UUID format), expiry check (expired vs valid), and email send (mock Resend).

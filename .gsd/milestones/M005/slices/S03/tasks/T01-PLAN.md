@@ -73,6 +73,13 @@ Create the foundational pieces for the school email verification flow: a DB migr
 - `src/__tests__/sms.test.ts` — pattern for `vi.hoisted` mocking and test structure
 - `supabase/migrations/0008_sms_and_verification.sql` — confirms `verified_at` column already exists; do NOT re-add
 
+## Observability Impact
+
+- **New DB columns:** `teachers.school_email_verification_token` and `teachers.school_email_verification_expires_at` — inspectable via `SELECT school_email_verification_token, school_email_verification_expires_at FROM teachers WHERE school_email_verification_token IS NOT NULL` to see pending verifications.
+- **Email send signal:** `sendVerificationEmail()` calls `resend.emails.send()` — Resend dashboard shows delivery status. Failures throw and should be caught by the caller (T02/T03).
+- **Token expiry:** `isTokenExpired()` is a pure function — testable directly. In production, expired tokens are detected at verification time (T02) and logged via `console.warn`.
+- **Partial index:** `idx_teachers_verification_token` enables fast token lookups — visible in `\di` in psql.
+
 ## Expected Output
 
 - `supabase/migrations/0010_email_verification_tokens.sql` — migration file with ALTER TABLE and CREATE INDEX
