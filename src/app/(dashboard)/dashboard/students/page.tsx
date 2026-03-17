@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 export default async function StudentsPage() {
   const supabase = await createClient()
 
-  const { data: claimsData } = await supabase.auth.getClaims()
-  if (!claimsData?.claims) redirect('/login')
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const userId = claimsData.claims.sub
+  const userId = user.id
 
   const { data: teacher } = await supabase
     .from('teachers')

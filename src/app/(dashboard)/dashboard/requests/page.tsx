@@ -9,12 +9,12 @@ export default async function RequestsPage() {
   const supabase = await createClient()
 
   // Auth check
-  const { data: claimsData } = await supabase.auth.getClaims()
-  if (!claimsData?.claims) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
     redirect('/login')
   }
 
-  const userId = claimsData.claims.sub
+  const userId = user.id
 
   // Fetch teacher row
   const { data: teacher } = await supabase
