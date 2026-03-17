@@ -2,6 +2,7 @@
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { sendSessionReminderEmail } from '@/lib/email'
+import { sendSmsReminder } from '@/lib/sms'
 
 /**
  * GET /api/cron/session-reminders
@@ -45,8 +46,9 @@ export async function GET(request: NextRequest) {
       .select('id')
 
     if (updated && updated.length > 0) {
-      // Only email if this run actually set the flag — prevents duplicates on re-run
+      // Only notify if this run actually set the flag — prevents duplicates on re-run
       await sendSessionReminderEmail(session.id).catch(console.error)
+      sendSmsReminder(session.id).catch(console.error)
       sent++
     }
   }

@@ -9,6 +9,8 @@ export const BookingRequestSchema = z.object({
   bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM'),
+  parent_phone: z.string().optional(),
+  parent_sms_opt_in: z.boolean().optional().default(false),
 })
 
 export type BookingRequestData = z.infer<typeof BookingRequestSchema>

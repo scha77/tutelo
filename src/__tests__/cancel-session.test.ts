@@ -20,6 +20,11 @@ vi.mock('@/lib/email', () => ({
   sendCancellationEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Mock SMS module
+vi.mock('@/lib/sms', () => ({
+  sendSmsCancellation: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Stripe mock — class-based vi.hoisted pattern for ESM constructor mocking
 const { MockStripeClass, stripeCancelMock } = vi.hoisted(() => {
   const stripeCancelMock = vi.fn()
@@ -90,6 +95,7 @@ describe('cancelSession', () => {
     vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: vi.fn() } }))
     vi.mock('@/lib/email', () => ({ sendCancellationEmail: vi.fn().mockResolvedValue(undefined) }))
+    vi.mock('@/lib/sms', () => ({ sendSmsCancellation: vi.fn().mockResolvedValue(undefined) }))
     vi.mock('stripe', () => ({ default: MockStripeClass }))
     stripeCancelMock.mockResolvedValue({ id: PI_ID, status: 'canceled' })
   })

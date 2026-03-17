@@ -175,7 +175,7 @@ export default async function TeacherProfilePage({
         <HeroSection teacher={teacher} />
       </AnimatedProfile>
       <AnimatedProfile delay={0.1}>
-        <CredentialsBar teacher={teacher} />
+        <CredentialsBar teacher={teacher} isVerified={!!teacher.verified_at} />
       </AnimatedProfile>
       <AnimatedProfile delay={0.15}>
         <AboutSection teacher={teacher} />

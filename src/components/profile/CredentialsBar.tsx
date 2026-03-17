@@ -10,20 +10,24 @@ interface CredentialsBarProps {
     city: string | null
     state: string | null
   }
+  isVerified: boolean
 }
 
-export function CredentialsBar({ teacher }: CredentialsBarProps) {
+export function CredentialsBar({ teacher, isVerified }: CredentialsBarProps) {
   return (
     <div className="border-y bg-muted/30 py-3">
       <div className="mx-auto max-w-3xl px-4">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          {/* Verified badge */}
-          <div className="flex items-center gap-1 text-emerald-600">
-            <CheckCircle className="h-4 w-4" />
-            <span className="font-medium">Verified Teacher</span>
-          </div>
-
-          <span className="text-muted-foreground">·</span>
+          {/* Verified badge — only shown when teacher has verified school email */}
+          {isVerified && (
+            <>
+              <div className="flex items-center gap-1 text-emerald-600">
+                <CheckCircle className="h-4 w-4" />
+                <span className="font-medium">Verified Teacher</span>
+              </div>
+              <span className="text-muted-foreground">·</span>
+            </>
+          )}
 
           {/* Years experience */}
           {teacher.years_experience != null && (

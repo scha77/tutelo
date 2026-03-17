@@ -38,8 +38,11 @@ export function WizardStep1({ userId }: WizardStep1Props) {
     register,
     control,
     setValue,
+    watch,
     formState: { errors },
   } = useFormContext<FullOnboardingData>()
+
+  const phoneValue = watch('phone_number')
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -153,6 +156,37 @@ export function WizardStep1({ userId }: WizardStep1Props) {
           className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
         />
         <p className="text-xs text-muted-foreground">Upload a professional headshot. Max 5 MB.</p>
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="phone_number">Phone number (optional)</Label>
+        <Input
+          id="phone_number"
+          type="tel"
+          placeholder="(555) 555-1234"
+          {...register('phone_number')}
+          aria-invalid={!!errors.phone_number}
+        />
+        {errors.phone_number && (
+          <p className="text-sm text-destructive">{errors.phone_number.message}</p>
+        )}
+        <p className="text-xs text-muted-foreground">US phone number for SMS notifications.</p>
+      </div>
+
+      <div className="flex items-start gap-2">
+        <input
+          id="sms_opt_in"
+          type="checkbox"
+          {...register('sms_opt_in')}
+          disabled={!phoneValue}
+          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+        />
+        <Label
+          htmlFor="sms_opt_in"
+          className={`text-sm ${!phoneValue ? 'text-muted-foreground' : ''}`}
+        >
+          Text me session reminders and cancellation alerts
+        </Label>
       </div>
     </div>
   )

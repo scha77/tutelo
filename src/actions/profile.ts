@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js/min'
 
 const ProfileUpdateSchema = z.object({
   full_name: z.string().min(1).max(100).optional(),
@@ -18,6 +19,15 @@ const ProfileUpdateSchema = z.object({
   social_instagram: z.string().max(100).nullable().optional(),
   social_email: z.string().email().nullable().optional().or(z.literal('').transform(() => null)),
   social_website: z.string().max(200).nullable().optional(),
+  phone_number: z.preprocess(
+    (v) => {
+      if (typeof v !== 'string' || !v) return null
+      if (!isValidPhoneNumber(v, 'US')) return v // let refine catch it
+      return parsePhoneNumber(v, 'US')!.format('E.164')
+    },
+    z.string().nullable().optional()
+  ),
+  sms_opt_in: z.boolean().optional(),
 })
 
 async function getAuthUserId(): Promise<string | null> {

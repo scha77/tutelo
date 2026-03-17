@@ -203,6 +203,10 @@ export async function cancelSession(
   const { sendCancellationEmail } = await import('@/lib/email')
   sendCancellationEmail(bookingId).catch(console.error)
 
+  // Send cancellation SMS to opted-in recipients — fire and forget
+  const { sendSmsCancellation } = await import('@/lib/sms')
+  sendSmsCancellation(bookingId).catch(console.error)
+
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }

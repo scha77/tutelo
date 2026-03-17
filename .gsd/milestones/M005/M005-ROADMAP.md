@@ -56,7 +56,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: SMS Infrastructure & Teacher Phone Collection** `risk:high` `depends:[]`
+- [x] **S01: SMS Infrastructure & Teacher Phone Collection** `risk:high` `depends:[]`
   > After this: Teacher can add phone number with SMS opt-in during onboarding (WizardStep1) and in account settings; `src/lib/sms.ts` exists with `sendSmsReminder` and `sendSmsCancellation` functions using Twilio SDK; SMS reminder cron extends existing session-reminders handler to send texts alongside emails; `cancelSession` sends SMS alongside cancellation email; DB migration adds phone_number, sms_opt_in, verified_at columns to teachers table and parent_phone, parent_sms_opt_in columns to bookings table; all SMS gated on opt-in; unit tests pass; build passes.
 - [ ] **S02: Parent Phone Collection & Booking SMS** `risk:medium` `depends:[S01]`
   > After this: Parent can provide phone number with SMS consent checkbox on both deferred booking form and direct booking flow (InlineAuthForm); parent phone stored on bookings row; cancellation SMS reaches opted-in parents; reminder SMS reaches opted-in parents; booking form shows clear consent language; build passes.

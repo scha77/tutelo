@@ -2,9 +2,10 @@ import { describe, it, vi, expect, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // vi.hoisted ensures mock variables are available before module imports are hoisted
-const { mockSendSessionReminderEmail } = vi.hoisted(() => {
+const { mockSendSessionReminderEmail, mockSendSmsReminder } = vi.hoisted(() => {
   const mockSendSessionReminderEmail = vi.fn().mockResolvedValue(undefined)
-  return { mockSendSessionReminderEmail }
+  const mockSendSmsReminder = vi.fn().mockResolvedValue(undefined)
+  return { mockSendSessionReminderEmail, mockSendSmsReminder }
 })
 
 // Mock email module
@@ -16,6 +17,12 @@ vi.mock('@/lib/email', () => ({
   sendCheckoutLinkEmail: vi.fn().mockResolvedValue(undefined),
   sendBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
   sendSessionCompleteEmail: vi.fn().mockResolvedValue(undefined),
+}))
+
+// Mock SMS module
+vi.mock('@/lib/sms', () => ({
+  sendSmsReminder: mockSendSmsReminder,
+  sendSmsCancellation: vi.fn().mockResolvedValue(undefined),
 }))
 
 // Chainable Supabase mock factory
@@ -99,6 +106,7 @@ describe('GET /api/cron/session-reminders', () => {
     expect(body.sent).toBe(1)
     expect(body.checked).toBe(1)
     expect(mockSendSessionReminderEmail).toHaveBeenCalledWith('booking-1')
+    expect(mockSendSmsReminder).toHaveBeenCalledWith('booking-1')
   })
 
   it('idempotent: second cron run skips bookings where reminder_sent_at is already set', async () => {

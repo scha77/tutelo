@@ -17,6 +17,8 @@ interface Teacher {
   subjects: string[]
   grade_levels: string[]
   timezone: string
+  phone_number: string | null
+  sms_opt_in: boolean
 }
 
 interface AccountSettingsProps {
@@ -31,6 +33,8 @@ export function AccountSettings({ teacher }: AccountSettingsProps) {
   const [yearsExp, setYearsExp] = useState(
     teacher.years_experience != null ? String(teacher.years_experience) : ''
   )
+  const [phoneNumber, setPhoneNumber] = useState(teacher.phone_number ?? '')
+  const [smsOptIn, setSmsOptIn] = useState(teacher.sms_opt_in ?? false)
   const [isPending, startTransition] = useTransition()
 
   function handleSave(e: React.FormEvent) {
@@ -42,6 +46,8 @@ export function AccountSettings({ teacher }: AccountSettingsProps) {
         city: city || null,
         state: state || null,
         years_experience: yearsExp ? parseInt(yearsExp, 10) : null,
+        phone_number: phoneNumber || null,
+        sms_opt_in: phoneNumber ? smsOptIn : false,
       })
       if (result.error) {
         toast.error('Failed to save: ' + result.error)
@@ -115,6 +121,35 @@ export function AccountSettings({ teacher }: AccountSettingsProps) {
             onChange={(e) => setYearsExp(e.target.value)}
             placeholder="e.g. 5"
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="phone-number">Phone number (optional)</Label>
+          <Input
+            id="phone-number"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="(555) 555-1234"
+          />
+          <p className="text-xs text-muted-foreground">US phone number for SMS notifications.</p>
+        </div>
+
+        <div className="flex items-start gap-2">
+          <input
+            id="sms-opt-in"
+            type="checkbox"
+            checked={smsOptIn}
+            onChange={(e) => setSmsOptIn(e.target.checked)}
+            disabled={!phoneNumber}
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+          />
+          <Label
+            htmlFor="sms-opt-in"
+            className={`text-sm ${!phoneNumber ? 'text-muted-foreground' : ''}`}
+          >
+            Text me session reminders and cancellation alerts
+          </Label>
         </div>
 
         <div className="pt-2">

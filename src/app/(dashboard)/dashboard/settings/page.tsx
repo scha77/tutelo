@@ -10,7 +10,7 @@ export default async function DashboardSettingsPage() {
 
   const { data: teacher } = await supabase
     .from('teachers')
-    .select('full_name, school, city, state, years_experience, photo_url, subjects, grade_levels, timezone')
+    .select('full_name, school, city, state, years_experience, photo_url, subjects, grade_levels, timezone, phone_number, sms_opt_in')
     .eq('user_id', userId)
     .maybeSingle()
 
