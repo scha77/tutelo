@@ -38,6 +38,21 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
     }
   }
 
+  // Store parent phone (post-insert — create_booking RPC doesn't accept phone params)
+  if (parsed.data.parent_phone?.trim()) {
+    try {
+      await supabaseAdmin
+        .from('bookings')
+        .update({
+          parent_phone: parsed.data.parent_phone.trim(),
+          parent_sms_opt_in: parsed.data.parent_sms_opt_in ?? false,
+        })
+        .eq('id', result.booking_id!)
+    } catch (err) {
+      console.warn('[submitBookingRequest] Failed to store parent phone for booking', result.booking_id, err)
+    }
+  }
+
   // Fire email notification — do not await so booking confirmation is not delayed.
   // sendBookingEmail is a no-op stub in src/lib/email.ts until Plan 02-03 wires up Resend.
   try {

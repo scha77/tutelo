@@ -17,7 +17,7 @@ import { computeSessionAmount } from '@/lib/utils/booking'
 export async function POST(req: Request) {
   // 1. Parse request body (not a webhook — req.json() is correct here)
   const body = await req.json()
-  const { teacherId, bookingDate, startTime, endTime, studentName, subject, notes } = body
+  const { teacherId, bookingDate, startTime, endTime, studentName, subject, notes, parentPhone, parentSmsOptIn } = body
 
   // 2. Authenticate the parent
   const supabase = await createClient()
@@ -47,6 +47,8 @@ export async function POST(req: Request) {
       student_name: studentName,
       subject,
       notes: notes ?? null,
+      parent_phone: parentPhone ?? null,
+      parent_sms_opt_in: parentSmsOptIn ?? false,
       booking_date: bookingDate,
       start_time: startTime,
       end_time: endTime,
