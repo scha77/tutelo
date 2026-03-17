@@ -3,9 +3,14 @@ id: T03
 parent: S03
 milestone: M005
 provides:
-  - SchoolEmailVerification client component with verified/unverified states
-  - Settings page integration that fetches verified_at and renders verification UI
-  - URL param feedback handling for post-redirect toast messages
+  - SchoolEmailVerification component renders verified state with green CheckCircle when isVerified is true
+  - SchoolEmailVerification component renders email input form when isVerified is false
+  - Form calls requestSchoolEmailVerification action with useTransition loading state (Loader2 spinner)
+  - Success and error toasts display correctly after action call (toast.success/toast.error)
+  - URL params from verify-email redirect trigger appropriate toast messages (verified, invalid, expired)
+  - Settings page select query includes verified_at
+  - Settings page renders SchoolEmailVerification below AccountSettings in space-y-8 container
+  - npm run build passes with zero errors (25 routes)
 key_files:
   - src/components/dashboard/SchoolEmailVerification.tsx
   - src/app/(dashboard)/dashboard/settings/page.tsx

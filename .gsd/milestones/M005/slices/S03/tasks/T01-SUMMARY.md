@@ -3,10 +3,13 @@ id: T01
 parent: S03
 milestone: M005
 provides:
-  - DB migration for verification token columns and partial index
-  - Pure verification library (token gen, expiry check, email send)
-  - SchoolVerificationEmail React Email template
-  - Unit tests for all verification logic
+  - Migration 0010 adds school_email_verification_token TEXT and school_email_verification_expires_at TIMESTAMPTZ to teachers
+  - Migration 0010 includes partial index idx_teachers_verification_token on non-null tokens
+  - generateVerificationToken() returns UUID v4 string via crypto.randomUUID()
+  - isTokenExpired(expiresAt) correctly identifies past and future dates
+  - sendVerificationEmail(toEmail, token) sends via Resend with SchoolVerificationEmail template and correct verification URL
+  - SchoolVerificationEmail React Email template renders with CTA Button linking to verification URL
+  - 9 unit tests pass covering all verification logic (token format, uniqueness, expiry, email send args, URL construction)
 key_files:
   - supabase/migrations/0010_email_verification_tokens.sql
   - src/lib/verification.ts
