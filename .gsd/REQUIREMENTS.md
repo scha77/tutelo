@@ -738,49 +738,49 @@ Review prompt is delivered via email after session completion
 ### VERIFY-01 — Teacher identity verification system
 
 - Class: differentiator
-- Status: deferred
+- Status: validated
 - Description: A mechanism to confirm that people signing up are actual current or former teachers, adding a trust layer for parents.
 - Why it matters: Trust is the core value prop. Parents need to know they're booking verified educators.
 - Source: user
-- Primary owning slice: M005
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Research-dependent. No obvious turnkey API for teacher credential verification. State licensing databases are fragmented.
+- Primary owning slice: M005/S03
+- Supporting slices: M005/S01 (verified_at column in migration 0008)
+- Validated by: M005/S03 — school email verification flow: requestSchoolEmailVerification server action writes token to DB and sends Resend email; /api/verify-email route stamps verified_at and clears token; settings page shows verification UI; CredentialsBar badge gated on !!teacher.verified_at; 9 unit tests pass; build clean
+- Notes: School email domain validation not enforced (any valid email passes); domain allowlist is a future enhancement. Alumni .edu addresses accepted — MVP trust level intentional. Implementation chose school email verification over third-party API or state license lookup (free, automatable, no 50-state fragmentation).
 
 ### SMS-01 — SMS session reminders to teachers and parents
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Session reminders sent via text message in addition to email.
 - Why it matters: Text messages have much higher open rates than email. Critical for reducing no-shows.
 - Source: user
-- Primary owning slice: M005
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Requires Twilio or similar, phone number collection, opt-in consent. Ongoing cost.
+- Primary owning slice: M005/S01
+- Supporting slices: M005/S02
+- Validated by: M005/S01 — src/lib/sms.ts with sendSmsReminder (Twilio SDK); session-reminders cron extended to send SMS alongside email for opted-in recipients; DB migration 0008 adds phone_number, sms_opt_in to teachers; all sends gated on opt-in; unit tests pass; build clean
+- Notes: A2P 10DLC registration is an external process (2–4 weeks); production SMS won't reach non-test numbers until carrier registration completes.
 
 ### SMS-02 — SMS last-minute cancellation alerts
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: Last-minute cancellation alerts sent via text message for immediate parent notification.
 - Why it matters: Email may not be seen in time for a last-minute cancellation. Text is instant.
 - Source: user
-- Primary owning slice: M005
-- Supporting slices: none
-- Validation: unmapped
+- Primary owning slice: M005/S01
+- Supporting slices: M005/S02
+- Validated by: M005/S01+S02 — cancelSession sends sendSmsCancellation fire-and-forget in the same request; parent_phone + parent_sms_opt_in on bookings table; all sends gated on opt-in
 - Notes: Depends on SMS-01 infrastructure.
 
 ### CANCEL-02 — Teacher last-minute cancellation via text (SMS)
 
 - Class: core-capability
-- Status: deferred
+- Status: validated
 - Description: The last-minute cancellation notification from CANCEL-01 is also sent via SMS.
 - Why it matters: Parents need immediate notification — email alone may not be fast enough.
 - Source: user
-- Primary owning slice: M005
-- Supporting slices: none
-- Validation: unmapped
+- Primary owning slice: M005/S01
+- Supporting slices: M005/S02
+- Validated by: M005/S01+S02 — cancelSession calls sendSmsCancellation (Twilio) alongside sendCancellationEmail (Resend) in the same request for synchronous delivery; gated on parent_sms_opt_in
 - Notes: Depends on SMS-01 and CANCEL-01.
 
 ## Out of Scope
@@ -811,14 +811,14 @@ Review prompt is delivered via email after session completion
 | AVAIL-06 | core-capability | validated | M004/S02 | none | M004 — per-date overrides + 90-day window |
 | AVAIL-07 | quality-attribute | validated | M004/S01 | M004/S02 | M004 — editor rewrite + Tabs shell |
 | CANCEL-01 | core-capability | validated | M004/S04 | none | M004 — cancelSession + 8 tests |
-| VERIFY-01 | differentiator | deferred | M005 | none | unmapped |
-| SMS-01 | core-capability | deferred | M005 | none | unmapped |
-| SMS-02 | core-capability | deferred | M005 | none | unmapped |
-| CANCEL-02 | core-capability | deferred | M005 | none | unmapped |
+| VERIFY-01 | differentiator | validated | M005/S03 | M005/S01 | M005/S03 — school email verification flow; 9 unit tests; build clean |
+| SMS-01 | core-capability | validated | M005/S01 | M005/S02 | M005/S01 — Twilio SMS, cron extended, opt-in gated |
+| SMS-02 | core-capability | validated | M005/S01 | M005/S02 | M005/S01+S02 — cancelSession sends SMS synchronously |
+| CANCEL-02 | core-capability | validated | M005/S01 | M005/S02 | M005/S01+S02 — cancelSession: SMS + email in same request |
 
 ## Coverage Summary
 
 - Active requirements: 0
-- Validated: 81 (59 from M001/M002 + 17 from M003 + 5 from M004)
-- Deferred: 4 (M005: 4)
+- Validated: 85 (59 from M001/M002 + 17 from M003 + 5 from M004 + 4 from M005)
+- Deferred: 0
 - Unmapped active requirements: 0

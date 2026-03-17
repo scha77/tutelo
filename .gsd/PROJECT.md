@@ -24,7 +24,11 @@ Tagline: "Shopify for teacher side hustles."
   - DB migration 0008 adds `phone_number`, `sms_opt_in`, `verified_at` to teachers; `parent_phone`, `parent_sms_opt_in` to bookings
   - shadcn/ui Checkbox component added to project
   - 402 tests passing; build clean
-  - S03 (school email verification + badge gating) is next and independent
+  - S03 complete: school email verification flow end-to-end — token generation, Resend email delivery, /api/verify-email route stamps verified_at, CredentialsBar badge gated on real DB state; 9 unit tests pass; build clean
+  - All 3 slices complete — M005 milestone achieved
+- DB migration 0010 adds `school_email_verification_token`, `school_email_verification_expires_at` to teachers with partial index
+- **M005 COMPLETE** — all slices done, build clean, milestone criteria met
+- S03 (school email verification + badge gating) is next and independent
 - **Availability & Scheduling Overhaul (M004):** 5-minute granularity recurring editor, per-date override scheduling, override-wins-recurring precedence on booking calendar, 30-min booking slot expansion, duration-prorated payments, one-click session cancellation with email notification
 - Branded marketing landing page at tutelo.app/ with hero, how-it-works, problem/solution, interactive teacher mock, and CTA
 - Animation system (motion v12.36.0) active across 6 surfaces: landing scroll reveals, page transitions, onboarding step slides, dashboard card staggers, profile section fades, button micro-interactions
@@ -75,7 +79,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M002:** Production Launch — Deployed to tutelo.app; all flows verified end-to-end on live URL
 - [x] **M003:** Landing Page & Polish — Marketing landing page, brand identity, UI animations, mobile dashboard, OG tags, social_email fix
 - [x] **M004:** Availability & Scheduling Overhaul — 5-min granularity, per-date overrides, weeks-in-advance planning, redesigned editor, last-minute cancellation
-- [ ] **M005:** Trust & Communication — Teacher verification system, SMS notifications, SMS cancellation alerts
+- [x] **M005:** Trust & Communication — Teacher verification system, SMS notifications, SMS cancellation alerts
 
 ---
-*Last updated: 2026-03-17 after M005/S02 completion*
+*Last updated: 2026-03-17 after M005/S03 completion — M005 milestone complete*
