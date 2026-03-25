@@ -57,8 +57,9 @@ describe('generateMetadata for teacher /[slug] pages', () => {
     expect(metadata.description).toContain('Portland')
     expect(metadata.description).toContain('Springfield Elementary')
     expect(metadata.openGraph?.title).toContain('Ms. Johnson')
-    expect(metadata.openGraph?.type).toBe('profile')
-    expect(metadata.twitter?.card).toBe('summary_large_image')
+    expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('profile')
+    expect((metadata.openGraph as Record<string, unknown>)?.url).toBe('https://tutelo.app/ms-johnson')
+    expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image')
   })
 
   it('returns generic Tutelo fallback for an invalid slug', async () => {
@@ -99,6 +100,7 @@ describe('generateMetadata for teacher /[slug] pages', () => {
     // Should not crash or include "undefined"
     expect(metadata.description).not.toContain('undefined')
     expect(metadata.description).not.toContain('null')
+    expect((metadata.openGraph as Record<string, unknown>)?.url).toBe('https://tutelo.app/mr-smith')
   })
 
   it('handles teacher with null subjects array', async () => {
@@ -121,5 +123,6 @@ describe('generateMetadata for teacher /[slug] pages', () => {
     expect(metadata.title).toContain('Ms. Davis')
     expect(metadata.description).toContain('various subjects')
     expect(metadata.description).toContain('Austin')
+    expect((metadata.openGraph as Record<string, unknown>)?.url).toBe('https://tutelo.app/ms-davis')
   })
 })

@@ -72,7 +72,8 @@ describe('saveWizardStep social_email auto-population', () => {
 
     // Verify insert was called with social_email from auth
     expect(mockInsert).toHaveBeenCalledTimes(1)
-    const insertArg = mockInsert.mock.calls[0][0]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const insertArg = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertArg.social_email).toBe('teacher@example.com')
     expect(insertArg.full_name).toBe('Ms. Johnson')
     expect(insertArg.user_id).toBe('user-123')
@@ -91,7 +92,7 @@ describe('saveWizardStep social_email auto-population', () => {
 
     // Insert still happens — social_email is null (graceful fallback)
     expect(mockInsert).toHaveBeenCalledTimes(1)
-    const insertArg = mockInsert.mock.calls[0][0]
+    const insertArg = (mockInsert.mock.calls[0] as unknown[])[0] as Record<string, unknown>
     expect(insertArg.social_email).toBeNull()
   })
 
@@ -108,7 +109,7 @@ describe('saveWizardStep social_email auto-population', () => {
 
     expect(result.error).toBeUndefined()
 
-    const insertArg = mockInsert.mock.calls[0][0]
+    const insertArg = (mockInsert.mock.calls[0] as unknown[])[0] as Record<string, unknown>
     expect(insertArg.social_email).toBeNull()
   })
 

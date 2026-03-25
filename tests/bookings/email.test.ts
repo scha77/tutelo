@@ -35,6 +35,7 @@ const mockBookingData: BookingRequestData = {
   bookingDate: '2026-04-15',
   startTime: '15:00',
   endTime: '16:00',
+  parent_sms_opt_in: false,
 }
 
 describe('sendBookingEmail', () => {

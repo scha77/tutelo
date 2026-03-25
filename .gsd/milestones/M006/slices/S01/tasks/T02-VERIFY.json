@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M006/S01/T02",
+  "timestamp": 1774442758862,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 1,
+      "durationMs": 2194,
+      "verdict": "fail"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "durationMs": 9927,
+      "verdict": "pass"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

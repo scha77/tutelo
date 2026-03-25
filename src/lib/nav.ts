@@ -13,6 +13,7 @@ import {
   Calendar,
   Settings,
   LayoutDashboard,
+  Megaphone,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -29,6 +30,7 @@ export const navItems: NavItem[] = [
   { href: '/dashboard/students',     label: 'Students',     icon: Users           },
   { href: '/dashboard/page',         label: 'Page',         icon: FileText        },
   { href: '/dashboard/availability', label: 'Availability', icon: Calendar        },
+  { href: '/dashboard/promote',      label: 'Promote',      icon: Megaphone       },
   { href: '/dashboard/settings',     label: 'Settings',     icon: Settings        },
 ]
 

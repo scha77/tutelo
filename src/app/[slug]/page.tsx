@@ -51,6 +51,7 @@ export async function generateMetadata({
       title,
       description,
       type: 'profile',
+      url: `https://tutelo.app/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
