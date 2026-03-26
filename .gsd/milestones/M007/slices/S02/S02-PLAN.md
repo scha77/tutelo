@@ -50,7 +50,7 @@
   - Files: `src/emails/WaitlistNotificationEmail.tsx`, `src/lib/email.ts`, `src/lib/utils/waitlist.ts`, `src/actions/bookings.ts`, `tests/unit/waitlist-notify.test.ts`, `src/__tests__/cancel-session.test.ts`
   - Verify: npx vitest run tests/unit/waitlist-notify.test.ts && npx vitest run src/__tests__/cancel-session.test.ts && npx tsc --noEmit
 
-- [ ] **T02: Build waitlist dashboard page with nav entry and delete action** `est:1h`
+- [x] **T02: Build waitlist dashboard page with nav entry and delete action** `est:1h`
   Create the /dashboard/waitlist RSC page listing waitlist entries, a removeWaitlistEntry server action, a WaitlistEntryRow client component with delete + pending state, and add the Waitlist nav item between Students and Settings.
   - Files: `src/app/(dashboard)/dashboard/waitlist/page.tsx`, `src/actions/waitlist.ts`, `src/components/dashboard/WaitlistEntryRow.tsx`, `src/lib/nav.ts`
   - Verify: npx tsc --noEmit && npm run build | grep -q 'dashboard/waitlist'
