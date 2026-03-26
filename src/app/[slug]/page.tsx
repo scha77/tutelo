@@ -7,6 +7,7 @@ import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
 import { BookingCalendar } from '@/components/profile/BookingCalendar'
+import { AtCapacitySection } from '@/components/profile/AtCapacitySection'
 import { BookNowCTA } from '@/components/profile/BookNowCTA'
 import { ReviewsSection } from '@/components/profile/ReviewsSection'
 import { AnimatedProfile } from '@/components/profile/AnimatedProfile'
@@ -170,6 +171,29 @@ export default async function TeacherProfilePage({
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // M007-S01: Capacity check — only query if teacher has a capacity limit set
+  let atCapacity = false
+  if (teacher.capacity_limit != null) {
+    const ninetyDaysAgo = format(addDays(today, -90), 'yyyy-MM-dd')
+    const { data: bookingRows, error: capacityError } = await supabase
+      .from('bookings')
+      .select('student_name')
+      .eq('teacher_id', teacher.id)
+      .in('status', ['confirmed', 'completed'])
+      .gte('booking_date', ninetyDaysAgo)
+
+    if (capacityError) {
+      // Safe default: show booking calendar on error (per slice plan failure visibility spec)
+      console.error('[capacity] Query failed on profile page', {
+        teacher_id: teacher.id,
+        error: capacityError.message,
+      })
+    } else {
+      const distinctStudents = new Set(bookingRows?.map((r) => r.student_name)).size
+      atCapacity = distinctStudents >= teacher.capacity_limit
+    }
+  }
+
   return (
     <main style={{ '--accent': teacher.accent_color } as React.CSSProperties}>
       <AnimatedProfile delay={0}>
@@ -181,19 +205,27 @@ export default async function TeacherProfilePage({
       <AnimatedProfile delay={0.15}>
         <AboutSection teacher={teacher} />
       </AnimatedProfile>
-      <BookingCalendar
-        slots={teacher.availability ?? []}
-        overrides={overrides ?? []}
-        teacherTimezone={teacher.timezone}
-        teacherName={teacher.full_name}
-        accentColor={teacher.accent_color}
-        subjects={teacher.subjects ?? []}
-        teacherId={teacher.id}
-        submitAction={submitBookingRequest}
-        stripeConnected={teacher.stripe_charges_enabled ?? false}
-        teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
-      />
-      <BookNowCTA />
+      {atCapacity ? (
+        <AtCapacitySection
+          teacherName={teacher.full_name}
+          teacherId={teacher.id}
+          accentColor={teacher.accent_color}
+        />
+      ) : (
+        <BookingCalendar
+          slots={teacher.availability ?? []}
+          overrides={overrides ?? []}
+          teacherTimezone={teacher.timezone}
+          teacherName={teacher.full_name}
+          accentColor={teacher.accent_color}
+          subjects={teacher.subjects ?? []}
+          teacherId={teacher.id}
+          submitAction={submitBookingRequest}
+          stripeConnected={teacher.stripe_charges_enabled ?? false}
+          teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
+        />
+      )}
+      {!atCapacity && <BookNowCTA />}
       <AnimatedProfile delay={0.2}>
         <ReviewsSection reviews={reviews ?? []} />
       </AnimatedProfile>

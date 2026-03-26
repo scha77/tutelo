@@ -44,7 +44,7 @@
   - Files: `src/components/dashboard/CapacitySettings.tsx`, `src/app/(dashboard)/dashboard/settings/page.tsx`, `src/actions/profile.ts`
   - Verify: npx tsc --noEmit && npm run build
 
-- [ ] **T03: Profile at-capacity state + waitlist signup form** `est:1h`
+- [x] **T03: Profile at-capacity state + waitlist signup form** `est:1h`
   Modify the teacher profile page to check capacity and conditionally render an AtCapacitySection with a waitlist email signup form instead of the booking calendar. Create the AtCapacitySection and WaitlistForm client components.
   - Files: `src/app/[slug]/page.tsx`, `src/components/profile/AtCapacitySection.tsx`, `src/components/profile/WaitlistForm.tsx`, `src/app/api/waitlist/route.ts`
   - Verify: npx tsc --noEmit && npm run build
