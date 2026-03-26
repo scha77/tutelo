@@ -39,7 +39,7 @@
   - Files: `supabase/migrations/0011_capacity_and_session_types.sql`, `src/lib/utils/capacity.ts`, `tests/unit/capacity.test.ts`
   - Verify: npx vitest run tests/unit/capacity.test.ts && npx tsc --noEmit
 
-- [ ] **T02: Dashboard capacity settings UI** `est:40m`
+- [x] **T02: Dashboard capacity settings UI** `est:40m`
   Add a CapacitySettings component to the dashboard settings page so teachers can set or clear their capacity limit. Wire it to the existing updateProfile action.
   - Files: `src/components/dashboard/CapacitySettings.tsx`, `src/app/(dashboard)/dashboard/settings/page.tsx`, `src/actions/profile.ts`
   - Verify: npx tsc --noEmit && npm run build

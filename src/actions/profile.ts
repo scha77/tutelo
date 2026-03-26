@@ -28,6 +28,7 @@ const ProfileUpdateSchema = z.object({
     z.string().nullable().optional()
   ),
   sms_opt_in: z.boolean().optional(),
+  capacity_limit: z.number().int().min(1).max(100).nullable().optional(),
 })
 
 async function getAuthUserId(): Promise<string | null> {
