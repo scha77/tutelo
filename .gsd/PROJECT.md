@@ -14,6 +14,15 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
+- **Capacity & Pricing (M007 — in progress 🔄):**
+  - **S01 complete:** Capacity limits + waitlist signup
+    - `capacity_limit` column on teachers table (migration 0011); `waitlist` and `session_types` tables with RLS
+    - `CapacitySettings` component in `/dashboard/settings` — teacher can set/clear limit (1–100 students)
+    - Profile page conditionally shows `AtCapacitySection` + `WaitlistForm` instead of booking calendar
+    - `POST /api/waitlist` — anonymous email signup with duplicate detection (409), PII-safe logging
+    - 15 unit tests for `isAtCapacity()` / `getCapacityStatus()` pass; `tsc --noEmit` exits 0; build clean
+  - S02 pending: Waitlist dashboard + email notifications
+  - S03 pending: Session types CRUD + variable pricing in booking flow
 - All 90 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006)
 - 272 tests passing; build clean
 - **Growth Tools (M006 — complete ✅):**

@@ -61,35 +61,35 @@ This file is the explicit capability and coverage contract for the project.
 
 ### CAP-01 — Teacher can set max active students or max weekly sessions in dashboard settings
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Dashboard settings include a capacity limit field (nullable — null means unlimited). System counts active bookings/students against this limit.
 - Why it matters: Side-hustling teachers may only have room for 3 students. They need to control capacity without removing their link.
 - Source: user
 - Primary owning slice: M007/S01
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S01 — capacity_limit column added to teachers table (migration 0011); CapacitySettings component in dashboard/settings lets teachers set or clear limit (1–100); updateProfile action extended with z.number().int().min(1).max(100).nullable(); npx tsc --noEmit exits 0; npm run build passes.
 - Notes: New capacity_limit column on teachers table.
 
 ### CAP-02 — Profile page shows "at capacity" state when limit reached
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a teacher's capacity is reached, the profile page shows "Currently at capacity" instead of the booking calendar. The teacher's info remains visible.
 - Why it matters: Better than an empty calendar or a confusing "no slots available" message.
 - Source: user
 - Primary owning slice: M007/S01
 - Supporting slices: M007/S02
-- Validation: unmapped
+- Validation: M007/S01 — Profile RSC checks capacity before rendering; AtCapacitySection shows 'Currently at capacity' with teacher name and WaitlistForm; BookingCalendar replaced when at capacity; BookNowCTA hidden; safe fallback to booking calendar on query error; /api/waitlist in route manifest; npm run build exits 0.
 - Notes: Must handle edge cases: concurrent bookings near capacity, cancellations freeing capacity.
 
 ### WAIT-01 — Parent can join waitlist when teacher is at capacity
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a teacher is at capacity, parents can enter their email to be notified when a spot opens.
 - Why it matters: Captures demand that would otherwise bounce. Teacher keeps their link active even when full.
 - Source: user
 - Primary owning slice: M007/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S01 — waitlist table created with RLS (anon insert, teacher-gated select/delete); WaitlistForm component POSTs to /api/waitlist; API route validates email, inserts via supabaseAdmin, returns 201/409/400/500 with appropriate messages; duplicate email returns friendly 'already on waitlist' state; npm run build passes with /api/waitlist in route manifest.
 - Notes: New waitlist table: (id, teacher_id, parent_email, created_at, notified_at).
 
 ### WAIT-02 — Teacher sees waitlist in dashboard and can manually open spots

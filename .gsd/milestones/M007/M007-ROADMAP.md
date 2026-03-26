@@ -12,7 +12,7 @@
 
 ## Slices
 
-- [ ] **S01: Capacity Limits + Waitlist Signup** `risk:low-medium` `depends:[]`
+- [x] **S01: Capacity Limits + Waitlist Signup** `risk:low-medium` `depends:[]`
   > After this: Teacher sets capacity_limit=3 in dashboard settings. With 3 active students, their profile page shows 'Currently at capacity' with teacher info still visible and a waitlist email signup form replacing the booking calendar. A parent enters their email and sees a confirmation. Teachers without a capacity limit see no changes.
 
 - [ ] **S02: Waitlist Dashboard + Notifications** `risk:low` `depends:[S01]`

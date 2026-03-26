@@ -212,3 +212,23 @@ ln -s ../../.env .env
 ```
 
 Worktrees share git history but have isolated working directories. Any file that is gitignored (like `.env.local`) must be explicitly made available. This is a recurring gap — establish the symlink as part of worktree initialization.
+
+---
+
+## Safe-Default Pattern for Capacity / Feature Gating Checks
+
+When a gating check (capacity, feature flag, rate limit) fails due to a DB error, **always default to the permissive state** so the product remains functional. For capacity specifically: if `getCapacityStatus()` throws or returns an error, render the booking calendar (not the at-capacity state). This prevents a transient DB hiccup from locking all parents out of booking.
+
+Apply this consistently: `if (error) { return { atCapacity: false, ... } }`. Log the error with structured context (teacher_id, error code, message) but never PII.
+
+---
+
+## Inline Capacity Query vs. Importing Utility in Profile RSC
+
+`src/app/[slug]/page.tsx` deliberately inlines the capacity DB query rather than importing `getCapacityStatus()` from `src/lib/utils/capacity.ts`. The RSC already has a Supabase client, and the query is a 3-line `.select().eq().in().gte()` — importing the utility would add a dependency for minimal gain. The utility is valuable for **unit testing** (pure `isAtCapacity()`) and for **reuse across multiple call sites** (S02 notification trigger). Use the utility in new server actions; prefer inline for single-use RSC queries.
+
+---
+
+## Active Student Count: Distinct student_name, Last 90 Days
+
+The "active student" metric used for capacity counting is: **distinct `student_name` values from `bookings` where `status IN ('confirmed', 'completed')` AND `booking_date >= 90 days ago`**. This definition is used in both `getCapacityStatus()` (T01) and the CapacitySettings display (T02) — keep them in sync if the definition changes. The 90-day window prevents long-ago completed engagements from permanently consuming capacity slots.
