@@ -34,7 +34,7 @@
 
 ## Tasks
 
-- [ ] **T01: Migration + capacity check utility** `est:45m`
+- [x] **T01: Migration + capacity check utility** `est:45m`
   Write the 0011 migration adding capacity_limit to teachers, waitlist table, and session_types table (per D005). Create a server-side utility function that counts active students for a teacher and returns whether they are at capacity.
   - Files: `supabase/migrations/0011_capacity_and_session_types.sql`, `src/lib/utils/capacity.ts`, `tests/unit/capacity.test.ts`
   - Verify: npx vitest run tests/unit/capacity.test.ts && npx tsc --noEmit
