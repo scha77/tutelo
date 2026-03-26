@@ -222,6 +222,10 @@ export async function cancelSession(
   const { sendSmsCancellation } = await import('@/lib/sms')
   sendSmsCancellation(bookingId).catch(console.error)
 
+  // Notify waitlisted parents if capacity freed — fire and forget
+  const { checkAndNotifyWaitlist } = await import('@/lib/utils/waitlist')
+  checkAndNotifyWaitlist(teacher.id).catch(console.error)
+
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }

@@ -45,7 +45,7 @@
 
 ## Tasks
 
-- [ ] **T01: Build waitlist notification pipeline (email + utility + cancelSession hook + tests)** `est:1h30m`
+- [x] **T01: Build waitlist notification pipeline (email + utility + cancelSession hook + tests)** `est:1h30m`
   Create the WaitlistNotificationEmail React Email component, add sendWaitlistNotificationEmail() to email.ts, implement checkAndNotifyWaitlist() utility in a new waitlist.ts, hook it into cancelSession as fire-and-forget, and write comprehensive unit tests for both the utility and the cancel-session integration.
   - Files: `src/emails/WaitlistNotificationEmail.tsx`, `src/lib/email.ts`, `src/lib/utils/waitlist.ts`, `src/actions/bookings.ts`, `tests/unit/waitlist-notify.test.ts`, `src/__tests__/cancel-session.test.ts`
   - Verify: npx vitest run tests/unit/waitlist-notify.test.ts && npx vitest run src/__tests__/cancel-session.test.ts && npx tsc --noEmit

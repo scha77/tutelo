@@ -9,6 +9,7 @@ import { BookingConfirmationEmail } from '@/emails/BookingConfirmationEmail'
 import { CancellationEmail } from '@/emails/CancellationEmail'
 import { SessionCompleteEmail } from '@/emails/SessionCompleteEmail'
 import { SessionReminderEmail } from '@/emails/SessionReminderEmail'
+import { WaitlistNotificationEmail } from '@/emails/WaitlistNotificationEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -277,5 +278,20 @@ export async function sendSessionCompleteEmail(bookingId: string, reviewToken: s
       teacherName: teacher.full_name,
       reviewUrl,
     }),
+  })
+}
+
+export async function sendWaitlistNotificationEmail(
+  parentEmail: string,
+  teacherName: string,
+  teacherSlug: string
+): Promise<void> {
+  const bookingLink = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'}/${teacherSlug}`
+
+  await resend.emails.send({
+    from: 'Tutelo <noreply@tutelo.app>',
+    to: parentEmail,
+    subject: `A spot just opened up — book with ${teacherName}`,
+    react: WaitlistNotificationEmail({ teacherName, bookingLink }),
   })
 }
