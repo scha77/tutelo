@@ -47,6 +47,8 @@ interface BookingCalendarProps {
   // Direct booking path (Phase 4):
   stripeConnected: boolean        // true = direct booking path; false = deferred (no change)
   teacherStripeAccountId?: string // passed through to create-intent fetch
+  // Session types (S03): optional array of teacher-defined session types
+  sessionTypes?: Array<{ id: string; label: string; price: number; duration_minutes: number; sort_order: number }>
 }
 
 const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -62,6 +64,7 @@ export function BookingCalendar({
   submitAction,
   stripeConnected,
   teacherStripeAccountId,
+  sessionTypes,
 }: BookingCalendarProps) {
   const searchParams = useSearchParams()
   const today = startOfToday()

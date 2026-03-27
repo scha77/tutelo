@@ -10,7 +10,7 @@
   - Estimate: 45m
   - Files: src/app/api/direct-booking/create-intent/route.ts, src/lib/schemas/booking.ts, tests/unit/session-type-pricing.test.ts
   - Verify: npx vitest run tests/unit/session-type-pricing.test.ts && npx tsc --noEmit
-- [ ] **T02: Wire SessionTypeManager into settings page + fetch session types in profile RSC** — Two wiring changes:
+- [x] **T02: Wired SessionTypeManager into dashboard settings and session type data pipeline into profile page BookingCalendar** — Two wiring changes:
 
 **Settings page** (`src/app/(dashboard)/dashboard/settings/page.tsx`):
 1. Add `id` to the teacher select string (currently missing — needed to query session_types by teacher.id)

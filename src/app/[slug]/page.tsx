@@ -170,6 +170,13 @@ export default async function TeacherProfilePage({
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // SESS-02: Fetch session types for session type selector on profile page
+  const { data: sessionTypes } = await supabase
+    .from('session_types')
+    .select('id, label, price, duration_minutes, sort_order')
+    .eq('teacher_id', teacher.id)
+    .order('sort_order')
+
   return (
     <main style={{ '--accent': teacher.accent_color } as React.CSSProperties}>
       <AnimatedProfile delay={0}>
@@ -192,6 +199,7 @@ export default async function TeacherProfilePage({
         submitAction={submitBookingRequest}
         stripeConnected={teacher.stripe_charges_enabled ?? false}
         teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
+        sessionTypes={sessionTypes ?? []}
       />
       <BookNowCTA />
       <AnimatedProfile delay={0.2}>
