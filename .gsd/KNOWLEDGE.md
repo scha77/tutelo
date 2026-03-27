@@ -212,3 +212,23 @@ ln -s ../../.env .env
 ```
 
 Worktrees share git history but have isolated working directories. Any file that is gitignored (like `.env.local`) must be explicitly made available. This is a recurring gap — establish the symlink as part of worktree initialization.
+
+---
+
+## Profile Page Capacity Check: Inline Query vs. Utility Import
+
+The profile RSC ([slug]/page.tsx) performs the capacity check inline (direct Supabase query) rather than importing `getCapacityStatus` from `src/lib/utils/capacity.ts`. This is intentional: the page already has a `supabase` client from cookie auth and shares the same request lifecycle. The utility accepts a `SupabaseClient` parameter specifically to support this inline-or-import flexibility. If you refactor to use the utility import, pass the page's existing `supabase` client — do NOT create a new one.
+
+---
+
+## AtCapacitySection Must Match BookingCalendar Layout Signature
+
+`AtCapacitySection` deliberately uses the same `mx-auto max-w-3xl px-4 py-8` container as `BookingCalendar`. The profile page conditionally renders one or the other in the same slot. If you change `BookingCalendar`'s container width/padding, update `AtCapacitySection` to match — otherwise the layout shifts noticeably when switching between states.
+
+---
+
+## Zod safeParse Error Access: `.issues` not `.errors`
+
+In Zod v3, `safeParse` returns `{ success: false, error: ZodError }` where `ZodError` exposes `.issues` (array of `ZodIssue`), NOT `.errors`. TypeScript will correctly flag `parsed.error.errors[0]` with "Property 'errors' does not exist on type 'ZodError'" — the fix is `parsed.error.issues[0].message`.
+
+**Affected:** `src/actions/session-types.ts` (discovered during S02 build verification — pre-existing S03 code). Apply `parsed.error.issues[0].message` everywhere Zod `safeParse` error messages are extracted.

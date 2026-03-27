@@ -11,6 +11,7 @@ export const BookingRequestSchema = z.object({
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM'),
   parent_phone: z.string().optional(),
   parent_sms_opt_in: z.boolean().optional().default(false),
+  session_type_id: z.string().uuid().optional(),
 })
 
 export type BookingRequestData = z.infer<typeof BookingRequestSchema>
