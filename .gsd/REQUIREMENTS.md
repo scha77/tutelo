@@ -94,25 +94,25 @@ This file is the explicit capability and coverage contract for the project.
 
 ### WAIT-02 — Teacher sees waitlist in dashboard and can manually open spots
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Dashboard shows waitlisted parents with email and join date. Teacher can manually adjust capacity or remove waitlist entries.
 - Why it matters: Teacher maintains control over their practice size.
 - Source: user
 - Primary owning slice: M007/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S02 — /dashboard/waitlist RSC page lists waitlist entries (email, join date, notified status badge); removeWaitlistEntry server action with teacher-gated ownership check deletes entries; WaitlistEntryRow client component with confirmation dialog + pending state; Waitlist nav item in sidebar between Students and Page; npx tsc --noEmit exits 0; npm run build passes with /dashboard/waitlist in route manifest.
 - Notes: none
 
 ### WAIT-03 — Waitlisted parents auto-notified via email when capacity frees up
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a booking is cancelled or a student leaves, freeing capacity below the limit, waitlisted parents are automatically notified via email with a link to book.
 - Why it matters: Closes the loop — parents who expressed interest shouldn't have to check back manually.
 - Source: user
 - Primary owning slice: M007/S02
 - Supporting slices: none
-- Validation: unmapped
-- Notes: Trigger on booking cancellation/completion. Email template needed.
+- Validation: M007/S02 — checkAndNotifyWaitlist(teacherId) rechecks capacity after cancellation, sends WaitlistNotificationEmail to unnotified entries via sendWaitlistNotificationEmail, batch-stamps notified_at on successful sends only; cancelSession calls checkAndNotifyWaitlist as fire-and-forget; per-entry error handling; 7 unit tests + 1 cancel-session integration test all pass.
+- Notes: Triggered on booking cancellation. WaitlistNotificationEmail React Email template renders teacher name + booking link CTA.
 
 ### SESS-01 — Teacher can define session types with custom labels, prices, and optional durations
 - Class: core-capability

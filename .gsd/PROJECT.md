@@ -14,8 +14,12 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
-- All 90 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006)
+- All 92 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 2 waitlist from M007/S02)
 - 272 tests passing; build clean
+- **Capacity & Pricing (M007 — in progress):**
+  - capacity_limit on teachers table; profile shows "at capacity" state with waitlist form (S01 ✅)
+  - `/dashboard/waitlist` page with entry management; `checkAndNotifyWaitlist` auto-emails waitlisted parents on capacity freed after cancellation (S02 ✅)
+  - Session types + variable pricing (S03 — next)
 - **Growth Tools (M006 — complete ✅):**
   - `/dashboard/promote` page with QR code preview + high-res PNG download
   - `/api/flyer/[slug]` ImageResponse API returning branded 1200×1600 portrait flyer PNG
