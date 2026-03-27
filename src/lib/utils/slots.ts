@@ -54,18 +54,20 @@ export function generateSlotsFromWindow(
   endRaw: string,
   now: Date,
   teacherTimezone: string,
-  visitorTimezone: string
+  visitorTimezone: string,
+  durationMinutes: number = 30
 ): TimeSlot[] {
   const windowStart = toDate(`${dateStr}T${startRaw}:00`, { timeZone: teacherTimezone })
   const windowEnd = toDate(`${dateStr}T${endRaw}:00`, { timeZone: teacherTimezone })
   const result: TimeSlot[] = []
+  const slotDurationMs = durationMinutes * 60 * 1000
 
   let slotStart = windowStart.getTime()
   const endMs = windowEnd.getTime()
 
-  while (slotStart + SLOT_DURATION_MS <= endMs) {
+  while (slotStart + slotDurationMs <= endMs) {
     const slotStartDate = new Date(slotStart)
-    const slotEndDate = new Date(slotStart + SLOT_DURATION_MS)
+    const slotEndDate = new Date(slotStart + slotDurationMs)
 
     // Filter out past slots per increment
     if (slotStartDate > now) {
@@ -81,7 +83,7 @@ export function generateSlotsFromWindow(
       })
     }
 
-    slotStart += SLOT_DURATION_MS
+    slotStart += SLOT_DURATION_MS // Always advance by 30-min increments for slot start options
   }
 
   return result
@@ -111,7 +113,8 @@ export function getSlotsForDate(
   slots: AvailabilitySlot[],
   teacherTimezone: string,
   visitorTimezone: string,
-  overrides: AvailabilityOverride[] = []
+  overrides: AvailabilityOverride[] = [],
+  durationMinutes: number = 30
 ): TimeSlot[] {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -128,7 +131,7 @@ export function getSlotsForDate(
       .flatMap((override) => {
         const startRaw = override.start_time.slice(0, 5)
         const endRaw = override.end_time.slice(0, 5)
-        return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone)
+        return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone, durationMinutes)
       })
       .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
   }
@@ -141,7 +144,7 @@ export function getSlotsForDate(
     .flatMap((slot) => {
       const startRaw = slot.start_time.slice(0, 5)
       const endRaw = slot.end_time.slice(0, 5)
-      return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone)
+      return generateSlotsFromWindow(dateStr, startRaw, endRaw, now, teacherTimezone, visitorTimezone, durationMinutes)
     })
     .sort((a, b) => a.startRaw.localeCompare(b.startRaw))
 }

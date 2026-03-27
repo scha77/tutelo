@@ -28,7 +28,7 @@ Note: The existing bookings query uses `eq('teacher_id', userId)` where userId i
   - Estimate: 30m
   - Files: src/app/(dashboard)/dashboard/settings/page.tsx, src/app/[slug]/page.tsx
   - Verify: npx tsc --noEmit 2>&1 | head -20
-- [ ] **T03: BookingCalendar session type selector, slot duration filtering, and backward-compat guards** — Extend `BookingCalendar` to support session types. This is the main UI integration task.
+- [x] **T03: Added session type selector, slot duration filtering, subject guards, price display, and sessionTypeId integration to BookingCalendar** — Extend `BookingCalendar` to support session types. This is the main UI integration task.
 
 **Props:**
 Add optional `sessionTypes` prop to `BookingCalendarProps`:

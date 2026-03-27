@@ -48,8 +48,10 @@ interface BookingCalendarProps {
   stripeConnected: boolean        // true = direct booking path; false = deferred (no change)
   teacherStripeAccountId?: string // passed through to create-intent fetch
   // Session types (S03): optional array of teacher-defined session types
-  sessionTypes?: Array<{ id: string; label: string; price: number; duration_minutes: number; sort_order: number }>
+  sessionTypes?: Array<{ id: string; label: string; price: number; duration_minutes: number | null; sort_order: number }>
 }
+
+type SessionType = NonNullable<BookingCalendarProps['sessionTypes']>[number]
 
 const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -92,6 +94,9 @@ export function BookingCalendar({
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [creatingIntent, setCreatingIntent] = useState(false)
+  const [selectedSessionType, setSelectedSessionType] = useState<SessionType | null>(null)
+
+  const hasSessionTypes = !!(sessionTypes && sessionTypes.length > 0)
 
   const supabase = createClient()
 
@@ -126,8 +131,9 @@ export function BookingCalendar({
 
   const timeSlotsForDay = useMemo(() => {
     if (!selectedDate) return []
-    return getSlotsForDate(selectedDate, slots, teacherTimezone, visitorTimezone, overrides)
-  }, [selectedDate, slots, teacherTimezone, visitorTimezone, overrides])
+    const duration = selectedSessionType?.duration_minutes ?? undefined
+    return getSlotsForDate(selectedDate, slots, teacherTimezone, visitorTimezone, overrides, duration)
+  }, [selectedDate, slots, teacherTimezone, visitorTimezone, overrides, selectedSessionType])
 
   function isAvailable(date: Date) {
     if (isBefore(date, today)) return false
@@ -157,6 +163,7 @@ export function BookingCalendar({
     setStep('calendar')
     setSelectedDate(null)
     setSelectedSlot(null)
+    setSelectedSessionType(null)
     setForm({
       name: '',
       subject: subjects.length === 1 ? subjects[0] : '',
@@ -186,6 +193,7 @@ export function BookingCalendar({
         notes: form.notes || undefined,
         parentPhone: form.phone.trim() || undefined,
         parentSmsOptIn: form.phone.trim() ? form.smsOptIn : false,
+        ...(selectedSessionType ? { sessionTypeId: selectedSessionType.id } : {}),
       }),
     })
     setCreatingIntent(false)
@@ -229,6 +237,7 @@ export function BookingCalendar({
         endTime: selectedSlot!.endRaw,
         parent_phone: form.phone.trim() || undefined,
         parent_sms_opt_in: form.phone.trim() ? form.smsOptIn : false,
+        ...(selectedSessionType ? { session_type_id: selectedSessionType.id } : {}),
       })
       setSubmitting(false)
       if (result.success) {
@@ -410,9 +419,52 @@ export function BookingCalendar({
             />
           </div>
         ) : step === 'calendar' ? (
+          hasSessionTypes && !selectedSessionType ? (
+            /* ── Session type selector ── */
+            <div className="p-6 space-y-4">
+              <h3 className="font-semibold text-base">Choose a session type</h3>
+              <div className="space-y-3">
+                {sessionTypes!.map((st) => (
+                  <button
+                    key={st.id}
+                    onClick={() => {
+                      setSelectedSessionType(st)
+                      setForm((f) => ({ ...f, subject: st.label }))
+                    }}
+                    className="w-full text-left border rounded-lg px-5 py-4 hover:bg-muted/50 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm">{st.label}</span>
+                      <span className="font-semibold text-sm" style={{ color: accentColor }}>
+                        ${Number(st.price).toFixed(0)}
+                      </span>
+                    </div>
+                    {st.duration_minutes && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {st.duration_minutes} min
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
           <div className="flex flex-col md:flex-row">
             {/* ── Calendar ── */}
             <div className={`flex-1 p-6 ${selectedDate ? 'md:border-r' : ''}`}>
+              {/* Session type change link */}
+              {hasSessionTypes && selectedSessionType && (
+                <button
+                  onClick={() => {
+                    setSelectedSessionType(null)
+                    setSelectedDate(null)
+                    setSelectedSlot(null)
+                  }}
+                  className="mb-3 text-xs underline underline-offset-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ← Change session type ({selectedSessionType.label})
+                </button>
+              )}
               {/* Month navigation */}
               <div className="flex items-center justify-between mb-5">
                 <button
@@ -511,6 +563,7 @@ export function BookingCalendar({
               </div>
             )}
           </div>
+          )
         ) : (
           /* ── Booking form ── */
           <div>
@@ -533,6 +586,12 @@ export function BookingCalendar({
                     &middot; {selectedSlot.startDisplay} – {selectedSlot.endDisplay}
                   </span>
                 )}
+                {selectedSessionType && (
+                  <span>
+                    {' '}
+                    &middot; ${Number(selectedSessionType.price).toFixed(0)} &middot; {selectedSessionType.label}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -550,8 +609,8 @@ export function BookingCalendar({
                 />
               </div>
 
-              {/* Subject — shown only when teacher has multiple subjects */}
-              {subjects.length > 1 && (
+              {/* Subject — shown only when teacher has multiple subjects AND no session types */}
+              {subjects.length > 1 && !hasSessionTypes && (
                 <div className="space-y-1.5">
                   <Label htmlFor="subject">Subject</Label>
                   <Select
@@ -644,7 +703,7 @@ export function BookingCalendar({
               <Button
                 type="submit"
                 size="lg"
-                disabled={submitting || creatingIntent || (subjects.length > 1 && !form.subject)}
+                disabled={submitting || creatingIntent || (subjects.length > 1 && !hasSessionTypes && !form.subject)}
                 className="w-full font-semibold"
                 style={{ backgroundColor: accentColor, color: 'white' }}
               >
