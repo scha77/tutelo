@@ -14,8 +14,8 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
-- All 92 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 2 waitlist from M007/S02)
-- 272 tests passing; build clean
+- All 101 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02)
+- 57 M007 unit tests + all prior tests passing; build clean (pre-existing qrcode.react missing-module from M006 unresolved)
 - **Capacity & Pricing (M007 — complete ✅):**
   - capacity_limit on teachers table; profile shows "at capacity" state with waitlist form (S01 ✅)
   - `/dashboard/waitlist` page with entry management; `checkAndNotifyWaitlist` auto-emails waitlisted parents on capacity freed after cancellation (S02 ✅)
@@ -67,10 +67,10 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M004:** Availability & Scheduling Overhaul — 5-min granularity, per-date overrides, weeks-in-advance planning, redesigned editor, last-minute cancellation
 - [x] **M005:** Trust & Communication — School email verification with badge gating, Twilio SMS reminders and cancellation alerts, teacher and parent phone collection with opt-in consent
 - [x] **M006:** Growth Tools — QR codes, printable flyers, copy-paste announcement templates, OG image platform verification
-- [ ] **M007:** Capacity & Pricing — Max student/session limits, waitlist with notifications, per-session-type variable pricing
+- [x] **M007:** Capacity & Pricing — capacity_limit gate + waitlist signup (S01), waitlist dashboard + auto-notifications on cancellation (S02), session types CRUD + variable Stripe pricing + backward-compat hourly_rate fallback (S03); 57 unit tests, tsc clean, build green
 - [ ] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
 - [ ] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [ ] **M010:** Parent & Admin — Multi-child management, saved payment methods, teacher-parent messaging, read-only admin dashboard
 
 ---
-*Last updated: 2026-03-30 after M007/S03 completion — all 3 S03 requirements validated (SESS-01–04); M007 all slices complete*
+*Last updated: 2026-03-30 after M007 milestone completion — all 9 M007 requirements validated (CAP-01, CAP-02, WAIT-01, WAIT-02, WAIT-03, SESS-01, SESS-02, SESS-03, SESS-04); M007 all 3 slices complete, 57 unit tests pass*

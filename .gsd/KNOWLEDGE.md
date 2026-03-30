@@ -270,3 +270,52 @@ The `session_types.price` column stores dollar values as a NUMERIC type (e.g., `
 ## session_type_id FK on Bookings: Skip for MVP, Add When Analytics Needed
 
 Storing `session_type_id` as a FK on the `bookings` table requires a migration and delivers no immediate user-facing value — the session type label is already captured as `subject`. For MVP, storing `session_type_id` only in Stripe PaymentIntent metadata is sufficient. Add the FK migration when reporting or analytics queries need session-type-level aggregation. This avoids table-altering migrations that create risk without reward.
+
+---
+
+## Pure-Logic + Async-Query Split Pattern for DB-Dependent Utilities
+
+When a utility function combines business logic with a DB query, split it into two exports:
+1. A **pure function** (`isAtCapacity(count, limit)`) for unit-testable logic with no mocking
+2. An **async function** (`getCapacityStatus(supabase, teacherId, capacityLimit)`) for the DB query layer
+
+The async function accepts a `SupabaseClient` parameter so RSC pages that already have a client can call it directly, and the utility's own tests can pass a mock. The async function also short-circuits early when no computation is needed (e.g., `if (capacityLimit === null) return { atCapacity: false, count: 0 }` — avoids a DB round trip for the common case).
+
+---
+
+## Anonymous Mutations: API Route + supabaseAdmin, Not Server Actions
+
+Server actions require an auth context (Next.js session) that anonymous users don't have. For any form submission where the user is not authenticated (e.g., waitlist signup by a parent who has never logged in), use an API route (`/api/resource` POST) with `supabaseAdmin` (service role key). This pattern:
+- Bypasses RLS cleanly without anon-safe client gymnastics
+- Returns explicit HTTP status codes (201/409/400/500) that are meaningful to the client
+- Is testable as a standard HTTP handler
+- Is consistent with Next.js middleware patterns for unauthenticated requests
+
+---
+
+## Safe-Default-on-Error for Feature/Access-Gate Checks
+
+Any check that gates user access to a feature (capacity check, feature flag, subscription status) must fail open — not fail closed. If the DB query fails, the user should see the permissive state (show calendar, not "at capacity"). Log the error with context (teacher_id, no PII), but never block access due to a transient infrastructure failure. This applies to capacity checks, session type lookups, and any "should this user see X?" logic.
+
+---
+
+## Fire-and-Forget Post-Action Work: Dynamic Import Pattern
+
+When a server action needs to trigger non-blocking follow-up work (sending emails, processing notifications, updating analytics), use this pattern:
+```ts
+import('@/lib/utils/notify').then(m => m.checkAndNotify(id)).catch(console.error)
+```
+- **Dynamic import** keeps the notification module out of the primary action bundle
+- **.catch(console.error)** ensures failures never propagate to the action caller
+- Matches the existing pattern for `sendCancellationEmail` and `sendSmsCancellation` in `bookings.ts`
+- Never use `await` — the caller should not wait for the notification to complete
+
+---
+
+## Worktree vs. Main Branch Split: Verify Code in Both
+
+When closing a milestone that used a worktree, some slice work may have been committed directly to `main` rather than the worktree branch (e.g., M007/S03). Before declaring a code-change verification pass, check both:
+- `git diff --stat $(git merge-base HEAD main) HEAD -- ':!.gsd/'` in the worktree
+- The main branch for any files listed in slice summaries but not in the worktree diff
+
+The union of both sets is the milestone's actual deliverable. The worktree merge will reconcile them, but the verification step must account for both locations.

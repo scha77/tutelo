@@ -61,35 +61,35 @@ This file is the explicit capability and coverage contract for the project.
 
 ### CAP-01 — Teacher can set max active students or max weekly sessions in dashboard settings
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Dashboard settings include a capacity limit field (nullable — null means unlimited). System counts active bookings/students against this limit.
 - Why it matters: Side-hustling teachers may only have room for 3 students. They need to control capacity without removing their link.
 - Source: user
 - Primary owning slice: M007/S01
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S01 — CapacitySettings component renders with toggle + number input + active student count; updateProfile ProfileUpdateSchema extended with capacity_limit (nullable integer, Zod-validated 1–100); settings page queries capacity_limit and active student count; tsc clean on all S01 files; npm run build passes.
 - Notes: New capacity_limit column on teachers table.
 
 ### CAP-02 — Profile page shows "at capacity" state when limit reached
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a teacher's capacity is reached, the profile page shows "Currently at capacity" instead of the booking calendar. The teacher's info remains visible.
 - Why it matters: Better than an empty calendar or a confusing "no slots available" message.
 - Source: user
 - Primary owning slice: M007/S01
 - Supporting slices: M007/S02
-- Validation: unmapped
+- Validation: M007/S01 — Profile page conditionally renders AtCapacitySection vs BookingCalendar based on capacity_limit + active student count; BookNowCTA hidden when at capacity; HeroSection/CredentialsBar/AboutSection/ReviewsSection/SocialLinks always rendered in both states; tsc and build clean.
 - Notes: Must handle edge cases: concurrent bookings near capacity, cancellations freeing capacity.
 
 ### WAIT-01 — Parent can join waitlist when teacher is at capacity
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a teacher is at capacity, parents can enter their email to be notified when a spot opens.
 - Why it matters: Captures demand that would otherwise bounce. Teacher keeps their link active even when full.
 - Source: user
 - Primary owning slice: M007/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S01 — /api/waitlist POST route inserts into waitlist table via supabaseAdmin; unique constraint on (teacher_id, parent_email) returns 409 for duplicates; WaitlistForm shows distinct success/already-on-list/error states; 15 capacity unit tests pass.
 - Notes: New waitlist table: (id, teacher_id, parent_email, created_at, notified_at).
 
 ### WAIT-02 — Teacher sees waitlist in dashboard and can manually open spots
@@ -116,46 +116,46 @@ This file is the explicit capability and coverage contract for the project.
 
 ### SESS-01 — Teacher can define session types with custom labels, prices, and optional durations
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Dashboard settings allow teachers to create session types (e.g., "SAT Prep $45", "General Math $35") with label, price, and optional duration. Ordered by sort_order.
 - Why it matters: Some teachers charge differently for test prep vs homework help. A single flat rate is too limiting.
 - Source: user
 - Primary owning slice: M007/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S03 — SessionTypeManager CRUD UI in dashboard settings with create/edit/delete; createSessionType/updateSessionType/deleteSessionType server actions with teacher ownership verification; 8 session-type-pricing unit tests + tsc --noEmit pass.
 - Notes: New session_types table: (id, teacher_id, label, price, duration_minutes, sort_order).
 
 ### SESS-02 — Booking flow shows session type selector with correct price per type
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a teacher has session types defined, the booking form shows a session type selector. The displayed price updates based on selection.
 - Why it matters: Parents need to know what they're paying for and how much before committing.
 - Source: user
 - Primary owning slice: M007/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S03 — 18 booking-slots tests pass; BookingCalendar session type picker card UI wired to selectedSessionType state with price display ($XX · Label in form header); slot duration filtering via getSlotsForDate(durationMinutes).
 - Notes: Falls back to subject selector + hourly_rate when no session types defined.
 
 ### SESS-03 — Stripe payment intent uses session-type price instead of flat hourly_rate
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: The create-intent API route uses the selected session type's price to compute the payment amount, replacing the flat hourly_rate calculation.
 - Why it matters: Correct billing. Parents must be charged the price they saw.
 - Source: user
 - Primary owning slice: M007/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S03 — 8 unit tests covering flat-price path, wrong-teacher (400), dollar-to-cent conversion (Math.round(Number(price)*100)) all pass; session_type_id stored in PI metadata for Stripe dashboard audit trail.
 - Notes: Must validate session_type_id belongs to the teacher. Falls back to hourly_rate when no session type selected.
 
 ### SESS-04 — Teachers without session types continue using single hourly_rate (backward compatible)
 - Class: continuity
-- Status: active
+- Status: validated
 - Description: Existing teachers with no session types defined continue to work exactly as before — single hourly_rate, subject selector in booking form.
 - Why it matters: No breaking change for existing teachers. Migration must be seamless.
 - Source: user
 - Primary owning slice: M007/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: M007/S03 — Hourly-rate fallback unit test in session-type-pricing.test.ts passes; subject dropdown guard condition verified in BookingCalendar source; when sessionTypes prop is empty/absent, BookingCalendar shows subject dropdown and create-intent uses existing computeSessionAmount path unchanged.
 - Notes: Default behavior when session_types is empty.
 
 ### DIR-01 — Public /tutors directory page listing published teachers with filters

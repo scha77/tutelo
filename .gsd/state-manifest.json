@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-30T18:46:26.098Z",
+  "exported_at": "2026-03-30T19:07:39.844Z",
   "milestones": [
     {
       "id": "M001",
@@ -187,10 +187,10 @@
     {
       "id": "M007",
       "title": "",
-      "status": "active",
+      "status": "complete",
       "depends_on": [],
       "created_at": "2026-03-27T01:40:51.431Z",
-      "completed_at": null,
+      "completed_at": "2026-03-30T19:07:39.822Z",
       "vision": "Teachers can cap their student load and offer variable pricing per session type. When at capacity, parents join a waitlist and get notified when a spot opens. Teachers who define session types (e.g. \"SAT Prep $60 / 90 min\") see parents charged the right price through Stripe. Teachers who never create session types continue working exactly as before.",
       "success_criteria": [
         "A teacher with capacity_limit=3 and 3 active students → profile page shows 'at capacity' + waitlist form; a parent joins waitlist, a booking is cancelled, waitlisted parents receive email with booking link, next parent can book successfully",
