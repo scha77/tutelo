@@ -16,10 +16,10 @@ Tagline: "Shopify for teacher side hustles."
 
 - All 92 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 2 waitlist from M007/S02)
 - 272 tests passing; build clean
-- **Capacity & Pricing (M007 — in progress):**
+- **Capacity & Pricing (M007 — complete ✅):**
   - capacity_limit on teachers table; profile shows "at capacity" state with waitlist form (S01 ✅)
   - `/dashboard/waitlist` page with entry management; `checkAndNotifyWaitlist` auto-emails waitlisted parents on capacity freed after cancellation (S02 ✅)
-  - Session types + variable pricing (S03 — next)
+  - Session types + variable pricing: SessionTypeManager CRUD in settings, session type selector in BookingCalendar, flat-price Stripe PI fork, backward-compatible hourly_rate fallback (S03 ✅)
 - **Growth Tools (M006 — complete ✅):**
   - `/dashboard/promote` page with QR code preview + high-res PNG download
   - `/api/flyer/[slug]` ImageResponse API returning branded 1200×1600 portrait flyer PNG
@@ -73,4 +73,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [ ] **M010:** Parent & Admin — Multi-child management, saved payment methods, teacher-parent messaging, read-only admin dashboard
 
 ---
-*Last updated: 2026-03-25 after M006 completion — 90 validated + 28 active requirements*
+*Last updated: 2026-03-30 after M007/S03 completion — all 3 S03 requirements validated (SESS-01–04); M007 all slices complete*

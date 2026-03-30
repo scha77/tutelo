@@ -20,7 +20,11 @@ export function MobileBottomNav({ pendingCount }: MobileBottomNavProps) {
     <m.nav
       {...slideFromBottom}
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
     >
       <div className="flex items-center">
         {navItems.map(({ href, label, icon: Icon }) => {

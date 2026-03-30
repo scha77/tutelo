@@ -2,6 +2,29 @@
 
 <!-- Items here are future milestone ideas, not yet planned. They'll be picked up after the current milestone completes or when explicitly scheduled. -->
 
+## Mobile Bottom Nav: Edge Padding + iOS Gesture Zone Fix
+
+**Added:** 2026-03-30
+**Requested by:** User
+**Priority:** High — affects all mobile dashboard users
+
+**Problem:** The mobile bottom nav (`MobileBottomNav.tsx`) divides its width into equal `flex-1` columns with no horizontal inset. On a phone (~390px), each of the 9 tab slots is ~43px wide. The outermost icons (Overview on the left, Sign Out on the right) sit flush against the screen edge — directly inside iOS's edge-swipe gesture zones (~20px from each side). This causes two issues:
+1. Edge tab icons are visually clipped or hard to tap
+2. On iPhone, tapping near the right edge activates the Siri shortcut gesture instead of the nav button
+
+**Root cause:** `env(safe-area-inset-bottom)` is already applied (handles home bar), but there is no `env(safe-area-inset-left)` / `env(safe-area-inset-right)` padding on the nav container or individual tabs.
+
+**Desired fix:**
+- Add `paddingLeft: 'env(safe-area-inset-left)'` and `paddingRight: 'env(safe-area-inset-right)'` to the nav container's inline style (same pattern as the existing `paddingBottom`)
+- These resolve to `0px` on non-notched devices and to the correct inset (~0px landscape, non-zero for Face ID phones in landscape) on iPhone — so no visual change on most devices
+- Optionally add a small `px-1` minimum horizontal padding on the outer tabs as a visual buffer even on devices where safe-area insets are zero
+
+**Files:** `src/components/dashboard/MobileBottomNav.tsx`
+
+**Scope:** Single-file, 2-line change. Zero DB or API impact. Can be a `/gsd quick` task or first task in next polish slice.
+
+---
+
 ## Dynamic Social Previews (The "iMessage Business Card")
 
 **Added:** 2026-03-11

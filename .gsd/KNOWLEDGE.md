@@ -232,3 +232,41 @@ The profile RSC ([slug]/page.tsx) performs the capacity check inline (direct Sup
 In Zod v3, `safeParse` returns `{ success: false, error: ZodError }` where `ZodError` exposes `.issues` (array of `ZodIssue`), NOT `.errors`. TypeScript will correctly flag `parsed.error.errors[0]` with "Property 'errors' does not exist on type 'ZodError'" — the fix is `parsed.error.issues[0].message`.
 
 **Affected:** `src/actions/session-types.ts` (discovered during S02 build verification — pre-existing S03 code). Apply `parsed.error.issues[0].message` everywhere Zod `safeParse` error messages are extracted.
+
+---
+
+## Session Type Selector as Calendar-Step Guard (Not a New Step Machine State)
+
+When adding a pre-selection screen to the booking calendar (session type picker, package selector, etc.), implement it as a conditional block inside the existing `'calendar'` step rather than a new named step. Pattern:
+
+```tsx
+{step === 'calendar' && (
+  <>
+    {hasSessionTypes && !selectedSessionType ? (
+      <SessionTypePicker onSelect={setSelectedSessionType} />
+    ) : (
+      <CalendarGrid ... />
+    )}
+  </>
+)}
+```
+
+This avoids adding branches to the back-navigation and step-transition logic while keeping the UI state machine simple. The selected type is just another piece of form state — not a named routing step.
+
+---
+
+## getSlotsForDate durationMinutes Parameter: Must Be Added, Not Assumed
+
+When a task plan says "`getSlotsForDate` already accepts `durationMinutes` as the 7th param with a default of 30" — **verify first**. In M007/S03, this parameter did NOT exist in `slots.ts`; it had to be added to both `generateSlotsFromWindow` and `getSlotsForDate`. The function signature in `slots.ts` is the ground truth; task plans that reference it may be stale. Adding `durationMinutes = 30` as a default parameter is backward-compatible and safe for existing callers.
+
+---
+
+## Session Type Price Is NUMERIC (Dollars), Convert to Cents at PI Creation
+
+The `session_types.price` column stores dollar values as a NUMERIC type (e.g., `60.00`). When creating a Stripe PaymentIntent, convert with `Math.round(Number(price) * 100)`. Never assume the DB stores cents. The `Number()` cast is needed because Supabase returns NUMERIC as a string in JavaScript. Using `Math.round` avoids floating-point rounding errors (e.g., 35.99 * 100 = 3598.9999...).
+
+---
+
+## session_type_id FK on Bookings: Skip for MVP, Add When Analytics Needed
+
+Storing `session_type_id` as a FK on the `bookings` table requires a migration and delivers no immediate user-facing value — the session type label is already captured as `subject`. For MVP, storing `session_type_id` only in Stripe PaymentIntent metadata is sufficient. Add the FK migration when reporting or analytics queries need session-type-level aggregation. This avoids table-altering migrations that create risk without reward.
