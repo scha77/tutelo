@@ -25,6 +25,11 @@ vi.mock('@/lib/sms', () => ({
   sendSmsCancellation: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Mock waitlist notification module
+vi.mock('@/lib/utils/waitlist', () => ({
+  checkAndNotifyWaitlist: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Stripe mock — class-based vi.hoisted pattern for ESM constructor mocking
 const { MockStripeClass, stripeCancelMock } = vi.hoisted(() => {
   const stripeCancelMock = vi.fn()
@@ -96,6 +101,7 @@ describe('cancelSession', () => {
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: vi.fn() } }))
     vi.mock('@/lib/email', () => ({ sendCancellationEmail: vi.fn().mockResolvedValue(undefined) }))
     vi.mock('@/lib/sms', () => ({ sendSmsCancellation: vi.fn().mockResolvedValue(undefined) }))
+    vi.mock('@/lib/utils/waitlist', () => ({ checkAndNotifyWaitlist: vi.fn().mockResolvedValue(undefined) }))
     vi.mock('stripe', () => ({ default: MockStripeClass }))
     stripeCancelMock.mockResolvedValue({ id: PI_ID, status: 'canceled' })
   })
@@ -281,5 +287,23 @@ describe('cancelSession', () => {
     expect(errorSpy).toHaveBeenCalled()
 
     errorSpy.mockRestore()
+  })
+
+  it('calls checkAndNotifyWaitlist on happy path', async () => {
+    const { client } = buildMockClient({
+      userId: 'user-1',
+      teacher: { id: TEACHER_ID },
+      booking: { id: BOOKING_ID, stripe_payment_intent: PI_ID },
+    })
+    const { createClient } = await import('@/lib/supabase/server')
+    vi.mocked(createClient).mockResolvedValue(client as never)
+
+    const { cancelSession } = await import('@/actions/bookings')
+    const result = await cancelSession(BOOKING_ID)
+
+    expect(result).toEqual({ success: true })
+
+    const { checkAndNotifyWaitlist } = await import('@/lib/utils/waitlist')
+    expect(checkAndNotifyWaitlist).toHaveBeenCalledWith(TEACHER_ID)
   })
 })
