@@ -288,7 +288,51 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M009/S01
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Must handle the case where some future dates are unavailable (warn parent, skip those dates).
+- Notes: Must handle the case where some future dates are unavailable (warn parent, skip those dates). Partial series creation allowed — skip conflicting dates, show parent which were skipped.
+
+### RECUR-06 — Saved card via Stripe Customer + SetupIntent for auto-charge
+- Class: core-capability
+- Status: active
+- Description: When a parent books a recurring series, a Stripe Customer is created (or reused) and their card is saved via a SetupIntent. Subsequent sessions in the series are auto-charged using the saved payment method 24 hours before the session.
+- Why it matters: Stripe PaymentIntent authorizations expire after 7 days. An 8-week series can't pre-authorize all sessions. Saved cards enable per-session auto-charging on schedule.
+- Source: inferred
+- Primary owning slice: M009/S02
+- Supporting slices: none
+- Validation: unmapped
+- Notes: First session still uses the existing PaymentIntent authorize flow. SetupIntent saves the card for future charges. Parent must consent to card storage.
+
+### RECUR-07 — Cron charges upcoming recurring sessions 24h before
+- Class: core-capability
+- Status: active
+- Description: The existing daily cron (stripe-reminders) is extended to find recurring sessions scheduled for tomorrow that haven't been charged yet, and creates PaymentIntents using the parent's saved card.
+- Why it matters: Automates the per-session billing without requiring the parent to return to the site each week.
+- Source: inferred
+- Primary owning slice: M009/S02
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Extends existing cron at /api/cron/stripe-reminders. Failed charges update booking status and notify both parties. Stays within Vercel Hobby cron limits.
+
+### RECUR-08 — Parent self-service cancellation via secure link/page
+- Class: core-capability
+- Status: active
+- Description: Parent receives a secure link in booking confirmation and reminder emails that allows them to cancel an individual session or the remaining series without needing to contact the teacher.
+- Why it matters: Parents need agency over their recurring commitment. Requiring teacher involvement for every cancellation creates friction and resentment.
+- Source: inferred
+- Primary owning slice: M009/S03
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Secure token-based link (similar to review token pattern). Page shows session details + cancel options (this session only / remaining series).
+
+### RECUR-09 — Recurring sessions visible in dashboard with series badge
+- Class: quality-attribute
+- Status: active
+- Description: Recurring sessions appear in the teacher's /dashboard/sessions page with a visual series indicator (repeat icon, "Series: Tuesdays 4pm" badge). A "Cancel remaining series" action is available.
+- Why it matters: Teachers need to distinguish one-off sessions from recurring ones and manage series as a group when needed.
+- Source: inferred
+- Primary owning slice: M009/S03
+- Supporting slices: none
+- Validation: unmapped
+- Notes: No separate management page. Series badge + cancel series action in existing session list.
 
 ### PARENT-04 — Parent can manage multiple children under one account
 - Class: core-capability
@@ -963,6 +1007,10 @@ This file is the explicit capability and coverage contract for the project.
 | RECUR-03 | core-capability | active | M009/S02 | none | unmapped |
 | RECUR-04 | core-capability | active | M009/S03 | none | unmapped |
 | RECUR-05 | continuity | active | M009/S01 | none | unmapped |
+| RECUR-06 | core-capability | active | M009/S02 | none | unmapped |
+| RECUR-07 | core-capability | active | M009/S02 | none | unmapped |
+| RECUR-08 | core-capability | active | M009/S03 | none | unmapped |
+| RECUR-09 | quality-attribute | active | M009/S03 | none | unmapped |
 | PARENT-04 | core-capability | active | M010/S01 | none | unmapped |
 | PARENT-05 | quality-attribute | active | M010/S02 | none | unmapped |
 | PARENT-06 | core-capability | active | M010/S03 | none | unmapped |
@@ -975,8 +1023,8 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 33
-- Mapped to slices: 31
+- Active requirements: 37
+- Mapped to slices: 35
 - Validated: 87
 - Deferred: 2
 - Unmapped active requirements: 2 (AUTH-03, AUTH-04 — pending milestone assignment)

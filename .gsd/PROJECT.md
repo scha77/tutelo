@@ -68,7 +68,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M005:** Trust & Communication — School email verification with badge gating, Twilio SMS reminders and cancellation alerts, teacher and parent phone collection with opt-in consent
 - [x] **M006:** Growth Tools — QR codes, printable flyers, copy-paste announcement templates, OG image platform verification
 - [x] **M007:** Capacity & Pricing — capacity_limit gate + waitlist signup (S01), waitlist dashboard + auto-notifications on cancellation (S02), session types CRUD + variable Stripe pricing + backward-compat hourly_rate fallback (S03); 57 unit tests, tsc clean, build green
-- [ ] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
+- [x] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
 - [ ] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [ ] **M010:** Parent & Admin — Multi-child management, saved payment methods, teacher-parent messaging, read-only admin dashboard
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T02:40:04.468Z",
+  "exported_at": "2026-03-31T13:48:33.865Z",
   "milestones": [
     {
       "id": "M001",
@@ -318,6 +318,68 @@
       ],
       "requirement_coverage": "DIR-01 (directory page + filters) → S01. DIR-02 (filter mechanics) → S01. DIR-03 (full-text search) → S02. SEO-03 (sitemap) → S03. SEO-04 (category pages) → S03. ANALYTICS-01 (page view tracking) → S04. ANALYTICS-02 (dashboard analytics) → S04.",
       "boundary_map_markdown": "| Layer | In | Out |\n|---|---|---|\n| Directory UI | /tutors page, filter sidebar, teacher cards, URL param sync | Map-based discovery, teacher ranking algorithm |\n| Search | tsvector full-text search, GIN index migration | Algolia, Meilisearch, any external search |\n| SEO | Category pages, sitemap.xml, canonical tags, meta per page | Structured data (JSON-LD), Google Search Console API |\n| Analytics | page_views table, bot filter, dashboard funnel display | Real-time analytics, historical export, heatmaps |\n| Scope | Only published (is_published=true) teachers shown | Admin tools, teacher management |"
+    },
+    {
+      "id": "M009",
+      "title": "Recurring Sessions",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-03-31T13:24:31.227Z",
+      "completed_at": null,
+      "vision": "Parents can set up recurring tutoring schedules (weekly/biweekly for N weeks). The system creates individual booking rows per session, handles per-session payment via saved cards with auto-charging 24h before each session, and lets both teacher and parent cancel single sessions or the remaining series.",
+      "success_criteria": [
+        "Parent can select a recurring schedule (weekly/biweekly, N weeks) in the booking flow and see which dates were skipped due to conflicts",
+        "Individual booking rows are created per session, linked by recurring_schedule_id",
+        "First session is authorized via existing PaymentIntent flow; subsequent sessions are auto-charged 24h before via saved card",
+        "Teacher sees recurring sessions in dashboard with series badge and can cancel one or remaining series",
+        "Parent can cancel individual sessions or remaining series via secure email link",
+        "Cron successfully charges saved cards for upcoming recurring sessions with failure handling and notifications"
+      ],
+      "key_risks": [
+        {
+          "risk": "Stripe SetupIntent + saved payment method flow is new surface area for Tutelo",
+          "whyItMatters": "Card saving, 3D Secure re-auth, and auto-charging have different failure modes than the existing authorize-then-capture flow. If this doesn't work, the entire recurring payment model breaks."
+        },
+        {
+          "risk": "Cron payment failure handling must be bulletproof",
+          "whyItMatters": "A failed charge 24h before a session means the session shouldn't proceed as if paid. Need clear failure states, notifications, and a path for the parent to retry or the booking to be cancelled."
+        },
+        {
+          "risk": "Multi-date availability conflict checking across N future dates",
+          "whyItMatters": "Must check recurring slots + overrides + existing bookings for each date in the series. Overrides can close a day, new bookings can appear. Performance and correctness both matter."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Stripe SetupIntent + saved card flow",
+          "retireIn": "S02",
+          "whatWillBeProven": "SetupIntent saves card; cron creates PaymentIntent from saved card with correct amount, destination charge, and application fee. Unit tests for the charge logic."
+        },
+        {
+          "riskOrUnknown": "Cron payment failure handling",
+          "retireIn": "S02",
+          "whatWillBeProven": "Failed charge updates booking status to 'payment_failed'; notifications sent to both parties. Unit tests for failure path."
+        },
+        {
+          "riskOrUnknown": "Multi-date conflict detection",
+          "retireIn": "S01",
+          "whatWillBeProven": "Conflict checker correctly identifies unavailable dates across recurring slots, overrides, and existing bookings. Partial series creation with skipped-date summary. Unit tests for all conflict scenarios."
+        }
+      ],
+      "verification_contract": "tsc --noEmit clean. npm run build passes. Unit tests for: recurring schedule creation, multi-date conflict detection, cron charge logic, cancellation (single + series), and parent self-service cancel flow. All RECUR-01 through RECUR-09 requirements have validation evidence.",
+      "verification_integration": "Stripe Customer + SetupIntent saves card. Cron creates PaymentIntent from saved card. cancelSession handles recurring_schedule_id for series cancellation. Parent cancel page works via secure token.",
+      "verification_operational": "Daily cron charges recurring sessions within Vercel Hobby cron limits. Failed charges don't block or crash the cron — per-booking error handling.",
+      "verification_uat": "Parent completes recurring booking flow end-to-end. Teacher sees series badge in dashboard. Teacher cancels one session and remaining series. Parent cancels via email link. Cron auto-charges upcoming session.",
+      "definition_of_done": [
+        "All 6 success criteria passing",
+        "tsc --noEmit clean",
+        "npm run build passes",
+        "Unit tests for conflict detection, series creation, cron charging, cancellation, and parent self-service",
+        "All RECUR-01 through RECUR-09 requirements have validation evidence",
+        "Recurring booking flow works end-to-end (booking → card saved → cron charges → cancellation)"
+      ],
+      "requirement_coverage": "RECUR-01 (recurring schedule selection) → S01. RECUR-02 (auto-create booking rows) → S01. RECUR-03 (per-session payment) → S02. RECUR-04 (cancel individual/series) → S03. RECUR-05 (availability + double-booking prevention) → S01. RECUR-06 (saved card via SetupIntent) → S02. RECUR-07 (cron auto-charge) → S02. RECUR-08 (parent self-service cancel) → S03. RECUR-09 (dashboard series badge) → S03.",
+      "boundary_map_markdown": "### S01 → S02\n\nProduces:\n- `supabase/migrations/0014_recurring_schedules.sql` → recurring_schedules table + bookings.recurring_schedule_id FK\n- `src/lib/utils/recurring.ts` → generateRecurringSeries(startDate, dayOfWeek, frequency, count), checkAvailabilityForDates(teacherId, dates, startTime, endTime)\n- `src/app/api/recurring-booking/route.ts` → POST handler that creates recurring_schedule + N booking rows atomically\n- BookingCalendar extended with recurring options UI (frequency selector, week count, skipped-date summary)\n\nConsumes:\n- nothing (first slice)\n\n### S02 → S03\n\nProduces:\n- Stripe Customer creation + SetupIntent card-saving flow integrated into recurring booking creation\n- `src/lib/utils/recurring-charge.ts` → chargeUpcomingRecurringSessions() for cron\n- Extended `/api/cron/stripe-reminders` with recurring charge logic\n- `stripe_customer_id` column on bookings or a parent-level record\n- Payment failure status + notification emails\n\nConsumes from S01:\n- recurring_schedules table schema\n- bookings.recurring_schedule_id FK\n- /api/recurring-booking route (extended with SetupIntent flow)\n\n### S01 → S03\n\nProduces:\n- recurring_schedules table + bookings.recurring_schedule_id (S03 reads these for cancel-series logic)\n\nConsumes from S01:\n- recurring_schedules table\n- bookings.recurring_schedule_id\n\n### S02 → S03\n\nProduces:\n- stripe_customer_id (S03 may need to void saved-card PIs on series cancellation)\n\nConsumes from S02:\n- Stripe Customer + saved payment method infrastructure"
     }
   ],
   "slices": [
@@ -935,6 +997,71 @@
       "proof_level": "build + unit tests for bot filter logic",
       "integration_closure": "Migration 0013 adds page_views table. /api/track-view POST route. /[slug]/page.tsx fires a fire-and-forget fetch to track-view. New /dashboard/analytics RSC page. Analytics nav item added to nav.ts between Promote and Settings.",
       "observability_impact": "New page_views table queryable for funnel analysis. Bot-filter UA list logged to console on first call in dev for audit.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M009",
+      "id": "S01",
+      "title": "Schema & Recurring Booking Creation",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "Parent selects 'Every Tuesday at 4pm for 6 weeks' in booking flow. System creates 6 individual booking rows linked by recurring_schedule_id, skipping conflicting dates with a summary shown to the parent.",
+      "created_at": "2026-03-31T13:24:31.228Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Parent can select a recurring schedule (weekly/biweekly for N weeks) during the booking flow. System creates individual booking rows per session linked by recurring_schedule_id, skips conflicting dates, shows a summary, and saves the parent's card for future auto-charging via Stripe PaymentIntent with setup_future_usage.",
+      "success_criteria": "- `recurring_schedules` table exists with frequency, total_sessions, stripe_customer_id, stripe_payment_method_id columns\n- `bookings` table has `recurring_schedule_id` and `is_recurring_first` columns\n- `generateRecurringDates()` and `checkDateConflicts()` pure functions in `src/lib/utils/recurring.ts` with full unit test coverage\n- POST `/api/direct-booking/create-recurring` creates N booking rows, a recurring_schedules row, and a Stripe PI with `setup_future_usage: 'off_session'`\n- `RecurringOptions` component in BookingCalendar lets parent pick frequency + count and see projected/skipped dates\n- `RecurringBookingConfirmationEmail` sends series summary with all session dates\n- `vitest run` passes all new test files (recurring-dates, recurring-conflicts, create-recurring)\n- `npx tsc --noEmit` exits 0\n- `npm run build` passes",
+      "proof_level": "This slice proves: integration (API route creates linked DB rows + Stripe objects). Real runtime required: no (Stripe mocked in tests). Human/UAT required: yes (manual booking flow walkthrough post-deploy).",
+      "integration_closure": "Upstream surfaces consumed: `src/lib/utils/slots.ts` (getSlotsForDate for conflict detection), `src/components/profile/PaymentStep.tsx` (reused for recurring first-session payment), `src/app/api/direct-booking/create-intent/route.ts` (pattern reference for Stripe PI creation), `src/lib/schemas/booking.ts` (pattern reference for Zod schema).\nNew wiring introduced: BookingCalendar state machine gains 'recurring' step between 'form' and 'auth'/'payment'; new `/api/direct-booking/create-recurring` route; `recurring_schedule_id` FK linking bookings to schedules.\nWhat remains before milestone is usable end-to-end: S02 (auto-charge cron for sessions 2–N), S03 (cancellation UX + dashboard series badge).",
+      "observability_impact": "Runtime signals: `console.error('[direct-booking/create-recurring]')` on Stripe/Supabase failures; skipped dates array in API response for parent visibility.\nInspection surfaces: `recurring_schedules` table (schedule metadata + stripe IDs); `bookings` table filtered by `recurring_schedule_id` (series membership); API response includes `skippedDates[]` for UI.\nFailure visibility: Stripe PI creation failure logged with error detail; per-booking-row insert failures caught by unique constraint (23505) and added to skippedDates; orphaned schedule rows cleaned up if zero bookings succeed.\nRedaction constraints: `stripe_customer_id` and `stripe_payment_method_id` are opaque Stripe tokens (not PII), but should not be exposed in API responses to the client.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M009",
+      "id": "S02",
+      "title": "Saved Cards & Auto-Charge Cron",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "First session authorized at booking. Cron auto-charges the parent's saved card 24h before each subsequent session. Failed charges update booking status and notify both parties.",
+      "created_at": "2026-03-31T13:24:31.228Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Stripe Customer + SetupIntent for card saving during recurring booking. Extend stripe-reminders cron to charge upcoming recurring sessions. Payment failure handling with status updates and notifications.",
+      "success_criteria": "SetupIntent saves card during recurring booking flow. Cron finds tomorrow's uncharged recurring sessions and creates PaymentIntents from saved card. Failed charges set booking status to 'payment_failed' and send notifications. Unit tests for charge logic and failure path. tsc clean. npm run build passes.",
+      "proof_level": "build + unit tests for cron charge logic and failure handling",
+      "integration_closure": "stripe_customer_id stored on recurring_schedules or parent record. SetupIntent integrated into /api/recurring-booking response. Cron extended in /api/cron/stripe-reminders.",
+      "observability_impact": "console.error on charge failures with booking_id + stripe error context. Notification emails on failure.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M009",
+      "id": "S03",
+      "title": "Cancellation & Dashboard Series UX",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01",
+        "S02"
+      ],
+      "demo": "Teacher sees series badge on recurring sessions in dashboard and can cancel one or all remaining. Parent receives email with secure link to cancel individual sessions or the series.",
+      "created_at": "2026-03-31T13:24:31.228Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Extend cancelSession with series awareness. Parent self-service cancel page at /manage/[token]. Dashboard series badge. Cancel-series action. Email templates for recurring confirmation and cancel links.",
+      "success_criteria": "Teacher can cancel single session or remaining series from dashboard. Parent can cancel via /manage/[token] secure page. Series badge visible on recurring sessions. Cancelled sessions have PIs voided. Notifications sent. tsc clean. npm run build passes.",
+      "proof_level": "build + unit tests for series cancellation logic + browser smoke test",
+      "integration_closure": "cancelSession extended with recurring_schedule_id logic. New /manage/[token] page. ConfirmedSessionCard shows series badge. New email templates for recurring confirmation + cancel links.",
+      "observability_impact": "console.error on series cancellation failures. Audit trail via booking status transitions.",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -3469,6 +3596,173 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Created recurring_schedules table migration, generateRecurringDates and checkDateConflicts utility functions, and 16 unit tests covering date generation, booking conflicts, availability gaps, and override precedence",
+      "status": "complete",
+      "one_liner": "Created recurring_schedules table migration, generateRecurringDates and checkDateConflicts utility functions, and 16 unit tests covering date generation, booking conflicts, availability gaps, and override precedence",
+      "narrative": "Created the SQL migration 0014_recurring_schedules.sql with the recurring_schedules table (UUID PK, teacher/parent FKs, frequency CHECK, total_sessions 2–26 range, time columns, Stripe IDs), plus two new columns on bookings (recurring_schedule_id FK and is_recurring_first boolean) with a partial index for efficient lookups. RLS policies follow existing patterns. Implemented generateRecurringDates as a pure function using UTC noon anchor for DST-safe date arithmetic. Implemented checkDateConflicts which queries bookings (non-cancelled, matching slot), recurring availability, and availability_overrides — applying override-wins-recurring precedence consistent with the client-side getSlotsForDate. Wrote 8 tests for date generation and 8 for conflict detection covering all plan-specified scenarios.",
+      "verification_result": "Ran npx vitest run recurring-dates recurring-conflicts --reporter=verbose — all 16 tests pass (8 date generation, 8 conflict detection). Ran npx tsc --noEmit — zero type errors.",
+      "duration": "",
+      "completed_at": "2026-03-31T13:48:33.835Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0014_recurring_schedules.sql",
+        "src/lib/utils/recurring.ts",
+        "src/__tests__/recurring-dates.test.ts",
+        "src/__tests__/recurring-conflicts.test.ts"
+      ],
+      "key_decisions": [
+        "Used UTC noon anchor for date arithmetic to avoid DST edge cases",
+        "checkDateConflicts returns optimistic on query failure — unique constraint provides fallback safety",
+        "Partial index on bookings(recurring_schedule_id) WHERE NOT NULL for efficient lookups"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M009\nkey_files:\n  - supabase/migrations/0014_recurring_schedules.sql\n  - src/lib/utils/recurring.ts\n  - src/__tests__/recurring-dates.test.ts\n  - src/__tests__/recurring-conflicts.test.ts\nkey_decisions:\n  - Used UTC noon anchor for date arithmetic to avoid DST edge cases\n  - checkDateConflicts returns optimistic on query failure — unique constraint provides fallback safety\n  - Partial index on bookings(recurring_schedule_id) WHERE NOT NULL for efficient lookups\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T13:48:33.835Z\nblocker_discovered: false\n---\n\n# T01: Created recurring_schedules table migration, generateRecurringDates and checkDateConflicts utility functions, and 16 unit tests covering date generation, booking conflicts, availability gaps, and override precedence\n\n**Created recurring_schedules table migration, generateRecurringDates and checkDateConflicts utility functions, and 16 unit tests covering date generation, booking conflicts, availability gaps, and override precedence**\n\n## What Happened\n\nCreated the SQL migration 0014_recurring_schedules.sql with the recurring_schedules table (UUID PK, teacher/parent FKs, frequency CHECK, total_sessions 2–26 range, time columns, Stripe IDs), plus two new columns on bookings (recurring_schedule_id FK and is_recurring_first boolean) with a partial index for efficient lookups. RLS policies follow existing patterns. Implemented generateRecurringDates as a pure function using UTC noon anchor for DST-safe date arithmetic. Implemented checkDateConflicts which queries bookings (non-cancelled, matching slot), recurring availability, and availability_overrides — applying override-wins-recurring precedence consistent with the client-side getSlotsForDate. Wrote 8 tests for date generation and 8 for conflict detection covering all plan-specified scenarios.\n\n## Verification\n\nRan npx vitest run recurring-dates recurring-conflicts --reporter=verbose — all 16 tests pass (8 date generation, 8 conflict detection). Ran npx tsc --noEmit — zero type errors.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run recurring-dates recurring-conflicts --reporter=verbose` | 0 | ✅ pass | 9800ms |\n| 2 | `npx tsc --noEmit` | 0 | ✅ pass | 12700ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0014_recurring_schedules.sql`\n- `src/lib/utils/recurring.ts`\n- `src/__tests__/recurring-dates.test.ts`\n- `src/__tests__/recurring-conflicts.test.ts`\n",
+      "description": "Create the SQL migration for the `recurring_schedules` table and new columns on `bookings`. Then implement the two pure utility functions (`generateRecurringDates`, `checkDateConflicts`) in `src/lib/utils/recurring.ts` with comprehensive unit tests. These functions are the testable core of the slice — they have zero external dependencies (conflict check queries are mocked in tests).\n\n## Steps\n\n1. Create `supabase/migrations/0014_recurring_schedules.sql`:\n   - CREATE TABLE `recurring_schedules` with columns: id (UUID PK), teacher_id (FK teachers), parent_id (FK auth.users, nullable), parent_email (TEXT NOT NULL), frequency (TEXT CHECK IN weekly/biweekly), total_sessions (SMALLINT CHECK 2–26), start_date (DATE), start_time (TIME), end_time (TIME), stripe_customer_id (TEXT), stripe_payment_method_id (TEXT), created_at (TIMESTAMPTZ DEFAULT NOW())\n   - ALTER TABLE bookings ADD COLUMN recurring_schedule_id UUID REFERENCES recurring_schedules(id)\n   - ALTER TABLE bookings ADD COLUMN is_recurring_first BOOLEAN DEFAULT FALSE\n   - CREATE INDEX on bookings(recurring_schedule_id) for S02/S03 queries\n\n2. Create `src/lib/utils/recurring.ts` with:\n   - `generateRecurringDates(startDate: string, frequency: 'weekly' | 'biweekly', count: number): string[]` — returns YYYY-MM-DD date strings for N sessions starting from startDate, advancing 7 or 14 days\n   - `checkDateConflicts(teacherId: string, dates: string[], startTime: string, endTime: string, supabase: SupabaseClient): Promise<{ available: string[], skipped: { date: string, reason: string }[] }>` — queries bookings for conflicts (non-cancelled status + matching slot) and availability/overrides via per-date getSlotsForDate logic. A date is skipped if (a) an existing booking occupies the slot, or (b) the teacher has no availability window covering startTime–endTime on that date.\n\n3. Create `src/__tests__/recurring-dates.test.ts` testing generateRecurringDates:\n   - Weekly: 6 sessions starting 2026-04-07 → correct Tuesdays\n   - Biweekly: 4 sessions starting 2026-04-07 → every other Tuesday\n   - Edge: count=2 (minimum), count=26 (maximum)\n   - Edge: month/year boundary crossing\n\n4. Create `src/__tests__/recurring-conflicts.test.ts` testing checkDateConflicts:\n   - Mock Supabase: existing booking on one date → that date skipped with reason 'already booked'\n   - Mock Supabase: teacher has no availability on one date → that date skipped with reason 'not available'\n   - Mock Supabase: override blocks one date → that date skipped\n   - All dates clear → all returned as available\n   - All dates conflicted → empty available, all skipped",
+      "estimate": "1h30m",
+      "files": [
+        "supabase/migrations/0014_recurring_schedules.sql",
+        "src/lib/utils/recurring.ts",
+        "src/__tests__/recurring-dates.test.ts",
+        "src/__tests__/recurring-conflicts.test.ts"
+      ],
+      "verify": "npx vitest run recurring-dates recurring-conflicts --reporter=verbose && npx tsc --noEmit",
+      "inputs": [
+        "`supabase/migrations/0001_initial_schema.sql` — bookings table definition and bookings_unique_slot constraint",
+        "`src/lib/utils/slots.ts` — getSlotsForDate function for availability checking pattern",
+        "`src/__tests__/payment-intent.test.ts` — Supabase mock pattern (vi.hoisted, chainable vi.fn)"
+      ],
+      "expected_output": [
+        "`supabase/migrations/0014_recurring_schedules.sql` — recurring_schedules table + bookings columns",
+        "`src/lib/utils/recurring.ts` — generateRecurringDates and checkDateConflicts functions",
+        "`src/__tests__/recurring-dates.test.ts` — unit tests for date generation",
+        "`src/__tests__/recurring-conflicts.test.ts` — unit tests for conflict detection"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Build create-recurring API route with Stripe setup_future_usage and integration tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create the POST `/api/direct-booking/create-recurring` API route that: authenticates the parent, validates input via a new Zod schema, calls generateRecurringDates + checkDateConflicts, inserts a recurring_schedules row, batch-inserts booking rows, creates a Stripe Customer + PaymentIntent with `setup_future_usage: 'off_session'` and `capture_method: 'manual'`, and returns the client secret + session dates + skipped dates. Then write comprehensive integration tests following the exact `payment-intent.test.ts` mock pattern.\n\n## Steps\n\n1. Add `RecurringBookingSchema` to `src/lib/schemas/booking.ts`:\n   - teacherId: z.string().uuid()\n   - bookingDate: z.string().regex(YYYY-MM-DD) — the series start date\n   - startTime, endTime: z.string().regex(HH:MM)\n   - studentName: z.string().min(1).max(100)\n   - subject: z.string().min(1)\n   - notes: z.string().max(1000).optional()\n   - parentPhone: z.string().optional()\n   - parentSmsOptIn: z.boolean().optional().default(false)\n   - sessionTypeId: z.string().uuid().optional()\n   - frequency: z.enum(['weekly', 'biweekly'])\n   - totalSessions: z.number().int().min(2).max(26)\n\n2. Create `src/app/api/direct-booking/create-recurring/route.ts`:\n   - Auth: get user from Supabase session (401 if not logged in)\n   - Validate body with RecurringBookingSchema\n   - Fetch teacher: verify stripe_charges_enabled + stripe_account_id (400 if not connected)\n   - Determine amount per session (session type price OR hourly rate proration, same as create-intent)\n   - Call generateRecurringDates(bookingDate, frequency, totalSessions)\n   - Call checkDateConflicts(teacherId, dates, startTime, endTime, supabaseAdmin)\n   - Guard: if 0 available dates, return 409 'No available dates'\n   - Insert recurring_schedules row (teacher_id, parent_id, parent_email, frequency, total_sessions, start_date, start_time, end_time)\n   - Batch insert bookings: for each available date, insert with recurring_schedule_id, status='requested'; first date gets is_recurring_first=true\n   - Handle 23505 per-row: skip and add to skippedDates\n   - Create Stripe Customer: `stripe.customers.create({ email: user.email, metadata: { tutelo_user_id: user.id } })`\n   - Create PaymentIntent for first session: amount, currency:'usd', capture_method:'manual', setup_future_usage:'off_session', customer: customerId, transfer_data:{destination: stripe_account_id}, application_fee_amount: 7%, metadata:{booking_id: firstBookingId, teacher_id, recurring_schedule_id}\n   - Update recurring_schedules with stripe_customer_id and stripe_payment_method_id (payment_method comes after client confirms — for now store customer_id)\n   - Return JSON: { clientSecret, recurringScheduleId, sessionDates[], skippedDates[], totalCreated }\n   - On Stripe failure: delete all inserted bookings + schedule row, return 502\n\n3. Create `src/__tests__/create-recurring.test.ts` following payment-intent.test.ts patterns:\n   - Uses vi.hoisted for Stripe mock class with customers.create and paymentIntents.create\n   - Uses vi.mock for supabase/server and supabase/service\n   - Mock the recurring utility functions (generateRecurringDates, checkDateConflicts)\n   - Test cases:\n     a. Happy path: 6 weekly sessions, 1 skipped → returns clientSecret + 5 sessionDates + 1 skippedDate\n     b. Unauthenticated → 401\n     c. Teacher not Stripe-connected → 400\n     d. Zero available dates → 409\n     e. Invalid body (missing frequency) → 400\n     f. Stripe failure → 502 + cleanup",
+      "estimate": "2h",
+      "files": [
+        "src/lib/schemas/booking.ts",
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/__tests__/create-recurring.test.ts"
+      ],
+      "verify": "npx vitest run create-recurring --reporter=verbose && npx tsc --noEmit",
+      "inputs": [
+        "`src/lib/utils/recurring.ts` — generateRecurringDates and checkDateConflicts functions from T01",
+        "`src/lib/schemas/booking.ts` — existing BookingRequestSchema pattern",
+        "`src/app/api/direct-booking/create-intent/route.ts` — reference for Stripe PI creation, auth pattern, error handling",
+        "`src/__tests__/payment-intent.test.ts` — exact mock pattern to follow (vi.hoisted, MockStripeClass, Supabase fromMock chain)",
+        "`src/lib/utils/booking.ts` — computeSessionAmount for hourly rate fallback"
+      ],
+      "expected_output": [
+        "`src/lib/schemas/booking.ts` — RecurringBookingSchema added",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — full API route",
+        "`src/__tests__/create-recurring.test.ts` — integration tests for recurring route"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Build RecurringOptions component and wire into BookingCalendar state machine",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create the `RecurringOptions` component that lets a parent choose a recurring schedule (frequency + session count), shows projected dates with conflict annotations, and wire it into BookingCalendar as a new 'recurring' step between 'form' and 'auth'/'payment'. The existing one-time booking path must remain unchanged when the parent selects 'One-time' (the default).\n\n## Steps\n\n1. Create `src/components/profile/RecurringOptions.tsx`:\n   - Props: teacherId, selectedDate (Date), selectedSlot (TimeSlot), subjects (string[]), accentColor, onConfirm(frequency, count, availableDates, skippedDates), onBack()\n   - State: frequency ('one-time' | 'weekly' | 'biweekly'), count (default 4, range 2–26), projectedDates[], skippedDates[], loading\n   - When frequency is not 'one-time': call generateRecurringDates client-side for preview, then fetch `/api/direct-booking/check-conflicts` or compute locally\n   - Since checkDateConflicts requires DB queries, add a lightweight POST `/api/direct-booking/check-conflicts/route.ts` that accepts {teacherId, dates[], startTime, endTime} and returns {available[], skipped[]}. Auth required.\n   - Show: frequency toggle (One-time / Weekly / Biweekly), session count slider/input (2–26), end date display, list of projected dates with ✓/✗ markers for available/skipped, total sessions summary\n   - 'One-time' selection: calls onConfirm with frequency='one-time' immediately (existing flow)\n   - 'Confirm recurring' button: calls onConfirm with data\n\n2. Create `src/app/api/direct-booking/check-conflicts/route.ts`:\n   - POST handler: auth required, validates input, calls checkDateConflicts from recurring.ts, returns JSON {available, skipped}\n   - This is a read-only pre-check endpoint — no state mutations\n\n3. Modify `src/components/profile/BookingCalendar.tsx`:\n   - Add 'recurring' to step type union: `'calendar' | 'form' | 'recurring' | 'success' | 'error' | 'auth' | 'payment'`\n   - Add state: recurringData: { frequency, count, availableDates, skippedDates } | null\n   - In handleSubmit (stripeConnected branch): instead of going to auth/payment, go to 'recurring' step first\n   - In 'recurring' step: render <RecurringOptions> with onConfirm callback\n   - onConfirm handler: if frequency='one-time', proceed to auth check → createPaymentIntent (existing flow). If recurring, store recurringData in state, then proceed to auth check → createRecurringIntent\n   - Add createRecurringIntent function: fetches /api/direct-booking/create-recurring with form data + recurringData, stores clientSecret, goes to 'payment' step\n   - PaymentStep reuse: the PI returned from create-recurring has setup_future_usage but confirmPayment() works the same\n   - Update success state to show recurring summary when recurringData is set (session dates list, skipped dates)\n   - Import RecurringOptions, generateRecurringDates from their modules\n   - Keep the 'not stripeConnected' (deferred) path completely unchanged — recurring is only for direct booking",
+      "estimate": "2h",
+      "files": [
+        "src/components/profile/RecurringOptions.tsx",
+        "src/app/api/direct-booking/check-conflicts/route.ts",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npm run build",
+      "inputs": [
+        "`src/lib/utils/recurring.ts` — generateRecurringDates for client-side date preview, checkDateConflicts for server-side conflict check",
+        "`src/components/profile/BookingCalendar.tsx` — existing state machine (step types, handleSubmit, createPaymentIntent, PaymentStep usage)",
+        "`src/components/profile/PaymentStep.tsx` — reused for recurring first-session payment confirmation",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — API route to call from createRecurringIntent"
+      ],
+      "expected_output": [
+        "`src/components/profile/RecurringOptions.tsx` — recurring options picker with projected dates",
+        "`src/app/api/direct-booking/check-conflicts/route.ts` — conflict pre-check endpoint",
+        "`src/components/profile/BookingCalendar.tsx` — updated with 'recurring' step and createRecurringIntent"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Create RecurringBookingConfirmationEmail and wire into create-recurring route",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Build the React Email template for recurring booking confirmations that shows the full series schedule (all session dates, skipped dates with reasons, frequency, total sessions). Then wire it into the create-recurring API route so confirmation emails are sent on successful booking creation.\n\n## Steps\n\n1. Create `src/emails/RecurringBookingConfirmationEmail.tsx`:\n   - Follow existing BookingConfirmationEmail.tsx pattern (React Email components: Html, Head, Preview, Body, Container, Section, Text, Hr, Link)\n   - Props: recipientFirstName, teacherName, studentName, subject, frequency ('weekly'|'biweekly'), sessionDates (string[] — YYYY-MM-DD), skippedDates ({date: string, reason: string}[]), startTime (HH:MM), isTeacher (boolean), accountUrl (optional)\n   - Preview text: 'Your recurring tutoring schedule is confirmed — N sessions starting [date]'\n   - Body: greeting, summary line ('You've booked N [weekly/biweekly] tutoring sessions...'), numbered list of session dates formatted as 'Tuesday, April 7, 2026 at 4:00 PM', if skippedDates.length > 0: section titled 'Dates skipped' with each date and reason, note about automatic payment for future sessions, link to account/sessions if accountUrl provided\n   - Export as named export\n\n2. Wire email sending into `src/app/api/direct-booking/create-recurring/route.ts`:\n   - Import Resend and the new email template\n   - After successful PI creation, send confirmation email to parent with session details\n   - Send notification email to teacher (reuse existing BookingNotificationEmail or create a brief notification — use the simpler approach of including recurring info in the existing notification pattern)\n   - Email sending is fire-and-forget (don't fail the booking if email fails) — wrap in try/catch with console.error\n\n3. Verify TypeScript compilation and build pass with the new email template.",
+      "estimate": "45m",
+      "files": [
+        "src/emails/RecurringBookingConfirmationEmail.tsx",
+        "src/app/api/direct-booking/create-recurring/route.ts"
+      ],
+      "verify": "npx tsc --noEmit && npm run build",
+      "inputs": [
+        "`src/emails/BookingConfirmationEmail.tsx` — existing email template pattern to follow",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — route to wire email sending into"
+      ],
+      "expected_output": [
+        "`src/emails/RecurringBookingConfirmationEmail.tsx` — recurring series confirmation email template",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — updated with email sending after successful booking"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -3589,6 +3883,90 @@
       "choice": "validated",
       "rationale": "M007/S03 delivered: when sessionTypes prop is empty/absent, BookingCalendar skips session type selector, shows subject dropdown as before, and create-intent route uses existing computeSessionAmount hourly_rate path unchanged; backward compat unit test in session-type-pricing.test.ts passes.",
       "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 17,
+      "id": "D011",
+      "when_context": "M009",
+      "scope": "architecture",
+      "decision": "Payment timing model for recurring sessions",
+      "choice": "Charge 24h before each session using saved card (Stripe Customer + SetupIntent), not bulk upfront or weekly batch",
+      "rationale": "Stripe authorizations expire after 7 days. An 8-week series can't pre-authorize all sessions. Per-session auto-charge via saved card is fairest (parent not locked in), simplest for refunds, and matches subscription service UX expectations.",
+      "revisable": "Yes — if parents complain about per-session charges, could offer upfront payment option",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 18,
+      "id": "D012",
+      "when_context": "M009",
+      "scope": "architecture",
+      "decision": "Conflict handling for partial recurring series",
+      "choice": "Create sessions for available dates, skip conflicts, show parent which dates were skipped and why",
+      "rationale": "A teacher having one day off in 8 weeks shouldn't block the entire recurring relationship. Partial series creation with a clear summary is the most flexible approach — parent can see exactly what they're getting.",
+      "revisable": "No",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 19,
+      "id": "D013",
+      "when_context": "M009",
+      "scope": "architecture",
+      "decision": "Cron strategy for recurring session charges",
+      "choice": "Extend existing /api/cron/stripe-reminders, not a separate cron job",
+      "rationale": "Vercel Hobby plan has limited cron slots. Fewer moving parts. Query pattern is nearly identical to existing reminder logic (find tomorrow's sessions). Adding a second cron doubles the bookings table query load without benefit.",
+      "revisable": "Yes — if cron execution time exceeds Vercel limits, split into separate jobs",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 20,
+      "id": "D014",
+      "when_context": "M009",
+      "scope": "convention",
+      "decision": "Dashboard recurring session display pattern",
+      "choice": "Unified session list with series badge and cancel-series action — no separate recurring management page",
+      "rationale": "A separate management page adds navigation complexity without much value at current scale. Series badge + cancel action in the existing session list keeps the mental model simple. Teachers already know where their sessions live.",
+      "revisable": "Yes — if teachers find the unified list too noisy with many recurring series",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 21,
+      "id": "D015",
+      "when_context": "M009",
+      "scope": "architecture",
+      "decision": "Who can cancel recurring sessions",
+      "choice": "Both teacher (from dashboard) and parent (via secure email link / /manage/[token] page) can cancel",
+      "rationale": "Parents need agency over their recurring commitment without needing to contact the teacher for every cancellation. Secure token-based link follows the established review token pattern and matches how subscription services handle self-service cancellation.",
+      "revisable": "No",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 22,
+      "id": "D016",
+      "when_context": "M009/S01",
+      "scope": "architecture",
+      "decision": "Stripe card-saving approach for recurring first session",
+      "choice": "Use PaymentIntent with `setup_future_usage: 'off_session'` on the first session PI, not a separate SetupIntent + PI two-step flow",
+      "rationale": "A single PI with setup_future_usage saves the card to the Stripe Customer automatically when confirmed. This halves browser round-trips (one confirmation instead of two), reuses the existing PaymentStep component unchanged, and Stripe confirms this is compatible with capture_method: 'manual'. If incompatible at runtime, the fallback is a two-step SetupIntent flow, but Stripe docs and the research spike indicate compatibility.",
+      "revisable": "Yes — if setup_future_usage proves incompatible with manual capture in production, switch to two-step SetupIntent flow",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 23,
+      "id": "D017",
+      "when_context": "M009/S01",
+      "scope": "architecture",
+      "decision": "Conflict pre-check architecture for recurring booking UI",
+      "choice": "Add a lightweight `/api/direct-booking/check-conflicts` endpoint that calls checkDateConflicts and returns available/skipped dates, rather than doing conflict detection purely client-side or bundling it into the create-recurring route",
+      "rationale": "The RecurringOptions component needs to show projected dates with availability status before the parent commits. Conflict detection requires querying existing bookings and teacher availability — these are server-side queries. A dedicated pre-check endpoint keeps the UI responsive (shows preview as parent adjusts count/frequency) and separates the read-only check from the write-heavy create-recurring route. The check is called on frequency/count changes; create-recurring re-checks at insert time for race conditions.",
+      "revisable": "Yes — could be inlined into create-recurring if the pre-check proves unnecessary",
       "made_by": "agent",
       "superseded_by": null
     }
@@ -3813,6 +4191,28 @@
       "verdict": "✅ pass — 8/8 tests",
       "duration_ms": 800,
       "created_at": "2026-03-31T02:37:08.065Z"
+    },
+    {
+      "id": 21,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx vitest run recurring-dates recurring-conflicts --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9800,
+      "created_at": "2026-03-31T13:48:33.835Z"
+    },
+    {
+      "id": 22,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 12700,
+      "created_at": "2026-03-31T13:48:33.835Z"
     }
   ]
 }
