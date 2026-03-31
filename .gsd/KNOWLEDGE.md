@@ -319,3 +319,31 @@ When closing a milestone that used a worktree, some slice work may have been com
 - The main branch for any files listed in slice summaries but not in the worktree diff
 
 The union of both sets is the milestone's actual deliverable. The worktree merge will reconcile them, but the verification step must account for both locations.
+
+---
+
+## Recurring Date Generation: Use UTC Noon Anchor for DST Safety
+
+`generateRecurringDates` uses `new Date(\`\${dateStr}T12:00:00Z\`)` as the anchor, not midnight. Then adds `n * 7 * 24 * 60 * 60 * 1000` ms and converts back via `.toISOString().split('T')[0]`. Midnight-anchored dates fail when adding days across a DST boundary — the UTC midnight shifts one hour and the date string rolls back by one day. Noon anchor absorbs the ±1h DST shift. All date-only arithmetic in the recurring feature should use this pattern.
+
+---
+
+## Stripe setup_future_usage + capture_method:manual Compatibility
+
+`PaymentIntent` with both `setup_future_usage: 'off_session'` and `capture_method: 'manual'` is valid and confirmed compatible by Stripe docs. The client calls `stripe.confirmCardPayment()` as normal — Stripe saves the payment method to the Customer and places an authorization hold simultaneously. When S02 implements auto-charge, retrieve `payment_intent.payment_method` from the PI object after confirmation (stored on `recurring_schedules.stripe_payment_method_id`) and use `stripe.paymentIntents.create()` with `confirm: true, payment_method: savedPmId, customer: customerId` for each subsequent session.
+
+---
+
+## React Email Template: Preview Text Must Use Template Literal for Number Interpolation
+
+React Email's `<Preview>` component only accepts `string` children, but TypeScript infers `number | string` from array `.length`. Use a template literal:
+```tsx
+<Preview>{`Your recurring schedule: ${sessionDates.length} sessions starting ${formattedStart}`}</Preview>
+```
+Direct JSX expression interpolation (`{sessionDates.length} sessions`) causes TS2322 errors with some React Email versions.
+
+---
+
+## Vitest Mock Pattern for Route Modules That Import @/lib/email
+
+When testing API routes that call `sendRecurringBookingConfirmationEmail` (or any email function), add `vi.mock('@/lib/email', () => ({ sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined), sendBookingNotificationEmail: vi.fn().mockResolvedValue(undefined) }))` to the test file — otherwise Resend's constructor fires during module import and throws `Error: Missing API key`. This applies to all route tests in `src/__tests__/` that import routes wired to `src/lib/email.ts`.

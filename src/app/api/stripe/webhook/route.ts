@@ -177,6 +177,22 @@ export async function POST(req: Request) {
         await sendBookingConfirmationEmail(bookingId, { accountUrl }).catch(console.error)
         console.log(`[stripe/webhook] Direct booking ${bookingId} confirmed via payment_intent.amount_capturable_updated`)
       }
+
+      // S02: Store payment method on recurring schedule for auto-charge cron
+      const recurringScheduleId = pi.metadata?.recurring_schedule_id
+      if (recurringScheduleId && pi.payment_method) {
+        const { error: pmError } = await supabaseAdmin
+          .from('recurring_schedules')
+          .update({ stripe_payment_method_id: pi.payment_method as string })
+          .eq('id', recurringScheduleId)
+          .is('stripe_payment_method_id', null) // idempotent — only set once
+
+        if (pmError) {
+          console.warn(`[stripe/webhook] Failed to store payment method on recurring_schedule ${recurringScheduleId}:`, pmError)
+        } else {
+          console.log(`[stripe/webhook] Stored payment method on recurring_schedule ${recurringScheduleId}`)
+        }
+      }
       break
     }
 

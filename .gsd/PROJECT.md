@@ -15,7 +15,11 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - All 101 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02)
-- 57 M007 unit tests + all prior tests passing; build clean (pre-existing qrcode.react missing-module from M006 unresolved)
+- **Recurring Sessions (M009 — in progress 🔄):**
+  - S01 ✅ Schema & Recurring Booking Creation — `recurring_schedules` table, `generateRecurringDates` + `checkDateConflicts` utilities, `POST /api/direct-booking/create-recurring` (Stripe setup_future_usage), `RecurringOptions` UI component in BookingCalendar, `RecurringBookingConfirmationEmail` template. 25 tests passing, build clean.
+  - S02 ⬜ Saved Cards & Auto-Charge Cron
+  - S03 ⬜ Cancellation & Dashboard Series UX
+- 82 unit tests (25 M009 + 57 M007) + all prior tests passing; build clean
 - **Capacity & Pricing (M007 — complete ✅):**
   - capacity_limit on teachers table; profile shows "at capacity" state with waitlist form (S01 ✅)
   - `/dashboard/waitlist` page with entry management; `checkAndNotifyWaitlist` auto-emails waitlisted parents on capacity freed after cancellation (S02 ✅)
