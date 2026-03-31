@@ -77,4 +77,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [ ] **M010:** Parent & Admin — Multi-child management, saved payment methods, teacher-parent messaging, read-only admin dashboard
 
 ---
-*Last updated: 2026-03-30 after M007 milestone completion — all 9 M007 requirements validated (CAP-01, CAP-02, WAIT-01, WAIT-02, WAIT-03, SESS-01, SESS-02, SESS-03, SESS-04); M007 all 3 slices complete, 57 unit tests pass*
+*Last updated: 2026-03-31 after M009/S02 completion — Saved Cards & Auto-Charge Cron: payment_failed status migration, webhook PM storage on recurring_schedules, daily cron at /api/cron/recurring-charges (0 12 * * *), RecurringPaymentFailedEmail template, 16 tests pass (8 webhook-capture + 8 recurring-charges), tsc clean, build green. M009/S01 (Schema & Recurring Booking Creation) and M009/S02 complete; S03 (Cancellation & Dashboard Series UX) remaining.*

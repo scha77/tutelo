@@ -21,6 +21,7 @@ interface RecurringBookingConfirmationEmailProps {
   startTime: string // HH:MM
   isTeacher: boolean
   accountUrl?: string
+  manageUrl?: string
 }
 
 function formatSessionDate(dateStr: string, time: string): string {
@@ -61,6 +62,7 @@ export function RecurringBookingConfirmationEmail({
   startTime,
   isTeacher,
   accountUrl,
+  manageUrl,
 }: RecurringBookingConfirmationEmailProps) {
   const count = sessionDates.length
   const firstDateFormatted =
@@ -174,6 +176,19 @@ export function RecurringBookingConfirmationEmail({
               Payment for your first session will be captured when the teacher confirms.
               Future sessions in this series will be charged automatically to your saved card.
             </Text>
+          )}
+
+          {!isTeacher && manageUrl && (
+            <Section style={{ margin: '16px 0' }}>
+              <Text style={{ fontSize: '15px', color: '#111827', marginBottom: '4px' }}>
+                Need to make changes? You can cancel individual sessions or the entire series:
+              </Text>
+              <Text style={{ fontSize: '15px', color: '#111827', margin: 0 }}>
+                <Link href={manageUrl} style={{ color: '#2563eb' }}>
+                  Manage your series
+                </Link>
+              </Text>
+            </Section>
           )}
 
           {accountUrl && (

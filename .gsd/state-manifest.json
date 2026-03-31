@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T14:24:34.280Z",
+  "exported_at": "2026-03-31T14:38:59.132Z",
   "milestones": [
     {
       "id": "M001",
@@ -1024,16 +1024,16 @@
       "milestone_id": "M009",
       "id": "S02",
       "title": "Saved Cards & Auto-Charge Cron",
-      "status": "pending",
+      "status": "complete",
       "risk": "high",
       "depends": [
         "S01"
       ],
       "demo": "First session authorized at booking. Cron auto-charges the parent's saved card 24h before each subsequent session. Failed charges update booking status and notify both parties.",
       "created_at": "2026-03-31T13:24:31.228Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-03-31T14:28:33.239Z",
+      "full_summary_md": "---\nid: S02\nparent: M009\nmilestone: M009\nprovides:\n  - payment_failed status in bookings CHECK constraint — S03 cancellation flows can set this status\n  - stripe_payment_method_id on recurring_schedules — populated by webhook on first session confirm, consumed by cron for all subsequent charges\n  - Auto-charge cron at /api/cron/recurring-charges — processes all non-first recurring sessions 24h before they occur\n  - RecurringPaymentFailedEmail + sendRecurringPaymentFailedEmail — parent + teacher notification on charge failure\n  - payment_failed booking status queryable for S03 dashboard display and cancellation handling\nrequires:\n  - slice: S01\n    provides: recurring_schedules table with stripe_customer_id + stripe_payment_method_id columns; is_recurring_first flag on bookings; recurring_schedule_id FK on bookings; Stripe Customer created and stored on first booking\naffects:\n  - S03 — Cancellation & Dashboard Series UX depends on payment_failed status (added here) and the full recurring charge infrastructure\nkey_files:\n  - supabase/migrations/0015_payment_failed_status.sql\n  - src/app/api/stripe/webhook/route.ts\n  - src/app/api/cron/recurring-charges/route.ts\n  - src/emails/RecurringPaymentFailedEmail.tsx\n  - src/lib/email.ts\n  - src/__tests__/webhook-capture.test.ts\n  - src/__tests__/recurring-charges.test.ts\n  - vercel.json\n  - vitest.config.ts\nkey_decisions:\n  - Fire-and-forget pattern for recurring_schedules PM update in webhook — log warning on error but always return 200 (T01)\n  - Idempotency via .is('stripe_payment_method_id', null) guard — only stores PM on first webhook delivery (T01)\n  - Dedicated /api/cron/recurring-charges route at 0 12 * * * (overrides D013) — D021 records rationale: Vercel lifted cron limit to 100 in Jan 2026, dedicated route is cleaner (T02)\n  - computeSessionAmount for recurring charge pricing — no session_type_id FK on bookings table (D008 deferred that column) (T02)\n  - Stripe idempotencyKey = recurring-charge-{bookingId}-{tomorrowUtc} — two-layer idempotency with .eq('status','requested') DB guard (T02)\n  - Added .gsd/** to vitest excludes to prevent stale worktree test pollution (T02)\npatterns_established:\n  - Cron route structure: CRON_SECRET auth → tomorrow UTC date → Supabase query → sequential PI loop → { charged, failed, skipped, checked } JSON response\n  - Dual-variant email pattern: single React Email component with isTeacher boolean prop, parent gets CTA link, teacher gets informational copy\n  - sendX email helper pattern: { bookingId } param only — function fetches all data internally via supabaseAdmin, same as sendCancellationEmail\n  - Two-layer idempotency for cron Stripe PIs: idempotencyKey on Stripe create + .eq('status','requested') on DB update\nobservability_surfaces:\n  - [recurring-charges] Charged booking {id} — logged on successful PI + booking confirmation\n  - [recurring-charges] Payment failed for booking {id}: {errorCode} — logged on Stripe error + payment_failed status update\n  - [recurring-charges] Skipped booking {id} — no payment method — logged when stripe_payment_method_id is null\n  - [recurring-charges] Complete: charged=N failed=N skipped=N checked=N — JSON response body for Vercel cron monitoring\n  - booking.status = 'payment_failed' — queryable in Supabase dashboard for ops triage\ndrill_down_paths:\n  - .gsd/milestones/M009/slices/S02/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M009/slices/S02/tasks/T02-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T14:28:33.239Z\nblocker_discovered: false\n---\n\n# S02: Saved Cards & Auto-Charge Cron\n\n**Built the full recurring-charge pipeline: payment_failed status, webhook PM storage, daily cron with idempotent Stripe PI creation, payment-failed email notifications (parent + teacher), and 16 passing tests.**\n\n## What Happened\n\nS02 delivered the complete auto-charge backbone for recurring sessions across two tasks.\n\n**T01 — Foundation (migration + webhook extension)**\nAdded `payment_failed` to the bookings status `CHECK` constraint via migration `0015_payment_failed_status.sql`, replacing the inline constraint from migration 0001. Extended the `payment_intent.amount_capturable_updated` webhook handler to detect `recurring_schedule_id` in PI metadata and store the payment method ID on the linked `recurring_schedules` row. The update uses an `.is('stripe_payment_method_id', null)` idempotency guard — only the first webhook delivery stores the PM, re-deliveries are no-ops. The update is fire-and-forget: errors are logged but the webhook always returns 200. Added 3 new test cases (PM storage path, no-op when no recurring_schedule_id, no-op when payment_method null) bringing webhook-capture.test.ts to 8 tests total.\n\n**T02 — Cron route and email (core deliverable)**\nCreated `RecurringPaymentFailedEmail.tsx` with parent (CTA link to update payment method) and teacher (informational) variants, following the established CancellationEmail pattern (UTC noon date anchor, sans-serif/f9fafb styling, 520px container). Added `sendRecurringPaymentFailedEmail({ bookingId })` to `email.ts` — it fetches booking + teacher data internally and sends parent email always, teacher email only if `social_email` is set.\n\nThe cron route at `/api/cron/recurring-charges` (GET, auth-gated on CRON_SECRET) runs at 0 12 * * * UTC daily. It queries non-first recurring bookings (`.eq('is_recurring_first', false)`) with `status='requested'` for tomorrow's date, joins `recurring_schedules!inner` for the saved payment method and `teachers!inner` for Stripe connect + hourly rate. For each session: skips if `stripe_payment_method_id` is null; computes amount via `computeSessionAmount` (no session_type_id FK on bookings — see deviation); creates a Stripe PI with `off_session:true`, `confirm:true`, `capture_method:'manual'`, 7% application fee, and an idempotencyKey of `recurring-charge-{bookingId}-{tomorrowUtc}`; on success updates booking to `confirmed` with PI ID; on Stripe error updates booking to `payment_failed` and fires `sendRecurringPaymentFailedEmail` as fire-and-forget. Returns `{ charged, failed, skipped, checked }` for Vercel cron monitoring.\n\nAdded `.gsd/**` to vitest excludes to eliminate stale worktree test pollution that was causing phantom failures in CI. Updated `vercel.json` with 4th cron entry.\n\n**Verification:** 16/16 tests pass (8 webhook-capture + 8 recurring-charges), `tsc --noEmit` exits 0, `npm run build` succeeds with `/api/cron/recurring-charges` in route manifest.\n\n## Verification\n\nAll slice verification checks passed:\n1. `npx vitest run webhook-capture recurring-charges --reporter=verbose` → 16/16 tests pass (8 webhook-capture + 8 recurring-charges)\n2. `npx tsc --noEmit` → 0 type errors\n3. `npm run build` → `/api/cron/recurring-charges` confirmed in route manifest, build exits 0\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\n- session_types(price) join removed from cron query — bookings has no session_type_id FK (D008: price stored in Stripe PI metadata only). Recurring charge amount computed via computeSessionAmount(start_time, end_time, hourly_rate) from teacher's hourly_rate.\n- Re-delivery idempotency test replaced with null payment_method test in T01 — idempotency is verified structurally via .is('stripe_payment_method_id', null) in the PM storage test.\n- Added error logging for recurring_schedules update in T01 (beyond plan's pure fire-and-forget spec) to aid debugging.\n- Added .gsd/** to vitest.config.ts excludes (T02) to fix stale worktree test pollution from previous milestones.\n\n## Known Limitations\n\n- Parent name not collected at MVP — RecurringPaymentFailedEmail uses 'there' as recipientFirstName for parent variant (\"Hi there, ...\").\n- Stripe Customer deduplication deferred — new Customer created per recurring booking (D020). Multiple bookings from the same parent email create separate Stripe Customers.\n- computeSessionAmount uses teacher hourly_rate for all recurring charges regardless of the session type pricing chosen at booking time. If a teacher has session types with custom prices, auto-charges will use the hourly rate instead. This is a known gap until session_type_id is added to the bookings table.\n- Cron runs at noon UTC (00:00 UTC midnight + 12h). Sessions starting after midnight UTC on the target day will be charged at noon the prior day — within the 24h window but not exactly 24h before. This is intentional to give a buffer for slow Stripe processing.\n\n## Follow-ups\n\n- S03: Cancellation & Dashboard Series UX now has full prerequisite infrastructure (payment_failed status, saved PM on recurring_schedules, cron auto-charging).\n- Future: Add session_type_id FK to bookings (migration 0016) and update recurring-charges cron to use session type price when available.\n- Future: Stripe Customer deduplication by parent email to avoid proliferation of Customer objects.\n\n## Files Created/Modified\n\n- `supabase/migrations/0015_payment_failed_status.sql` — New migration: adds payment_failed to bookings status CHECK constraint\n- `src/app/api/stripe/webhook/route.ts` — Extended payment_intent.amount_capturable_updated handler to store stripe_payment_method_id on recurring_schedules with idempotency guard\n- `src/app/api/cron/recurring-charges/route.ts` — New daily cron route: auto-charges saved cards 24h before recurring sessions\n- `src/emails/RecurringPaymentFailedEmail.tsx` — New React Email template: dual-variant (parent CTA + teacher informational) payment failure notification\n- `src/lib/email.ts` — Added sendRecurringPaymentFailedEmail helper following sendCancellationEmail pattern\n- `src/__tests__/webhook-capture.test.ts` — Added 3 new tests: PM storage, no-op without recurring_schedule_id, no-op with null payment_method\n- `src/__tests__/recurring-charges.test.ts` — New test file: 8 integration tests covering auth, no-op, success, failure, skip, idempotency, fee calculation, mixed results\n- `vercel.json` — Added 4th cron entry: /api/cron/recurring-charges at 0 12 * * *\n- `vitest.config.ts` — Added .gsd/** to exclude list to prevent stale worktree test pollution\n",
+      "full_uat_md": "# S02: Saved Cards & Auto-Charge Cron — UAT\n\n**Milestone:** M009\n**Written:** 2026-03-31T14:28:33.239Z\n\n## Preconditions\n\n- Stripe test mode keys configured (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`)\n- `CRON_SECRET` env var set\n- A recurring schedule exists in DB with a confirmed first booking (from S01)\n- Teacher has `stripe_account_id` and `hourly_rate` set\n- Parent booking row has `is_recurring_first=false`, `status='requested'`, `booking_date=tomorrow`, `recurring_schedule_id` populated\n\n---\n\n## Test Cases\n\n### TC-01: Stripe Webhook Stores Payment Method on First Session Confirm\n\n**Preconditions:** A `payment_intent.amount_capturable_updated` event is delivered with `metadata.recurring_schedule_id` set and `payment_method` non-null. The target `recurring_schedules` row has `stripe_payment_method_id = null`.\n\n**Steps:**\n1. Simulate webhook delivery to `/api/stripe/webhook` with a PI event containing `metadata: { booking_id: \"...\", recurring_schedule_id: \"rs-uuid\" }` and `payment_method: \"pm_test_xxx\"`.\n2. Verify the webhook returns HTTP 200.\n3. Query `recurring_schedules` for the row with `id = \"rs-uuid\"`.\n\n**Expected:** `stripe_payment_method_id = \"pm_test_xxx\"`.\n\n---\n\n### TC-02: Webhook Idempotency — Re-delivery Does Not Overwrite PM\n\n**Preconditions:** Same PI event as TC-01, but `recurring_schedules.stripe_payment_method_id` is already set to `\"pm_test_xxx\"`.\n\n**Steps:**\n1. Deliver the same webhook event again.\n2. Verify HTTP 200 returned.\n3. Query `recurring_schedules.stripe_payment_method_id`.\n\n**Expected:** Value remains `\"pm_test_xxx\"` (`.is('stripe_payment_method_id', null)` guard prevented overwrite). No duplicate DB write.\n\n---\n\n### TC-03: Webhook No-Op When No recurring_schedule_id in Metadata\n\n**Preconditions:** A `payment_intent.amount_capturable_updated` event with `metadata: { booking_id: \"...\" }` only (no `recurring_schedule_id`).\n\n**Steps:**\n1. Deliver webhook event.\n2. Verify HTTP 200.\n3. Verify no `UPDATE` on `recurring_schedules` table occurred.\n\n**Expected:** Booking confirmed normally; `recurring_schedules` untouched.\n\n---\n\n### TC-04: Cron Returns 401 Without CRON_SECRET\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with no `Authorization` header.\n2. Check response status.\n\n**Expected:** HTTP 401, body \"Unauthorized\". No Stripe calls made.\n\n---\n\n### TC-05: Cron No-Op When No Recurring Sessions Tomorrow\n\n**Preconditions:** No bookings in DB with `booking_date=tomorrow`, `status='requested'`, `is_recurring_first=false`, `recurring_schedule_id IS NOT NULL`.\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with `Authorization: Bearer {CRON_SECRET}`.\n2. Read response body.\n\n**Expected:** HTTP 200, `{ \"charged\": 0, \"failed\": 0, \"skipped\": 0, \"checked\": 0 }`.\n\n---\n\n### TC-06: Successful Auto-Charge — Booking Confirmed\n\n**Preconditions:** One booking row: `booking_date=tomorrow`, `status='requested'`, `is_recurring_first=false`, `recurring_schedule_id` pointing to a schedule with `stripe_customer_id` and `stripe_payment_method_id` set.\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with valid CRON_SECRET.\n2. Check Stripe dashboard for new PaymentIntent.\n3. Query `bookings` table for the booking.\n\n**Expected:**\n- Stripe PI created with `off_session: true`, `confirm: true`, `capture_method: 'manual'`, `application_fee_amount = Math.round(amount * 0.07)`.\n- `idempotencyKey` = `recurring-charge-{bookingId}-{tomorrow}`.\n- Booking `status = 'confirmed'`, `stripe_payment_intent = pi.id`.\n- Response: `{ \"charged\": 1, \"failed\": 0, \"skipped\": 0, \"checked\": 1 }`.\n\n---\n\n### TC-07: Failed Charge — Booking Marked payment_failed + Emails Sent\n\n**Preconditions:** Same as TC-06 but use a Stripe test card that declines (e.g., `pm_card_chargeDeclined`).\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with valid CRON_SECRET.\n2. Query `bookings` table for the booking.\n3. Check parent email inbox (test email address on booking).\n4. Check teacher email inbox (teacher's `social_email`).\n\n**Expected:**\n- Booking `status = 'payment_failed'`.\n- Parent receives email: subject contains `\"Payment failed for {studentName}'s session on {date}\"`. Body includes link to update payment method.\n- Teacher receives email (if `social_email` set): subject contains `\"Payment failed for {studentName}'s recurring session\"`. No CTA link in teacher variant.\n- Response: `{ \"charged\": 0, \"failed\": 1, \"skipped\": 0, \"checked\": 1 }`.\n\n---\n\n### TC-08: Null Payment Method — Session Skipped, Not Charged\n\n**Preconditions:** Booking row as in TC-06 but `recurring_schedules.stripe_payment_method_id = null`.\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with valid CRON_SECRET.\n\n**Expected:**\n- No Stripe PI created.\n- Booking `status` remains `'requested'` (not changed).\n- Response: `{ \"charged\": 0, \"failed\": 0, \"skipped\": 1, \"checked\": 1 }`.\n- Console log: `[recurring-charges] Skipped booking {id} — no payment method`.\n\n---\n\n### TC-09: Cron Idempotency — Already-Confirmed Sessions Not Re-Charged\n\n**Preconditions:** Same booking as TC-06, but cron already ran and booking is now `status='confirmed'`.\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` again with valid CRON_SECRET.\n\n**Expected:**\n- Cron query finds 0 sessions (`.eq('status','requested')` excludes confirmed bookings).\n- No Stripe PI created.\n- Response: `{ \"charged\": 0, \"failed\": 0, \"skipped\": 0, \"checked\": 0 }`.\n\n---\n\n### TC-10: First Session Not Charged by Cron (is_recurring_first=true)\n\n**Preconditions:** A booking with `is_recurring_first=true`, `booking_date=tomorrow`, `status='requested'`.\n\n**Steps:**\n1. `GET /api/cron/recurring-charges` with valid CRON_SECRET.\n\n**Expected:** Cron query excludes this booking (`.eq('is_recurring_first', false)` filter). No Stripe PI. Response `checked=0`.\n\n---\n\n### TC-11: Application Fee Is 7% of Session Amount\n\n**Preconditions:** Session with `start_time='14:00'`, `end_time='15:00'`, teacher `hourly_rate=60`. Expected amount: `$60.00 = 6000 cents`. Expected fee: `Math.round(6000 * 0.07) = 420 cents`.\n\n**Steps:**\n1. Run cron with valid CRON_SECRET.\n2. Inspect Stripe PI in test dashboard.\n\n**Expected:** PI `application_fee_amount = 420` (7% of 6000).\n\n---\n\n### TC-12: payment_failed Status Accepted by DB Constraint\n\n**Preconditions:** Migration 0015 applied to the database.\n\n**Steps:**\n1. Attempt to UPDATE a booking row directly: `UPDATE bookings SET status='payment_failed' WHERE id='{id}'`.\n\n**Expected:** Update succeeds without constraint violation. Confirm the status reads back as `'payment_failed'`.\n\n---\n\n## Edge Cases\n\n- **Teacher with no social_email**: Failed charge cron sends parent email only; no error thrown for missing teacher email.\n- **Stripe returns unexpected PI status** (not `requires_capture`): Booking left as `requested` for next cron run; logged as warning.\n- **Double cron invocation** (Vercel race on cold start): Stripe idempotencyKey returns same PI; `.eq('status','requested')` DB guard prevents double confirm.\n- **Booking cancelled between cron query and Stripe create**: Stripe PI created but DB update finds 0 rows (status no longer `requested`); PI authorization will auto-expire after 7 days.\n\n",
       "goal": "First session authorized at booking. Cron auto-charges the parent's saved card 24h before each subsequent session. Failed charges update booking status and notify both parties.",
       "success_criteria": "- `payment_failed` status added to bookings CHECK constraint via migration 0015\n- Webhook stores `stripe_payment_method_id` on `recurring_schedules` after parent confirms first PI\n- `/api/cron/recurring-charges` creates off-session PIs for tomorrow's non-first recurring sessions\n- Successful charges update booking `status='confirmed'` + store `stripe_payment_intent`\n- Failed charges update booking `status='payment_failed'` + fire notification email to both parties\n- Stripe idempotency key prevents double-charging on Vercel double-invocation\n- Cron auth gated on `CRON_SECRET` Bearer token\n- `npx vitest run webhook-capture recurring-charges --reporter=verbose` — all tests pass\n- `npx tsc --noEmit` — 0 errors\n- `npm run build` — production build succeeds",
       "proof_level": "Integration — exercises Stripe off-session charging logic, webhook extension, and cron query patterns via mocked integration tests. Real Stripe API not called (mocked), but the full request→query→charge→update→notify pipeline is tested end-to-end within the mock boundary.",
@@ -1057,11 +1057,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Extend cancelSession with series awareness. Parent self-service cancel page at /manage/[token]. Dashboard series badge. Cancel-series action. Email templates for recurring confirmation and cancel links.",
-      "success_criteria": "Teacher can cancel single session or remaining series from dashboard. Parent can cancel via /manage/[token] secure page. Series badge visible on recurring sessions. Cancelled sessions have PIs voided. Notifications sent. tsc clean. npm run build passes.",
-      "proof_level": "build + unit tests for series cancellation logic + browser smoke test",
-      "integration_closure": "cancelSession extended with recurring_schedule_id logic. New /manage/[token] page. ConfirmedSessionCard shows series badge. New email templates for recurring confirmation + cancel links.",
-      "observability_impact": "console.error on series cancellation failures. Audit trail via booking status transitions.",
+      "goal": "Teacher sees recurring series badge on dashboard sessions and can cancel one or all remaining. Parent receives email with secure manage link to cancel individual sessions or the series via /manage/[token].",
+      "success_criteria": "- Teacher dashboard sessions page shows recurring sessions with a \"Recurring\" badge and a \"Cancel Series\" action\n- cancelSingleRecurringSession and cancelRecurringSeries server actions handle confirmed/requested/payment_failed statuses correctly, void Stripe PIs when present, and send cancellation emails\n- Parent can visit /manage/[token] to see upcoming sessions and cancel individual sessions or the entire remaining series without authentication\n- Token-gated API routes validate token ownership before cancelling\n- RecurringCancellationEmail sent on series cancellation (parent + teacher variants)\n- cancel_token column exists on recurring_schedules, generated at booking creation, included in parent confirmation email as manage URL\n- All unit tests pass: cancel-recurring.test.ts + manage-cancel.test.ts\n- npx tsc --noEmit exits 0\n- npm run build passes with /manage/[token] and /api/manage/* in route manifest",
+      "proof_level": "Integration — real server actions + API routes with mocked DB/Stripe, type-checked, production build verified",
+      "integration_closure": "- Upstream: recurring_schedules table (S01), bookings.recurring_schedule_id FK (S01), payment_failed status (S02), Stripe Customer + saved PM (S02)\n- New wiring: cancel_token on recurring_schedules → manageUrl in confirmation email → /manage/[token] page; cancelRecurringSeries server action → ConfirmedSessionCard \"Cancel Series\" button; token-gated /api/manage/* routes → CancelSeriesForm\n- Remaining for milestone: Nothing — S03 is the final slice in M009",
+      "observability_impact": "- Runtime signals: console.error on Stripe PI cancel failures in new cancel actions (non-blocking); console.error on email send failures (fire-and-forget)\n- Inspection surfaces: booking.status = 'cancelled' queryable in Supabase; /api/manage/cancel-series returns JSON result summary\n- Failure visibility: Stripe void errors logged but don't block cancellation; invalid/missing token returns structured error response\n- Redaction: cancel_token is never exposed in teacher emails or dashboard UI — only in parent confirmation email",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -3890,6 +3890,150 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Added cancel_token column to recurring_schedules, generated token at booking creation, and included manage URL in parent confirmation email",
+      "status": "complete",
+      "one_liner": "Added cancel_token column to recurring_schedules, generated token at booking creation, and included manage URL in parent confirmation email",
+      "narrative": "Created migration 0016_cancel_token.sql adding cancel_token TEXT UNIQUE and cancel_token_created_at TIMESTAMPTZ columns to recurring_schedules with a partial index. Modified create-recurring route to generate a 64-char hex token via randomBytes(32), store it on schedule insert, compute manageUrl, and pass it to the email helper. Updated email.ts to accept and forward manageUrl to the parent variant only. Added a conditional \"Manage your series\" link section to RecurringBookingConfirmationEmail.tsx that renders only for parents (!isTeacher && manageUrl).",
+      "verification_result": "npx tsc --noEmit passed with zero errors. npm run build passed with all routes compiling successfully.",
+      "duration": "",
+      "completed_at": "2026-03-31T14:38:59.105Z",
+      "blocker_discovered": false,
+      "deviations": "Renumbered inline step comments in create-recurring/route.ts to accommodate the new step 6 for cancel token generation. No functional deviation.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0016_cancel_token.sql",
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/emails/RecurringBookingConfirmationEmail.tsx",
+        "src/lib/email.ts"
+      ],
+      "key_decisions": [
+        "cancel_token uses randomBytes(32).toString('hex') for 64-char hex tokens — same crypto pattern used elsewhere in the codebase"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M009\nkey_files:\n  - supabase/migrations/0016_cancel_token.sql\n  - src/app/api/direct-booking/create-recurring/route.ts\n  - src/emails/RecurringBookingConfirmationEmail.tsx\n  - src/lib/email.ts\nkey_decisions:\n  - cancel_token uses randomBytes(32).toString('hex') for 64-char hex tokens — same crypto pattern used elsewhere in the codebase\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T14:38:59.105Z\nblocker_discovered: false\n---\n\n# T01: Added cancel_token column to recurring_schedules, generated token at booking creation, and included manage URL in parent confirmation email\n\n**Added cancel_token column to recurring_schedules, generated token at booking creation, and included manage URL in parent confirmation email**\n\n## What Happened\n\nCreated migration 0016_cancel_token.sql adding cancel_token TEXT UNIQUE and cancel_token_created_at TIMESTAMPTZ columns to recurring_schedules with a partial index. Modified create-recurring route to generate a 64-char hex token via randomBytes(32), store it on schedule insert, compute manageUrl, and pass it to the email helper. Updated email.ts to accept and forward manageUrl to the parent variant only. Added a conditional \"Manage your series\" link section to RecurringBookingConfirmationEmail.tsx that renders only for parents (!isTeacher && manageUrl).\n\n## Verification\n\nnpx tsc --noEmit passed with zero errors. npm run build passed with all routes compiling successfully.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 12600ms |\n| 2 | `npm run build` | 0 | ✅ pass | 17300ms |\n\n\n## Deviations\n\nRenumbered inline step comments in create-recurring/route.ts to accommodate the new step 6 for cancel token generation. No functional deviation.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0016_cancel_token.sql`\n- `src/app/api/direct-booking/create-recurring/route.ts`\n- `src/emails/RecurringBookingConfirmationEmail.tsx`\n- `src/lib/email.ts`\n",
+      "description": "Foundation task: creates the cancel_token column on recurring_schedules, generates the token at booking creation time, and adds the manage URL to the parent confirmation email. This unblocks both T02 (needs the column for series cancel queries) and T03 (needs the token for the /manage page).\n\n## Steps\n\n1. Create `supabase/migrations/0016_cancel_token.sql`:\n   - `ALTER TABLE recurring_schedules ADD COLUMN IF NOT EXISTS cancel_token TEXT UNIQUE`\n   - `ALTER TABLE recurring_schedules ADD COLUMN IF NOT EXISTS cancel_token_created_at TIMESTAMPTZ`\n   - `CREATE INDEX IF NOT EXISTS idx_recurring_schedules_cancel_token ON recurring_schedules (cancel_token) WHERE cancel_token IS NOT NULL`\n\n2. Modify `src/app/api/direct-booking/create-recurring/route.ts`:\n   - Import `randomBytes` from `crypto` (already imported in bookings.ts — follow same pattern)\n   - After computing the schedule data but before the insert, generate `const cancelToken = randomBytes(32).toString('hex')`\n   - Add `cancel_token: cancelToken, cancel_token_created_at: new Date().toISOString()` to the recurring_schedules insert\n   - After successful booking creation, compute `const manageUrl = \\`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'}/manage/${cancelToken}\\``\n   - Pass `manageUrl` to the `sendRecurringBookingConfirmationEmail` call\n\n3. Modify `src/emails/RecurringBookingConfirmationEmail.tsx`:\n   - Add optional `manageUrl?: string` prop to the interface\n   - After the payment note for parent (!isTeacher), add a section with a 'Manage your series' link pointing to manageUrl\n   - Only render this section when manageUrl is provided and !isTeacher\n\n4. Modify `src/lib/email.ts` in `sendRecurringBookingConfirmationEmail`:\n   - Add optional `manageUrl?: string` to the params type\n   - Pass `manageUrl` through to the parent variant of RecurringBookingConfirmationEmail\n\n## Must-Haves\n\n- [ ] Migration 0016 creates cancel_token + index on recurring_schedules\n- [ ] create-recurring route generates and stores cancel_token\n- [ ] Parent confirmation email includes manage URL link\n- [ ] manageUrl only rendered in parent variant, not teacher variant",
+      "estimate": "30m",
+      "files": [
+        "supabase/migrations/0016_cancel_token.sql",
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/emails/RecurringBookingConfirmationEmail.tsx",
+        "src/lib/email.ts"
+      ],
+      "verify": "npx tsc --noEmit && npm run build",
+      "inputs": [
+        "`supabase/migrations/0014_recurring_schedules.sql` — existing recurring_schedules schema to extend",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — existing route to add cancel_token generation",
+        "`src/emails/RecurringBookingConfirmationEmail.tsx` — existing email template to add manageUrl prop",
+        "`src/lib/email.ts` — existing email helper to pass manageUrl through"
+      ],
+      "expected_output": [
+        "`supabase/migrations/0016_cancel_token.sql` — new migration adding cancel_token column + index",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — modified with cancel_token generation + manageUrl",
+        "`src/emails/RecurringBookingConfirmationEmail.tsx` — modified with manageUrl prop + manage link section",
+        "`src/lib/email.ts` — modified sendRecurringBookingConfirmationEmail with manageUrl param"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Add teacher cancel actions, series badge in dashboard, and RecurringCancellationEmail",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Delivers the teacher-facing cancellation experience: new server actions for single-session and series cancel, dashboard sessions page extended to show recurring sessions with a badge, ConfirmedSessionCard with Cancel Series button, and a new RecurringCancellationEmail template.\n\n## Steps\n\n1. Create `src/emails/RecurringCancellationEmail.tsx`:\n   - Dual-variant React Email template (parent + teacher) following CancellationEmail pattern\n   - Props: recipientFirstName, teacherName, studentName, subject, cancelledDates (string[]), startTime, isTeacher\n   - Shows list of all cancelled session dates\n   - Parent variant: \"Your recurring series has been cancelled\" + list of cancelled dates\n   - Teacher variant: \"The recurring series with {studentName} has been cancelled\"\n   - Use same styling as CancellationEmail (sans-serif, #f9fafb bg, 520px container, UTC noon date anchor)\n\n2. Add `sendRecurringCancellationEmail` to `src/lib/email.ts`:\n   - Params: `{ scheduleId: string }` — fetches all data internally via supabaseAdmin\n   - Query recurring_schedules joined with bookings (status='cancelled', today or future) to get cancelled dates\n   - Query teacher for full_name + social_email\n   - Send parent email (always) + teacher email (if social_email set)\n   - Follow existing sendCancellationEmail pattern exactly\n\n3. Add `cancelSingleRecurringSession` server action to `src/actions/bookings.ts`:\n   - Teacher-authenticated (same pattern as existing cancelSession)\n   - Fetch booking by ID with `.eq('teacher_id', teacher.id)` and `.in('status', ['requested','confirmed','payment_failed'])`\n   - If booking has `stripe_payment_intent`, call `stripe.paymentIntents.cancel()` — try/catch, non-blocking on error\n   - Update booking status to 'cancelled'\n   - Call `sendCancellationEmail(bookingId)` fire-and-forget (existing function works for single cancel)\n   - `revalidatePath('/dashboard/sessions')` + `revalidatePath('/dashboard', 'layout')`\n\n4. Add `cancelRecurringSeries` server action to `src/actions/bookings.ts`:\n   - Teacher-authenticated\n   - Params: `scheduleId: string`\n   - Verify schedule belongs to teacher: query recurring_schedules.teacher_id via supabaseAdmin\n   - Fetch all future non-cancelled bookings: `.eq('recurring_schedule_id', scheduleId).gte('booking_date', todayStr).in('status', ['requested','confirmed','payment_failed'])`\n   - For each booking with stripe_payment_intent: void PI (try/catch, non-blocking)\n   - Batch update all matched bookings to status 'cancelled'\n   - Call `sendRecurringCancellationEmail({ scheduleId })` fire-and-forget\n   - `revalidatePath('/dashboard/sessions')` + `revalidatePath('/dashboard', 'layout')`\n\n5. Extend `src/app/(dashboard)/dashboard/sessions/page.tsx`:\n   - Add `recurring_schedule_id, is_recurring_first, status` to the upcoming bookings select\n   - Change upcoming status filter from `.eq('status', 'confirmed')` to `.in('status', ['confirmed', 'payment_failed'])`\n   - Pass `recurringScheduleId`, `status`, and `cancelSeriesAction={cancelRecurringSeries}` to ConfirmedSessionCard\n   - Import `cancelRecurringSeries` from `@/actions/bookings`\n\n6. Extend `src/components/dashboard/ConfirmedSessionCard.tsx`:\n   - Add optional props: `recurringScheduleId?: string | null`, `bookingStatus?: string`, `cancelSeriesAction?: (id: string) => Promise<{ success?: true; error?: string }>`\n   - When `recurringScheduleId` is set, render an amber/blue \"Recurring\" badge pill\n   - When `bookingStatus === 'payment_failed'`, render an amber \"Payment Failed\" badge instead of green \"Confirmed\"\n   - When `recurringScheduleId && cancelSeriesAction`, render a \"Cancel Series\" button that calls `cancelSeriesAction(recurringScheduleId)` with confirm dialog\n   - Keep existing Cancel Session button unchanged\n\n7. Create `src/__tests__/cancel-recurring.test.ts`:\n   - Follow cancel-session.test.ts mock pattern exactly (vi.mock for supabase, stripe, email, sms, waitlist)\n   - Test cancelSingleRecurringSession: auth check, ownership check, handles confirmed/requested/payment_failed statuses, voids PI when present, skips void when no PI, updates DB, sends email, resilient to Stripe errors\n   - Test cancelRecurringSeries: auth check, schedule ownership, fetches future bookings only, voids PIs for each, batch updates, sends series cancellation email, handles empty future list\n\n## Must-Haves\n\n- [ ] cancelSingleRecurringSession handles confirmed, requested, and payment_failed statuses\n- [ ] cancelRecurringSeries only cancels future bookings (booking_date >= today)\n- [ ] cancelRecurringSeries voids Stripe PIs where present, non-blocking on errors\n- [ ] RecurringCancellationEmail shows all cancelled dates with parent + teacher variants\n- [ ] ConfirmedSessionCard shows 'Recurring' badge when recurringScheduleId is set\n- [ ] ConfirmedSessionCard shows 'Payment Failed' badge when status is payment_failed\n- [ ] Sessions page query includes payment_failed status bookings\n- [ ] All cancel-recurring tests pass",
+      "estimate": "2h",
+      "files": [
+        "src/emails/RecurringCancellationEmail.tsx",
+        "src/lib/email.ts",
+        "src/actions/bookings.ts",
+        "src/app/(dashboard)/dashboard/sessions/page.tsx",
+        "src/components/dashboard/ConfirmedSessionCard.tsx",
+        "src/__tests__/cancel-recurring.test.ts"
+      ],
+      "verify": "npx vitest run cancel-recurring --reporter=verbose && npx tsc --noEmit && npm run build",
+      "inputs": [
+        "`src/actions/bookings.ts` — existing cancel actions to extend with recurring variants",
+        "`src/app/(dashboard)/dashboard/sessions/page.tsx` — existing sessions page to extend query",
+        "`src/components/dashboard/ConfirmedSessionCard.tsx` — existing card component to add badge + series cancel",
+        "`src/emails/CancellationEmail.tsx` — template pattern for RecurringCancellationEmail",
+        "`src/lib/email.ts` — email helper module to add sendRecurringCancellationEmail",
+        "`src/__tests__/cancel-session.test.ts` — mock pattern reference for new tests",
+        "`supabase/migrations/0016_cancel_token.sql` — T01 output, confirms cancel_token column exists"
+      ],
+      "expected_output": [
+        "`src/emails/RecurringCancellationEmail.tsx` — new dual-variant email template for series cancellation",
+        "`src/lib/email.ts` — modified with sendRecurringCancellationEmail helper",
+        "`src/actions/bookings.ts` — modified with cancelSingleRecurringSession + cancelRecurringSeries",
+        "`src/app/(dashboard)/dashboard/sessions/page.tsx` — modified with recurring fields + payment_failed status",
+        "`src/components/dashboard/ConfirmedSessionCard.tsx` — modified with series badge + Cancel Series button",
+        "`src/__tests__/cancel-recurring.test.ts` — new test file for recurring cancel actions"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M009",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Build parent self-service /manage/[token] page with token-gated cancel API routes",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Delivers the parent-facing self-service cancellation page. The parent clicks a manage link in their confirmation email, sees their upcoming sessions, and can cancel individual sessions or the entire remaining series — no login required.\n\n## Steps\n\n1. Create `src/app/api/manage/cancel-session/route.ts`:\n   - POST route, no auth required — token is the authentication\n   - Body: `{ bookingId: string, token: string }`\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - Verify the bookingId belongs to this schedule (`.eq('recurring_schedule_id', schedule.id).eq('id', bookingId)`)\n   - Verify booking is in cancellable status: `['requested','confirmed','payment_failed']`\n   - If booking has stripe_payment_intent, call `stripe.paymentIntents.cancel()` (try/catch, non-blocking)\n   - Update booking status to 'cancelled'\n   - Call `sendCancellationEmail(bookingId)` fire-and-forget\n   - Return `{ success: true }` or `{ error: '...' }` with appropriate status codes (400 for bad input, 404 for not found, 200 for success)\n\n2. Create `src/app/api/manage/cancel-series/route.ts`:\n   - POST route, no auth required — token is the authentication\n   - Body: `{ token: string }`\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - Fetch all future non-cancelled bookings for this schedule: `.eq('recurring_schedule_id', schedule.id).gte('booking_date', todayStr).in('status', ['requested','confirmed','payment_failed'])`\n   - For each booking with stripe_payment_intent: void PI (try/catch, non-blocking)\n   - Batch update all to status 'cancelled'\n   - Call `sendRecurringCancellationEmail({ scheduleId: schedule.id })` fire-and-forget\n   - Return `{ success: true, cancelledCount: N }` or `{ error: '...' }`\n\n3. Create `src/app/manage/[token]/page.tsx` (RSC):\n   - Follow review/[token]/page.tsx pattern exactly\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - If not found → \"Invalid or expired link\" error state\n   - Fetch all non-cancelled future bookings for this schedule\n   - If empty → \"All sessions in this series have already been cancelled\" state\n   - Also fetch teacher name via teachers join for display\n   - Render CancelSeriesForm with sessions list + token + scheduleId\n\n4. Create `src/app/manage/[token]/CancelSeriesForm.tsx` (client component):\n   - Props: `{ sessions: Array<{id, studentName, subject, bookingDate, startTime, status}>, token: string, teacherName: string }`\n   - Show list of upcoming sessions with date, student name, status badge (Confirmed / Payment Failed)\n   - Each row has a \"Cancel This Session\" button → calls POST /api/manage/cancel-session with { bookingId, token }\n   - \"Cancel All Remaining\" button at bottom → calls POST /api/manage/cancel-series with { token }\n   - Both buttons show confirm dialog before proceeding\n   - On success: remove cancelled session from list, show success toast\n   - When all sessions cancelled: show \"All sessions cancelled\" completion state\n   - Use fetch() for API calls (not server actions — this page has no auth context)\n\n5. Create `src/__tests__/manage-cancel.test.ts`:\n   - Follow recurring-charges.test.ts mock pattern (vi.hoisted for Stripe, vi.mock for supabase/email)\n   - Test cancel-session route: invalid token (404), booking not in schedule (404), booking not cancellable (400), success with PI void, success without PI\n   - Test cancel-series route: invalid token (404), no future bookings (200 with cancelledCount 0), success cancels all future bookings, voids PIs, sends email\n\n## Must-Haves\n\n- [ ] /manage/[token] RSC resolves token and shows appropriate state (valid, invalid, all-cancelled)\n- [ ] CancelSeriesForm shows individual cancel per session + cancel-all-remaining\n- [ ] POST /api/manage/cancel-session validates token owns the booking before cancelling\n- [ ] POST /api/manage/cancel-series cancels only future non-cancelled bookings\n- [ ] Token-gated routes have no auth requirement (token IS the auth)\n- [ ] All manage-cancel tests pass",
+      "estimate": "2h",
+      "files": [
+        "src/app/api/manage/cancel-session/route.ts",
+        "src/app/api/manage/cancel-series/route.ts",
+        "src/app/manage/[token]/page.tsx",
+        "src/app/manage/[token]/CancelSeriesForm.tsx",
+        "src/__tests__/manage-cancel.test.ts"
+      ],
+      "verify": "npx vitest run manage-cancel --reporter=verbose && npx tsc --noEmit && npm run build",
+      "inputs": [
+        "`src/app/review/[token]/page.tsx` — RSC pattern reference for token-based pages",
+        "`src/lib/supabase/service.ts` — supabaseAdmin for token lookup",
+        "`src/lib/email.ts` — sendCancellationEmail + sendRecurringCancellationEmail (T02 output)",
+        "`src/emails/RecurringCancellationEmail.tsx` — T02 output, used by cancel-series route",
+        "`supabase/migrations/0016_cancel_token.sql` — T01 output, confirms cancel_token column exists",
+        "`src/__tests__/recurring-charges.test.ts` — mock pattern reference for route tests"
+      ],
+      "expected_output": [
+        "`src/app/api/manage/cancel-session/route.ts` — new token-gated single-session cancel route",
+        "`src/app/api/manage/cancel-series/route.ts` — new token-gated series cancel route",
+        "`src/app/manage/[token]/page.tsx` — new RSC for parent self-service manage page",
+        "`src/app/manage/[token]/CancelSeriesForm.tsx` — new client component for cancel form",
+        "`src/__tests__/manage-cancel.test.ts` — new test file for token-gated cancel routes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -4142,6 +4286,18 @@
       "choice": "Dedicated `/api/cron/recurring-charges` route at `0 12 * * *` instead of extending existing `/api/cron/stripe-reminders`",
       "rationale": "D013 chose extending stripe-reminders because \"Vercel Hobby plan has limited cron slots.\" Since Jan 2026, Vercel lifted the per-project cron limit to 100 on all plans. A dedicated route is cleaner: avoids coupling charge logic with reminder logic, enables independent scheduling (noon UTC gives 2h buffer before session-reminders at 14:00 UTC), and keeps each cron route single-purpose. The stripe-reminders route has a \"requires Pro\" comment and different query patterns — merging charge logic into it would add complexity without benefit.",
       "revisable": "No — D013 is superseded",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 28,
+      "id": "D022",
+      "when_context": "M009/S03",
+      "scope": "M009/S03",
+      "decision": "Cancel token security model for parent self-service cancellation",
+      "choice": "Non-expiring 64-char hex cancel_token stored on recurring_schedules, generated at booking creation. Token-based auth (no login required) for /manage/[token] page and /api/manage/* routes. Token included only in parent confirmation email, never in teacher email or dashboard UI.",
+      "rationale": "Recurring series can span 6+ months — expiring tokens would lock parents out. The 256-bit random token (randomBytes(32)) is cryptographically secure and unguessable. Token-only auth follows the established review/[token] pattern and matches how subscription services handle self-service cancellation. The token is effectively the parent's credential for this specific series — scoped to a single recurring_schedule_id, not a general auth token.",
+      "revisable": "Yes — could add expiry or rate-limiting if abuse is detected",
       "made_by": "agent",
       "superseded_by": null
     }
@@ -4553,6 +4709,28 @@
       "verdict": "✅ pass",
       "duration_ms": 13000,
       "created_at": "2026-03-31T14:24:34.260Z"
+    },
+    {
+      "id": 38,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 12600,
+      "created_at": "2026-03-31T14:38:59.105Z"
+    },
+    {
+      "id": 39,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M009",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 17300,
+      "created_at": "2026-03-31T14:38:59.105Z"
     }
   ]
 }

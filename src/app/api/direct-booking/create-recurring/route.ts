@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -118,7 +119,10 @@ export async function POST(req: Request) {
     )
   }
 
-  // 6. Insert recurring_schedules row
+  // 6. Generate cancel token for parent self-service management
+  const cancelToken = randomBytes(32).toString('hex')
+
+  // 7. Insert recurring_schedules row
   const { data: schedule, error: scheduleError } = await supabaseAdmin
     .from('recurring_schedules')
     .insert({
@@ -130,6 +134,8 @@ export async function POST(req: Request) {
       start_date: bookingDate,
       start_time: startTime,
       end_time: endTime,
+      cancel_token: cancelToken,
+      cancel_token_created_at: new Date().toISOString(),
     })
     .select('id')
     .single()
@@ -141,7 +147,7 @@ export async function POST(req: Request) {
 
   const recurringScheduleId = schedule.id
 
-  // 7. Batch-insert booking rows for each available date
+  // 8. Batch-insert booking rows for each available date
   const insertedBookingIds: string[] = []
   const additionalSkipped: { date: string; reason: string }[] = []
   const sessionDates: string[] = []
@@ -200,7 +206,7 @@ export async function POST(req: Request) {
 
   const firstBookingId = insertedBookingIds[0]
 
-  // 8. Create Stripe Customer + PaymentIntent for the first session
+  // 9. Create Stripe Customer + PaymentIntent for the first session
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const applicationFeeAmount = Math.round(amountInCents * 0.07)
 
@@ -241,15 +247,16 @@ export async function POST(req: Request) {
     return new Response('Payment setup failed', { status: 502 })
   }
 
-  // 9. Update recurring_schedules with Stripe customer ID
+  // 10. Update recurring_schedules with Stripe customer ID
   await supabaseAdmin
     .from('recurring_schedules')
     .update({ stripe_customer_id: customer.id })
     .eq('id', recurringScheduleId)
 
-  // 10. Fire-and-forget confirmation emails (don't fail the booking if email fails)
+  // 11. Fire-and-forget confirmation emails (don't fail the booking if email fails)
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
+    const manageUrl = `${appUrl}/manage/${cancelToken}`
     await sendRecurringBookingConfirmationEmail({
       parentEmail: user.email!,
       teacherName: teacher.full_name,
@@ -261,12 +268,13 @@ export async function POST(req: Request) {
       skippedDates: allSkipped,
       startTime,
       accountUrl: `${appUrl}/account`,
+      manageUrl,
     })
   } catch (emailErr) {
     console.error('[create-recurring] Email sending failed (non-fatal):', emailErr)
   }
 
-  // 11. Return response
+  // 12. Return response
   return Response.json({
     clientSecret: paymentIntent.client_secret,
     recurringScheduleId,

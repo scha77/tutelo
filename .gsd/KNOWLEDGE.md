@@ -347,3 +347,30 @@ Direct JSX expression interpolation (`{sessionDates.length} sessions`) causes TS
 ## Vitest Mock Pattern for Route Modules That Import @/lib/email
 
 When testing API routes that call `sendRecurringBookingConfirmationEmail` (or any email function), add `vi.mock('@/lib/email', () => ({ sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined), sendBookingNotificationEmail: vi.fn().mockResolvedValue(undefined) }))` to the test file — otherwise Resend's constructor fires during module import and throws `Error: Missing API key`. This applies to all route tests in `src/__tests__/` that import routes wired to `src/lib/email.ts`.
+
+---
+
+## Vitest Config: Exclude .gsd/** to Prevent Worktree Test Pollution
+
+When vitest runs without excludes, it discovers test files in `.gsd/worktrees/` from previous milestones. These stale tests import modules that reference missing env vars (e.g., `STRIPE_SECRET_KEY`) and fail with unrelated errors. Add `'.gsd/**'` to the `exclude` array in `vitest.config.ts` to prevent this:
+```ts
+exclude: ['node_modules/**', '.gsd/**']
+```
+Without this, vitest reports 5–10 phantom failures that obscure real test results.
+
+---
+
+## Recurring Cron: bookings Table Has No session_type_id FK
+
+When implementing the recurring auto-charge cron, the plan specified joining `session_types(price)` via `bookings.session_type_id`. The `bookings` table does not have a `session_type_id` column — session type price was stored only in Stripe PaymentIntent metadata (see D008). For recurring charges, use `computeSessionAmount(start_time, end_time, hourly_rate)` from the teacher's `hourly_rate` instead. The recurring schedule join provides the teacher's `hourly_rate` directly.
+
+---
+
+## Cron Route idempotencyKey Pattern for Stripe PI Creates
+
+For cron-initiated Stripe PaymentIntent creates, always pass an idempotencyKey combining a booking ID and the target date:
+```ts
+{ idempotencyKey: `recurring-charge-${bookingId}-${tomorrowUtc}` }
+```
+This prevents duplicate charges if Vercel reruns the cron on a cold start or network error. The `.eq('status', 'requested')` guard on the booking update is a second layer — if the PI was created but the DB update failed, the next cron run finds 0 bookings with `status='requested'` for that date (Stripe's idempotency returns the same PI, booking is already confirmed).
+

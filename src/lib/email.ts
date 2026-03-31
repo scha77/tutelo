@@ -309,6 +309,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
   skippedDates: { date: string; reason: string }[]
   startTime: string
   accountUrl?: string
+  manageUrl?: string
 }): Promise<void> {
   const {
     parentEmail,
@@ -321,6 +322,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
     skippedDates,
     startTime,
     accountUrl,
+    manageUrl,
   } = params
 
   const from = 'Tutelo <noreply@tutelo.app>'
@@ -343,6 +345,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
       startTime,
       isTeacher: false,
       accountUrl,
+      manageUrl,
     }),
   })
 
