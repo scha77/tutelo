@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/select'
 import { InlineAuthForm } from '@/components/auth/InlineAuthForm'
 import { PaymentStep } from '@/components/profile/PaymentStep'
+import { RecurringOptions } from '@/components/profile/RecurringOptions'
+import type { RecurringConfirmData } from '@/components/profile/RecurringOptions'
 import { createClient } from '@/lib/supabase/client'
 import { getSlotsForDate } from '@/lib/utils/slots'
 import type { AvailabilitySlot, TimeSlot } from '@/lib/utils/slots'
@@ -73,7 +75,7 @@ export function BookingCalendar({
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [step, setStep] = useState<'calendar' | 'form' | 'success' | 'error' | 'auth' | 'payment'>('calendar')
+  const [step, setStep] = useState<'calendar' | 'form' | 'recurring' | 'success' | 'error' | 'auth' | 'payment'>('calendar')
   const [form, setForm] = useState({
     name: '',
     subject: subjects.length === 1 ? subjects[0] : (searchParams.get('subject') ?? ''),
@@ -95,6 +97,7 @@ export function BookingCalendar({
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [creatingIntent, setCreatingIntent] = useState(false)
   const [selectedSessionType, setSelectedSessionType] = useState<SessionType | null>(null)
+  const [recurringData, setRecurringData] = useState<RecurringConfirmData | null>(null)
 
   const hasSessionTypes = !!(sessionTypes && sessionTypes.length > 0)
 
@@ -176,6 +179,7 @@ export function BookingCalendar({
     setErrorMessage(null)
     setClientSecret(null)
     setPaymentError(null)
+    setRecurringData(null)
   }
 
   async function createPaymentIntent() {
@@ -217,7 +221,78 @@ export function BookingCalendar({
   }
 
   async function handleAuthSuccess() {
-    await createPaymentIntent()
+    if (recurringData && recurringData.frequency !== 'one-time') {
+      await createRecurringIntent()
+    } else {
+      await createPaymentIntent()
+    }
+  }
+
+  async function createRecurringIntent() {
+    if (!recurringData || recurringData.frequency === 'one-time') return
+    setCreatingIntent(true)
+    const res = await fetch('/api/direct-booking/create-recurring', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        teacherId,
+        bookingDate: format(selectedDate!, 'yyyy-MM-dd'),
+        startTime: selectedSlot!.startRaw,
+        endTime: selectedSlot!.endRaw,
+        studentName: form.name,
+        subject: form.subject,
+        notes: form.notes || undefined,
+        parentPhone: form.phone.trim() || undefined,
+        parentSmsOptIn: form.phone.trim() ? form.smsOptIn : false,
+        ...(selectedSessionType ? { sessionTypeId: selectedSessionType.id } : {}),
+        frequency: recurringData.frequency,
+        totalSessions: recurringData.count,
+      }),
+    })
+    setCreatingIntent(false)
+    if (!res.ok) {
+      if (res.status === 409) {
+        setErrorMessage('All dates have conflicts. Please adjust your schedule.')
+      } else if (res.status === 400) {
+        setErrorMessage('Could not create recurring booking. Please try again.')
+      } else {
+        setErrorMessage('Could not initialize payment. Please try again.')
+      }
+      setStep('error')
+      return
+    }
+    const data = await res.json()
+    setClientSecret(data.clientSecret)
+    // Update recurringData with server-confirmed dates
+    setRecurringData((prev) =>
+      prev
+        ? { ...prev, availableDates: data.sessionDates, skippedDates: data.skippedDates }
+        : prev
+    )
+    setStep('payment')
+  }
+
+  async function handleRecurringConfirm(data: RecurringConfirmData) {
+    setRecurringData(data)
+
+    if (data.frequency === 'one-time') {
+      // One-time: proceed with existing single-booking flow
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setStep('auth')
+      } else {
+        await createPaymentIntent()
+      }
+      return
+    }
+
+    // Recurring: check auth then create recurring intent
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setStep('auth')
+    } else {
+      await createRecurringIntent()
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -259,15 +334,8 @@ export function BookingCalendar({
     }
 
     // Direct booking path (stripeConnected = true)
-    // Check if user is already authenticated
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      // Not authenticated — show inline auth step
-      setStep('auth')
-    } else {
-      // Already authenticated — go straight to payment
-      await createPaymentIntent()
-    }
+    // Go to recurring step first — parent chooses one-time or recurring schedule
+    setStep('recurring')
   }
 
   const firstName = teacherName.split(' ')[0]
@@ -317,13 +385,40 @@ export function BookingCalendar({
               style={{ color: accentColor }}
             />
             <h3 className="text-xl font-semibold">
-              {stripeConnected ? 'Session confirmed!' : 'Session requested!'}
+              {recurringData && recurringData.frequency !== 'one-time'
+                ? 'Recurring sessions confirmed!'
+                : stripeConnected
+                ? 'Session confirmed!'
+                : 'Session requested!'}
             </h3>
             <div className="space-y-1 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">
                 {bookingConfirmation.date} at {bookingConfirmation.time}
               </p>
               <p>{bookingConfirmation.subject}</p>
+              {recurringData && recurringData.frequency !== 'one-time' && (
+                <div className="mt-3 text-left w-full">
+                  <p className="text-xs font-medium text-foreground mb-1">
+                    {recurringData.availableDates.length} session{recurringData.availableDates.length !== 1 ? 's' : ''} scheduled
+                    {recurringData.frequency === 'weekly' ? ' (weekly)' : ' (biweekly)'}
+                  </p>
+                  <ul className="text-xs space-y-0.5">
+                    {recurringData.availableDates.map((d) => {
+                      const [y, m, dd] = d.split('-').map(Number)
+                      return (
+                        <li key={d} className="text-muted-foreground">
+                          ✓ {format(new Date(y, m - 1, dd), 'EEE, MMM d')}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {recurringData.skippedDates.length > 0 && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      {recurringData.skippedDates.length} date{recurringData.skippedDates.length !== 1 ? 's' : ''} skipped due to conflicts
+                    </p>
+                  )}
+                </div>
+              )}
               {!stripeConnected && (
                 <p className="mt-2">
                   We&apos;ll email{' '}
@@ -355,6 +450,17 @@ export function BookingCalendar({
               ← Back to calendar
             </Button>
           </div>
+        ) : step === 'recurring' && selectedDate && selectedSlot ? (
+          /* ── Recurring options step (direct booking only) ── */
+          <RecurringOptions
+            teacherId={teacherId}
+            selectedDate={selectedDate}
+            selectedSlot={selectedSlot}
+            subjects={subjects}
+            accentColor={accentColor}
+            onConfirm={handleRecurringConfirm}
+            onBack={() => setStep('form')}
+          />
         ) : step === 'auth' ? (
           /* ── Auth step (direct booking only) ── */
           <div>

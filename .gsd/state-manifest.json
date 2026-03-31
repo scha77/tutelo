@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T13:51:40.287Z",
+  "exported_at": "2026-03-31T13:55:59.393Z",
   "milestones": [
     {
       "id": "M001",
@@ -3699,19 +3699,26 @@
       "milestone_id": "M009",
       "slice_id": "S01",
       "id": "T03",
-      "title": "Build RecurringOptions component and wire into BookingCalendar state machine",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built RecurringOptions component with frequency toggle, session count slider, projected dates with conflict annotations, and wired it into BookingCalendar as a new 'recurring' step between form and auth/payment — one-time path unchanged",
+      "status": "complete",
+      "one_liner": "Built RecurringOptions component with frequency toggle, session count slider, projected dates with conflict annotations, and wired it into BookingCalendar as a new 'recurring' step between form and auth/payment — one-time path unchanged",
+      "narrative": "Created three deliverables: (1) check-conflicts API endpoint — read-only POST with Zod validation, auth, returns available/skipped dates via checkDateConflicts; (2) RecurringOptions component — frequency toggle (One-time/Weekly/Biweekly), session count slider (2–26), projected dates list with conflict markers, end date display, summary; (3) BookingCalendar modifications — added 'recurring' step to state machine, recurringData state, handleRecurringConfirm callback routing to createPaymentIntent or createRecurringIntent after auth, updated success view with recurring summary showing session dates and skipped count. Deferred booking path remains completely unchanged.",
+      "verification_result": "Ran npx tsc --noEmit — zero type errors. Ran npm run build — production build succeeds with all routes including new check-conflicts endpoint. Ran existing test suite (25 tests across recurring-dates, recurring-conflicts, create-recurring) — all pass.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-03-31T13:55:59.363Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/RecurringOptions.tsx",
+        "src/app/api/direct-booking/check-conflicts/route.ts",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "key_decisions": [
+        "Optimistic fallback on conflict-check failure — if API call fails, all dates shown as available (server-side unique constraint catches real conflicts)",
+        "Server-confirmed dates replace client-side projections after createRecurringIntent succeeds"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M009\nkey_files:\n  - src/components/profile/RecurringOptions.tsx\n  - src/app/api/direct-booking/check-conflicts/route.ts\n  - src/components/profile/BookingCalendar.tsx\nkey_decisions:\n  - Optimistic fallback on conflict-check failure — if API call fails, all dates shown as available (server-side unique constraint catches real conflicts)\n  - Server-confirmed dates replace client-side projections after createRecurringIntent succeeds\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T13:55:59.364Z\nblocker_discovered: false\n---\n\n# T03: Built RecurringOptions component with frequency toggle, session count slider, projected dates with conflict annotations, and wired it into BookingCalendar as a new 'recurring' step between form and auth/payment — one-time path unchanged\n\n**Built RecurringOptions component with frequency toggle, session count slider, projected dates with conflict annotations, and wired it into BookingCalendar as a new 'recurring' step between form and auth/payment — one-time path unchanged**\n\n## What Happened\n\nCreated three deliverables: (1) check-conflicts API endpoint — read-only POST with Zod validation, auth, returns available/skipped dates via checkDateConflicts; (2) RecurringOptions component — frequency toggle (One-time/Weekly/Biweekly), session count slider (2–26), projected dates list with conflict markers, end date display, summary; (3) BookingCalendar modifications — added 'recurring' step to state machine, recurringData state, handleRecurringConfirm callback routing to createPaymentIntent or createRecurringIntent after auth, updated success view with recurring summary showing session dates and skipped count. Deferred booking path remains completely unchanged.\n\n## Verification\n\nRan npx tsc --noEmit — zero type errors. Ran npm run build — production build succeeds with all routes including new check-conflicts endpoint. Ran existing test suite (25 tests across recurring-dates, recurring-conflicts, create-recurring) — all pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3100ms |\n| 2 | `npm run build` | 0 | ✅ pass | 18300ms |\n| 3 | `npx vitest run recurring-dates recurring-conflicts create-recurring --reporter=verbose` | 0 | ✅ pass | 5500ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/RecurringOptions.tsx`\n- `src/app/api/direct-booking/check-conflicts/route.ts`\n- `src/components/profile/BookingCalendar.tsx`\n",
       "description": "Create the `RecurringOptions` component that lets a parent choose a recurring schedule (frequency + session count), shows projected dates with conflict annotations, and wire it into BookingCalendar as a new 'recurring' step between 'form' and 'auth'/'payment'. The existing one-time booking path must remain unchanged when the parent selects 'One-time' (the default).\n\n## Steps\n\n1. Create `src/components/profile/RecurringOptions.tsx`:\n   - Props: teacherId, selectedDate (Date), selectedSlot (TimeSlot), subjects (string[]), accentColor, onConfirm(frequency, count, availableDates, skippedDates), onBack()\n   - State: frequency ('one-time' | 'weekly' | 'biweekly'), count (default 4, range 2–26), projectedDates[], skippedDates[], loading\n   - When frequency is not 'one-time': call generateRecurringDates client-side for preview, then fetch `/api/direct-booking/check-conflicts` or compute locally\n   - Since checkDateConflicts requires DB queries, add a lightweight POST `/api/direct-booking/check-conflicts/route.ts` that accepts {teacherId, dates[], startTime, endTime} and returns {available[], skipped[]}. Auth required.\n   - Show: frequency toggle (One-time / Weekly / Biweekly), session count slider/input (2–26), end date display, list of projected dates with ✓/✗ markers for available/skipped, total sessions summary\n   - 'One-time' selection: calls onConfirm with frequency='one-time' immediately (existing flow)\n   - 'Confirm recurring' button: calls onConfirm with data\n\n2. Create `src/app/api/direct-booking/check-conflicts/route.ts`:\n   - POST handler: auth required, validates input, calls checkDateConflicts from recurring.ts, returns JSON {available, skipped}\n   - This is a read-only pre-check endpoint — no state mutations\n\n3. Modify `src/components/profile/BookingCalendar.tsx`:\n   - Add 'recurring' to step type union: `'calendar' | 'form' | 'recurring' | 'success' | 'error' | 'auth' | 'payment'`\n   - Add state: recurringData: { frequency, count, availableDates, skippedDates } | null\n   - In handleSubmit (stripeConnected branch): instead of going to auth/payment, go to 'recurring' step first\n   - In 'recurring' step: render <RecurringOptions> with onConfirm callback\n   - onConfirm handler: if frequency='one-time', proceed to auth check → createPaymentIntent (existing flow). If recurring, store recurringData in state, then proceed to auth check → createRecurringIntent\n   - Add createRecurringIntent function: fetches /api/direct-booking/create-recurring with form data + recurringData, stores clientSecret, goes to 'payment' step\n   - PaymentStep reuse: the PI returned from create-recurring has setup_future_usage but confirmPayment() works the same\n   - Update success state to show recurring summary when recurringData is set (session dates list, skipped dates)\n   - Import RecurringOptions, generateRecurringDates from their modules\n   - Keep the 'not stripeConnected' (deferred) path completely unchanged — recurring is only for direct booking",
       "estimate": "2h",
       "files": [
@@ -4242,6 +4249,39 @@
       "verdict": "✅ pass",
       "duration_ms": 3000,
       "created_at": "2026-03-31T13:51:40.268Z"
+    },
+    {
+      "id": 25,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3100,
+      "created_at": "2026-03-31T13:55:59.364Z"
+    },
+    {
+      "id": 26,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 18300,
+      "created_at": "2026-03-31T13:55:59.364Z"
+    },
+    {
+      "id": 27,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx vitest run recurring-dates recurring-conflicts create-recurring --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 5500,
+      "created_at": "2026-03-31T13:55:59.364Z"
     }
   ]
 }

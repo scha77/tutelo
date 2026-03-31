@@ -81,7 +81,7 @@
   - Estimate: 2h
   - Files: src/lib/schemas/booking.ts, src/app/api/direct-booking/create-recurring/route.ts, src/__tests__/create-recurring.test.ts
   - Verify: npx vitest run create-recurring --reporter=verbose && npx tsc --noEmit
-- [ ] **T03: Build RecurringOptions component and wire into BookingCalendar state machine** — Create the `RecurringOptions` component that lets a parent choose a recurring schedule (frequency + session count), shows projected dates with conflict annotations, and wire it into BookingCalendar as a new 'recurring' step between 'form' and 'auth'/'payment'. The existing one-time booking path must remain unchanged when the parent selects 'One-time' (the default).
+- [x] **T03: Built RecurringOptions component with frequency toggle, session count slider, projected dates with conflict annotations, and wired it into BookingCalendar as a new 'recurring' step between form and auth/payment — one-time path unchanged** — Create the `RecurringOptions` component that lets a parent choose a recurring schedule (frequency + session count), shows projected dates with conflict annotations, and wire it into BookingCalendar as a new 'recurring' step between 'form' and 'auth'/'payment'. The existing one-time booking path must remain unchanged when the parent selects 'One-time' (the default).
 
 ## Steps
 
