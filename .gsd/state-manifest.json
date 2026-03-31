@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T14:19:00.493Z",
+  "exported_at": "2026-03-31T14:24:34.280Z",
   "milestones": [
     {
       "id": "M001",
@@ -3836,19 +3836,29 @@
       "milestone_id": "M009",
       "slice_id": "S02",
       "id": "T02",
-      "title": "Recurring charges cron route, email template, and integration tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built daily cron route that auto-charges parents' saved cards 24h before recurring sessions, with payment-failed email notification and 8 passing integration tests",
+      "status": "complete",
+      "one_liner": "Built daily cron route that auto-charges parents' saved cards 24h before recurring sessions, with payment-failed email notification and 8 passing integration tests",
+      "narrative": "Created the complete recurring auto-charge pipeline: RecurringPaymentFailedEmail.tsx React Email template with parent (CTA to update payment method) and teacher (informational) variants; sendRecurringPaymentFailedEmail in email.ts following sendCancellationEmail pattern; cron route at /api/cron/recurring-charges auth-gated on CRON_SECRET that queries non-first recurring bookings for tomorrow, creates Stripe PIs with off_session:true, confirm:true, capture_method:'manual', 7% application fee, and idempotencyKey, updates booking status on success/failure, and fires notification emails on failure; vercel.json updated with 4th cron entry; 8 integration tests covering auth, no-op, success, failure, skip, idempotency, fee calculation, and mixed results. Also fixed vitest config to exclude .gsd/** preventing stale worktree test pollution.",
+      "verification_result": "All 4 verification checks pass: `npx vitest run recurring-charges` (8/8 tests), `npx vitest run webhook-capture` (8/8 tests), `npx tsc --noEmit` (0 errors), `npm run build` (success, route in manifest).",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-03-31T14:24:34.260Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Removed session_types(price) join — bookings has no session_type_id FK, price computed via computeSessionAmount instead. Added .gsd/** to vitest exclude to fix stale worktree test pollution.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/cron/recurring-charges/route.ts",
+        "src/emails/RecurringPaymentFailedEmail.tsx",
+        "src/lib/email.ts",
+        "src/__tests__/recurring-charges.test.ts",
+        "vercel.json",
+        "vitest.config.ts"
+      ],
+      "key_decisions": [
+        "Use computeSessionAmount for pricing since bookings has no session_type_id FK",
+        "Added .gsd/** to vitest exclude to prevent stale worktree tests from polluting results"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M009\nkey_files:\n  - src/app/api/cron/recurring-charges/route.ts\n  - src/emails/RecurringPaymentFailedEmail.tsx\n  - src/lib/email.ts\n  - src/__tests__/recurring-charges.test.ts\n  - vercel.json\n  - vitest.config.ts\nkey_decisions:\n  - Use computeSessionAmount for pricing since bookings has no session_type_id FK\n  - Added .gsd/** to vitest exclude to prevent stale worktree tests from polluting results\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T14:24:34.261Z\nblocker_discovered: false\n---\n\n# T02: Built daily cron route that auto-charges parents' saved cards 24h before recurring sessions, with payment-failed email notification and 8 passing integration tests\n\n**Built daily cron route that auto-charges parents' saved cards 24h before recurring sessions, with payment-failed email notification and 8 passing integration tests**\n\n## What Happened\n\nCreated the complete recurring auto-charge pipeline: RecurringPaymentFailedEmail.tsx React Email template with parent (CTA to update payment method) and teacher (informational) variants; sendRecurringPaymentFailedEmail in email.ts following sendCancellationEmail pattern; cron route at /api/cron/recurring-charges auth-gated on CRON_SECRET that queries non-first recurring bookings for tomorrow, creates Stripe PIs with off_session:true, confirm:true, capture_method:'manual', 7% application fee, and idempotencyKey, updates booking status on success/failure, and fires notification emails on failure; vercel.json updated with 4th cron entry; 8 integration tests covering auth, no-op, success, failure, skip, idempotency, fee calculation, and mixed results. Also fixed vitest config to exclude .gsd/** preventing stale worktree test pollution.\n\n## Verification\n\nAll 4 verification checks pass: `npx vitest run recurring-charges` (8/8 tests), `npx vitest run webhook-capture` (8/8 tests), `npx tsc --noEmit` (0 errors), `npm run build` (success, route in manifest).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run recurring-charges --reporter=verbose` | 0 | ✅ pass | 6100ms |\n| 2 | `npx vitest run webhook-capture --reporter=verbose` | 0 | ✅ pass | 3100ms |\n| 3 | `npx tsc --noEmit` | 0 | ✅ pass | 3500ms |\n| 4 | `npm run build` | 0 | ✅ pass | 13000ms |\n\n\n## Deviations\n\nRemoved session_types(price) join — bookings has no session_type_id FK, price computed via computeSessionAmount instead. Added .gsd/** to vitest exclude to fix stale worktree test pollution.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/cron/recurring-charges/route.ts`\n- `src/emails/RecurringPaymentFailedEmail.tsx`\n- `src/lib/email.ts`\n- `src/__tests__/recurring-charges.test.ts`\n- `vercel.json`\n- `vitest.config.ts`\n",
       "description": "Build the daily cron that auto-charges parents' saved cards 24h before each recurring session, plus the payment-failed email template and send function. This is the core deliverable of S02.\n\n## Steps\n\n1. Create `src/emails/RecurringPaymentFailedEmail.tsx` following the `CancellationEmail.tsx` pattern (React Email components):\n   - Props: `recipientFirstName`, `studentName`, `bookingDate` (YYYY-MM-DD), `startTime` (HH:MM), `teacherName`, `isTeacher`, `accountUrl?` (optional, parent-only)\n   - Parent variant: 'Your payment of $X for [student]'s session on [date] failed. Please update your payment method.' with link to accountUrl\n   - Teacher variant: 'The automatic payment for [student]'s session on [date] failed. We'll notify you if it's resolved.'\n   - Use same styling as CancellationEmail: sans-serif, #f9fafb background, 520px container, 8px border-radius\n   - Format date with `new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {...})` (UTC noon anchor, same as CancellationEmail)\n\n2. Add `sendRecurringPaymentFailedEmail` to `src/lib/email.ts`:\n   - Params: `{ bookingId: string }` — function fetches booking + teacher data internally (same pattern as `sendCancellationEmail`)\n   - Query: `supabaseAdmin.from('bookings').select('parent_email, student_name, booking_date, start_time, teachers(full_name, social_email)').eq('id', bookingId).single()`\n   - Send parent email always; send teacher email only if `teacher.social_email` is set\n   - Import `RecurringPaymentFailedEmail` at top of file\n   - Pass `accountUrl` to parent variant only\n\n3. Create `src/app/api/cron/recurring-charges/route.ts`:\n   - Auth: `request.headers.get('authorization') !== \\`Bearer ${process.env.CRON_SECRET}\\`` → 401\n   - Compute `tomorrowUtc = new Date(Date.now() + 24*60*60*1000).toISOString().slice(0, 10)`\n   - Query bookings: `.eq('booking_date', tomorrowUtc).eq('status', 'requested').eq('is_recurring_first', false).not('recurring_schedule_id', 'is', null)` with select joining `recurring_schedules!inner(stripe_customer_id, stripe_payment_method_id, teachers!inner(stripe_account_id, hourly_rate, full_name, social_email))` and `session_types(price)`\n   - For each session:\n     - Skip if `recurring_schedules.stripe_payment_method_id` is null (log + increment skipped counter)\n     - Compute `amountInCents`: if `session_types?.price` use `Math.round(Number(price) * 100)`, else use `computeSessionAmount(start_time, end_time, hourly_rate)`\n     - `applicationFeeAmount = Math.round(amountInCents * 0.07)`\n     - `stripe.paymentIntents.create({ amount: amountInCents, currency: 'usd', customer: stripe_customer_id, payment_method: stripe_payment_method_id, off_session: true, confirm: true, capture_method: 'manual', transfer_data: { destination: stripe_account_id }, application_fee_amount: applicationFeeAmount, metadata: { booking_id, teacher_id, recurring_schedule_id } }, { idempotencyKey: \\`recurring-charge-${bookingId}-${tomorrowUtc}\\` })`\n     - On success (PI status `requires_capture`): update booking `status='confirmed'`, `stripe_payment_intent=pi.id` via `.eq('id', bookingId).eq('status', 'requested')` (idempotent)\n     - On Stripe error (catch block): update booking `status='payment_failed'` via `.eq('id', bookingId).eq('status', 'requested')`, then fire-and-forget `sendRecurringPaymentFailedEmail({ bookingId })`\n   - Return `Response.json({ charged, failed, skipped, checked: sessions.length })`\n   - Import: `Stripe` from 'stripe', `supabaseAdmin` from '@/lib/supabase/service', `computeSessionAmount` from '@/lib/utils/booking', `sendRecurringPaymentFailedEmail` from '@/lib/email'\n\n4. Update `vercel.json` — add 4th cron entry:\n   ```json\n   { \"path\": \"/api/cron/recurring-charges\", \"schedule\": \"0 12 * * *\" }\n   ```\n\n5. Create `src/__tests__/recurring-charges.test.ts` with 6-8 tests following the `reminders.test.ts` pattern:\n   - **401 without CRON_SECRET**: GET without auth header → 401\n   - **No-op when no sessions tomorrow**: Mock query returns empty array → `{ charged: 0, failed: 0, skipped: 0, checked: 0 }`\n   - **Successful charge path**: Mock session with valid PM → PI created with correct params (off_session, confirm, capture_method, idempotencyKey) → booking updated to confirmed → `{ charged: 1 }`\n   - **Failed charge path**: Mock Stripe PI create throws error → booking updated to payment_failed → sendRecurringPaymentFailedEmail called → `{ failed: 1 }`\n   - **Skips null payment_method**: Mock session with `stripe_payment_method_id: null` → `{ skipped: 1 }`, no PI created\n   - **Idempotency — second run skips confirmed session**: The cron query filters `status='requested'` so already-confirmed sessions are not returned. Test that query includes `.eq('status', 'requested')`\n   - **Application fee calculated at 7%**: Verify PI create called with `application_fee_amount: Math.round(amount * 0.07)`\n   - Use `vi.hoisted` for MockStripeClass (same pattern as webhook-capture.test.ts and create-recurring.test.ts)\n   - Mock `@/lib/email` to prevent Resend constructor error (established pattern from S01)\n   - Mock `@/lib/supabase/service` with chainable Supabase mock\n\n## Must-Haves\n\n- [ ] RecurringPaymentFailedEmail renders for both parent and teacher variants\n- [ ] sendRecurringPaymentFailedEmail added to email.ts following sendCancellationEmail pattern\n- [ ] Cron route auth-gated on CRON_SECRET\n- [ ] Cron queries non-first recurring bookings for tomorrow with status='requested'\n- [ ] Stripe PI created with off_session:true, confirm:true, capture_method:'manual', idempotencyKey\n- [ ] Successful charge → booking confirmed + PI ID stored\n- [ ] Failed charge → booking payment_failed + email notification sent\n- [ ] Null payment_method sessions skipped (not charged)\n- [ ] vercel.json includes /api/cron/recurring-charges at 0 12 * * *\n- [ ] All tests pass, tsc clean, build succeeds\n\n## Verification\n\n- `npx vitest run recurring-charges --reporter=verbose` — all tests pass\n- `npx tsc --noEmit` — 0 type errors\n- `npm run build` — production build succeeds, `/api/cron/recurring-charges` in route manifest\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Stripe paymentIntents.create | Catch error, mark booking payment_failed, send notification email | Stripe SDK has default timeout; booking marked payment_failed | Unexpected PI status logged as warning, booking left as requested for next cron run |\n| Supabase booking query | Return empty result, cron processes 0 sessions | Supabase client timeout; cron returns { checked: 0 } | Log error, return 500 |\n| sendRecurringPaymentFailedEmail | Fire-and-forget catch — email failure does not affect booking status update | Same — fire-and-forget | Same |\n\n## Load Profile\n\n- **Shared resources**: Stripe API (rate-limited per account), Supabase connection pool\n- **Per-operation cost**: 1 Supabase query to find sessions + N Stripe PI creates + N Supabase updates + M email sends (where N = sessions, M = failed sessions)\n- **10x breakpoint**: Stripe rate limit (25 req/s test, 10K/s live) — unlikely to hit with daily cron. Supabase pool exhaustion at ~100+ concurrent queries — sequential processing avoids this.\n\n## Negative Tests\n\n- **No CRON_SECRET**: Returns 401, no processing\n- **No sessions for tomorrow**: Returns { charged: 0, ... }, no Stripe calls\n- **Null payment_method**: Skipped, not charged, not failed\n- **Stripe card_declined / authentication_required / expired_card errors**: All map to payment_failed status\n- **Double cron invocation**: Idempotency key prevents double Stripe charge; `.eq('status', 'requested')` prevents double DB update\n\n## Observability Impact\n\n- Signals added: `[recurring-charges] Charged booking {id}`, `[recurring-charges] Payment failed for booking {id}: {code}`, `[recurring-charges] Skipped booking {id} — no payment method`\n- Response JSON: `{ charged, failed, skipped, checked }` for Vercel cron monitoring\n- Failure state: booking.status = 'payment_failed' queryable in Supabase; Stripe error code logged",
       "estimate": "75m",
       "files": [
@@ -4499,6 +4509,50 @@
       "verdict": "✅ pass",
       "duration_ms": 3500,
       "created_at": "2026-03-31T14:19:00.468Z"
+    },
+    {
+      "id": 34,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M009",
+      "command": "npx vitest run recurring-charges --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6100,
+      "created_at": "2026-03-31T14:24:34.260Z"
+    },
+    {
+      "id": 35,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M009",
+      "command": "npx vitest run webhook-capture --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3100,
+      "created_at": "2026-03-31T14:24:34.260Z"
+    },
+    {
+      "id": 36,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3500,
+      "created_at": "2026-03-31T14:24:34.260Z"
+    },
+    {
+      "id": 37,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M009",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13000,
+      "created_at": "2026-03-31T14:24:34.260Z"
     }
   ]
 }

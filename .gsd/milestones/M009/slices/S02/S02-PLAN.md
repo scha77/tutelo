@@ -59,7 +59,7 @@
   - Estimate: 30m
   - Files: supabase/migrations/0015_payment_failed_status.sql, src/app/api/stripe/webhook/route.ts, src/__tests__/webhook-capture.test.ts
   - Verify: npx vitest run webhook-capture --reporter=verbose && npx tsc --noEmit
-- [ ] **T02: Recurring charges cron route, email template, and integration tests** — Build the daily cron that auto-charges parents' saved cards 24h before each recurring session, plus the payment-failed email template and send function. This is the core deliverable of S02.
+- [x] **T02: Built daily cron route that auto-charges parents' saved cards 24h before recurring sessions, with payment-failed email notification and 8 passing integration tests** — Build the daily cron that auto-charges parents' saved cards 24h before each recurring session, plus the payment-failed email template and send function. This is the core deliverable of S02.
 
 ## Steps
 

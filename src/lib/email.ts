@@ -11,6 +11,7 @@ import { SessionCompleteEmail } from '@/emails/SessionCompleteEmail'
 import { SessionReminderEmail } from '@/emails/SessionReminderEmail'
 import { WaitlistNotificationEmail } from '@/emails/WaitlistNotificationEmail'
 import { RecurringBookingConfirmationEmail } from '@/emails/RecurringBookingConfirmationEmail'
+import { RecurringPaymentFailedEmail } from '@/emails/RecurringPaymentFailedEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -360,6 +361,57 @@ export async function sendRecurringBookingConfirmationEmail(params: {
         sessionDates,
         skippedDates,
         startTime,
+        isTeacher: true,
+      }),
+    })
+  }
+}
+
+export async function sendRecurringPaymentFailedEmail(params: {
+  bookingId: string
+}): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
+
+  const { data } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email, student_name, booking_date, start_time, teachers(full_name, social_email)')
+    .eq('id', params.bookingId)
+    .single()
+  if (!data) return
+
+  const teacher = data.teachers as unknown as { full_name: string; social_email: string | null }
+  const teacherFirstName = teacher.full_name.split(' ')[0]
+  const from = 'Tutelo <noreply@tutelo.app>'
+  const accountUrl = `${appUrl}/account`
+
+  // Always email parent
+  await resend.emails.send({
+    from,
+    to: data.parent_email,
+    subject: `Payment failed for ${data.student_name}'s session on ${data.booking_date}`,
+    react: RecurringPaymentFailedEmail({
+      recipientFirstName: 'there', // Parent name not collected at MVP
+      studentName: data.student_name,
+      bookingDate: data.booking_date,
+      startTime: data.start_time,
+      teacherName: teacher.full_name,
+      isTeacher: false,
+      accountUrl,
+    }),
+  })
+
+  // Email teacher only if social_email is set
+  if (teacher.social_email) {
+    await resend.emails.send({
+      from,
+      to: teacher.social_email,
+      subject: `Payment failed for ${data.student_name}'s recurring session`,
+      react: RecurringPaymentFailedEmail({
+        recipientFirstName: teacherFirstName,
+        studentName: data.student_name,
+        bookingDate: data.booking_date,
+        startTime: data.start_time,
+        teacherName: teacher.full_name,
         isTeacher: true,
       }),
     })

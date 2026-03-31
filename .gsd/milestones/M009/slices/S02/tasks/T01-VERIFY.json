@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M009/S02/T01",
+  "timestamp": 1774966751473,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx vitest run webhook-capture --reporter=verbose",
+      "exitCode": 1,
+      "durationMs": 1634,
+      "verdict": "fail"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 2374,
+      "verdict": "pass"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
