@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T14:45:17.416Z",
+  "exported_at": "2026-03-31T14:49:34.113Z",
   "milestones": [
     {
       "id": "M001",
@@ -4003,19 +4003,28 @@
       "milestone_id": "M009",
       "slice_id": "S03",
       "id": "T03",
-      "title": "Build parent self-service /manage/[token] page with token-gated cancel API routes",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built /manage/[token] parent self-service page with cancel-session and cancel-series API routes, CancelSeriesForm client component, and 10 passing tests",
+      "status": "complete",
+      "one_liner": "Built /manage/[token] parent self-service page with cancel-session and cancel-series API routes, CancelSeriesForm client component, and 10 passing tests",
+      "narrative": "Created two token-gated POST API routes under /api/manage/ — cancel-session (validates token owns the booking, voids Stripe PI if present, updates status to cancelled, fires cancellation email) and cancel-series (fetches all future non-cancelled bookings for the schedule, voids PIs, batch-updates to cancelled, fires series cancellation email). Both routes require no auth — the cancel_token from the email link IS the authentication. Built the /manage/[token] RSC page following the review/[token] pattern: resolves cancel_token via supabaseAdmin, shows error states for bad tokens or all-cancelled, or renders CancelSeriesForm. The form shows each upcoming session with individual Cancel buttons plus a Cancel All Remaining button, with confirm dialogs, fetch-based API calls, and reactive list updates. Wrote 10 tests covering both routes with all edge cases.",
+      "verification_result": "Ran all three verification gates: npx vitest run manage-cancel (10/10 pass), npx tsc --noEmit (zero errors), npm run build (all routes compile successfully, /manage/[token] and both API routes in build output).",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-03-31T14:49:34.093Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/manage/cancel-session/route.ts",
+        "src/app/api/manage/cancel-series/route.ts",
+        "src/app/manage/[token]/page.tsx",
+        "src/app/manage/[token]/CancelSeriesForm.tsx",
+        "src/__tests__/manage-cancel.test.ts"
+      ],
+      "key_decisions": [
+        "Token-gated API routes use top-level imports for email helpers since there is no auth context",
+        "CancelSeriesForm uses fetch() for API calls since the page has no auth context — server actions would fail without a session"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M009\nkey_files:\n  - src/app/api/manage/cancel-session/route.ts\n  - src/app/api/manage/cancel-series/route.ts\n  - src/app/manage/[token]/page.tsx\n  - src/app/manage/[token]/CancelSeriesForm.tsx\n  - src/__tests__/manage-cancel.test.ts\nkey_decisions:\n  - Token-gated API routes use top-level imports for email helpers since there is no auth context\n  - CancelSeriesForm uses fetch() for API calls since the page has no auth context — server actions would fail without a session\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T14:49:34.093Z\nblocker_discovered: false\n---\n\n# T03: Built /manage/[token] parent self-service page with cancel-session and cancel-series API routes, CancelSeriesForm client component, and 10 passing tests\n\n**Built /manage/[token] parent self-service page with cancel-session and cancel-series API routes, CancelSeriesForm client component, and 10 passing tests**\n\n## What Happened\n\nCreated two token-gated POST API routes under /api/manage/ — cancel-session (validates token owns the booking, voids Stripe PI if present, updates status to cancelled, fires cancellation email) and cancel-series (fetches all future non-cancelled bookings for the schedule, voids PIs, batch-updates to cancelled, fires series cancellation email). Both routes require no auth — the cancel_token from the email link IS the authentication. Built the /manage/[token] RSC page following the review/[token] pattern: resolves cancel_token via supabaseAdmin, shows error states for bad tokens or all-cancelled, or renders CancelSeriesForm. The form shows each upcoming session with individual Cancel buttons plus a Cancel All Remaining button, with confirm dialogs, fetch-based API calls, and reactive list updates. Wrote 10 tests covering both routes with all edge cases.\n\n## Verification\n\nRan all three verification gates: npx vitest run manage-cancel (10/10 pass), npx tsc --noEmit (zero errors), npm run build (all routes compile successfully, /manage/[token] and both API routes in build output).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run manage-cancel --reporter=verbose` | 0 | ✅ pass | 2900ms |\n| 2 | `npx tsc --noEmit` | 0 | ✅ pass | 3400ms |\n| 3 | `npm run build` | 0 | ✅ pass | 13100ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/manage/cancel-session/route.ts`\n- `src/app/api/manage/cancel-series/route.ts`\n- `src/app/manage/[token]/page.tsx`\n- `src/app/manage/[token]/CancelSeriesForm.tsx`\n- `src/__tests__/manage-cancel.test.ts`\n",
       "description": "Delivers the parent-facing self-service cancellation page. The parent clicks a manage link in their confirmation email, sees their upcoming sessions, and can cancel individual sessions or the entire remaining series — no login required.\n\n## Steps\n\n1. Create `src/app/api/manage/cancel-session/route.ts`:\n   - POST route, no auth required — token is the authentication\n   - Body: `{ bookingId: string, token: string }`\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - Verify the bookingId belongs to this schedule (`.eq('recurring_schedule_id', schedule.id).eq('id', bookingId)`)\n   - Verify booking is in cancellable status: `['requested','confirmed','payment_failed']`\n   - If booking has stripe_payment_intent, call `stripe.paymentIntents.cancel()` (try/catch, non-blocking)\n   - Update booking status to 'cancelled'\n   - Call `sendCancellationEmail(bookingId)` fire-and-forget\n   - Return `{ success: true }` or `{ error: '...' }` with appropriate status codes (400 for bad input, 404 for not found, 200 for success)\n\n2. Create `src/app/api/manage/cancel-series/route.ts`:\n   - POST route, no auth required — token is the authentication\n   - Body: `{ token: string }`\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - Fetch all future non-cancelled bookings for this schedule: `.eq('recurring_schedule_id', schedule.id).gte('booking_date', todayStr).in('status', ['requested','confirmed','payment_failed'])`\n   - For each booking with stripe_payment_intent: void PI (try/catch, non-blocking)\n   - Batch update all to status 'cancelled'\n   - Call `sendRecurringCancellationEmail({ scheduleId: schedule.id })` fire-and-forget\n   - Return `{ success: true, cancelledCount: N }` or `{ error: '...' }`\n\n3. Create `src/app/manage/[token]/page.tsx` (RSC):\n   - Follow review/[token]/page.tsx pattern exactly\n   - Look up recurring_schedules by cancel_token via supabaseAdmin\n   - If not found → \"Invalid or expired link\" error state\n   - Fetch all non-cancelled future bookings for this schedule\n   - If empty → \"All sessions in this series have already been cancelled\" state\n   - Also fetch teacher name via teachers join for display\n   - Render CancelSeriesForm with sessions list + token + scheduleId\n\n4. Create `src/app/manage/[token]/CancelSeriesForm.tsx` (client component):\n   - Props: `{ sessions: Array<{id, studentName, subject, bookingDate, startTime, status}>, token: string, teacherName: string }`\n   - Show list of upcoming sessions with date, student name, status badge (Confirmed / Payment Failed)\n   - Each row has a \"Cancel This Session\" button → calls POST /api/manage/cancel-session with { bookingId, token }\n   - \"Cancel All Remaining\" button at bottom → calls POST /api/manage/cancel-series with { token }\n   - Both buttons show confirm dialog before proceeding\n   - On success: remove cancelled session from list, show success toast\n   - When all sessions cancelled: show \"All sessions cancelled\" completion state\n   - Use fetch() for API calls (not server actions — this page has no auth context)\n\n5. Create `src/__tests__/manage-cancel.test.ts`:\n   - Follow recurring-charges.test.ts mock pattern (vi.hoisted for Stripe, vi.mock for supabase/email)\n   - Test cancel-session route: invalid token (404), booking not in schedule (404), booking not cancellable (400), success with PI void, success without PI\n   - Test cancel-series route: invalid token (404), no future bookings (200 with cancelledCount 0), success cancels all future bookings, voids PIs, sends email\n\n## Must-Haves\n\n- [ ] /manage/[token] RSC resolves token and shows appropriate state (valid, invalid, all-cancelled)\n- [ ] CancelSeriesForm shows individual cancel per session + cancel-all-remaining\n- [ ] POST /api/manage/cancel-session validates token owns the booking before cancelling\n- [ ] POST /api/manage/cancel-series cancels only future non-cancelled bookings\n- [ ] Token-gated routes have no auth requirement (token IS the auth)\n- [ ] All manage-cancel tests pass",
       "estimate": "2h",
       "files": [
@@ -4774,6 +4783,39 @@
       "verdict": "✅ pass",
       "duration_ms": 10000,
       "created_at": "2026-03-31T14:45:17.364Z"
+    },
+    {
+      "id": 43,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M009",
+      "command": "npx vitest run manage-cancel --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 2900,
+      "created_at": "2026-03-31T14:49:34.093Z"
+    },
+    {
+      "id": 44,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3400,
+      "created_at": "2026-03-31T14:49:34.093Z"
+    },
+    {
+      "id": 45,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M009",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13100,
+      "created_at": "2026-03-31T14:49:34.093Z"
     }
   ]
 }

@@ -106,7 +106,7 @@
   - Estimate: 2h
   - Files: src/emails/RecurringCancellationEmail.tsx, src/lib/email.ts, src/actions/bookings.ts, src/app/(dashboard)/dashboard/sessions/page.tsx, src/components/dashboard/ConfirmedSessionCard.tsx, src/__tests__/cancel-recurring.test.ts
   - Verify: npx vitest run cancel-recurring --reporter=verbose && npx tsc --noEmit && npm run build
-- [ ] **T03: Build parent self-service /manage/[token] page with token-gated cancel API routes** — Delivers the parent-facing self-service cancellation page. The parent clicks a manage link in their confirmation email, sees their upcoming sessions, and can cancel individual sessions or the entire remaining series — no login required.
+- [x] **T03: Built /manage/[token] parent self-service page with cancel-session and cancel-series API routes, CancelSeriesForm client component, and 10 passing tests** — Delivers the parent-facing self-service cancellation page. The parent clicks a manage link in their confirmation email, sees their upcoming sessions, and can cancel individual sessions or the entire remaining series — no login required.
 
 ## Steps
 
