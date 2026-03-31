@@ -33,7 +33,7 @@
   - Estimate: 1h30m
   - Files: supabase/migrations/0014_recurring_schedules.sql, src/lib/utils/recurring.ts, src/__tests__/recurring-dates.test.ts, src/__tests__/recurring-conflicts.test.ts
   - Verify: npx vitest run recurring-dates recurring-conflicts --reporter=verbose && npx tsc --noEmit
-- [ ] **T02: Build create-recurring API route with Stripe setup_future_usage and integration tests** — Create the POST `/api/direct-booking/create-recurring` API route that: authenticates the parent, validates input via a new Zod schema, calls generateRecurringDates + checkDateConflicts, inserts a recurring_schedules row, batch-inserts booking rows, creates a Stripe Customer + PaymentIntent with `setup_future_usage: 'off_session'` and `capture_method: 'manual'`, and returns the client secret + session dates + skipped dates. Then write comprehensive integration tests following the exact `payment-intent.test.ts` mock pattern.
+- [x] **T02: Built POST /api/direct-booking/create-recurring API route with Zod validation, recurring date generation, conflict checking, batch booking inserts, Stripe Customer + PaymentIntent with setup_future_usage, and 9 integration tests** — Create the POST `/api/direct-booking/create-recurring` API route that: authenticates the parent, validates input via a new Zod schema, calls generateRecurringDates + checkDateConflicts, inserts a recurring_schedules row, batch-inserts booking rows, creates a Stripe Customer + PaymentIntent with `setup_future_usage: 'off_session'` and `capture_method: 'manual'`, and returns the client secret + session dates + skipped dates. Then write comprehensive integration tests following the exact `payment-intent.test.ts` mock pattern.
 
 ## Steps
 

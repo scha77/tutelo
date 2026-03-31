@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M009/S01/T01",
+  "timestamp": 1774964916754,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx vitest run recurring-dates recurring-conflicts --reporter=verbose",
+      "exitCode": 0,
+      "durationMs": 1417,
+      "verdict": "pass"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 2410,
+      "verdict": "pass"
+    }
+  ]
+}

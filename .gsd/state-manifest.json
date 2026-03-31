@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T13:48:33.865Z",
+  "exported_at": "2026-03-31T13:51:40.287Z",
   "milestones": [
     {
       "id": "M001",
@@ -3651,19 +3651,26 @@
       "milestone_id": "M009",
       "slice_id": "S01",
       "id": "T02",
-      "title": "Build create-recurring API route with Stripe setup_future_usage and integration tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built POST /api/direct-booking/create-recurring API route with Zod validation, recurring date generation, conflict checking, batch booking inserts, Stripe Customer + PaymentIntent with setup_future_usage, and 9 integration tests",
+      "status": "complete",
+      "one_liner": "Built POST /api/direct-booking/create-recurring API route with Zod validation, recurring date generation, conflict checking, batch booking inserts, Stripe Customer + PaymentIntent with setup_future_usage, and 9 integration tests",
+      "narrative": "Added RecurringBookingSchema to src/lib/schemas/booking.ts. Created the full API route at src/app/api/direct-booking/create-recurring/route.ts following the create-intent pattern: authenticates parent, validates with Zod, fetches teacher + verifies Stripe, computes session amount, generates recurring dates, checks conflicts, inserts recurring_schedules row, batch-inserts booking rows with recurring_schedule_id and is_recurring_first, handles 23505 per-row, creates Stripe Customer + PaymentIntent with setup_future_usage:'off_session' and capture_method:'manual', cleans up on Stripe failure, returns clientSecret + sessionDates + skippedDates + totalCreated. Wrote 9 integration tests using vi.hoisted/MockStripeClass pattern covering happy path, auth, validation, conflicts, Stripe failures, cleanup, and amount calculation.",
+      "verification_result": "Ran npx vitest run create-recurring --reporter=verbose — all 9 tests pass. Ran npx tsc --noEmit — zero type errors.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-03-31T13:51:40.268Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/lib/schemas/booking.ts",
+        "src/__tests__/create-recurring.test.ts"
+      ],
+      "key_decisions": [
+        "Per-row booking insert with 23505 skip instead of batch-insert-all — allows partial success when race conditions claim individual slots",
+        "Stripe Customer created per recurring booking (not reused) — keeps first-session flow simple; customer reuse can be added later for future auto-charges"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M009\nkey_files:\n  - src/app/api/direct-booking/create-recurring/route.ts\n  - src/lib/schemas/booking.ts\n  - src/__tests__/create-recurring.test.ts\nkey_decisions:\n  - Per-row booking insert with 23505 skip instead of batch-insert-all — allows partial success when race conditions claim individual slots\n  - Stripe Customer created per recurring booking (not reused) — keeps first-session flow simple; customer reuse can be added later for future auto-charges\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T13:51:40.269Z\nblocker_discovered: false\n---\n\n# T02: Built POST /api/direct-booking/create-recurring API route with Zod validation, recurring date generation, conflict checking, batch booking inserts, Stripe Customer + PaymentIntent with setup_future_usage, and 9 integration tests\n\n**Built POST /api/direct-booking/create-recurring API route with Zod validation, recurring date generation, conflict checking, batch booking inserts, Stripe Customer + PaymentIntent with setup_future_usage, and 9 integration tests**\n\n## What Happened\n\nAdded RecurringBookingSchema to src/lib/schemas/booking.ts. Created the full API route at src/app/api/direct-booking/create-recurring/route.ts following the create-intent pattern: authenticates parent, validates with Zod, fetches teacher + verifies Stripe, computes session amount, generates recurring dates, checks conflicts, inserts recurring_schedules row, batch-inserts booking rows with recurring_schedule_id and is_recurring_first, handles 23505 per-row, creates Stripe Customer + PaymentIntent with setup_future_usage:'off_session' and capture_method:'manual', cleans up on Stripe failure, returns clientSecret + sessionDates + skippedDates + totalCreated. Wrote 9 integration tests using vi.hoisted/MockStripeClass pattern covering happy path, auth, validation, conflicts, Stripe failures, cleanup, and amount calculation.\n\n## Verification\n\nRan npx vitest run create-recurring --reporter=verbose — all 9 tests pass. Ran npx tsc --noEmit — zero type errors.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run create-recurring --reporter=verbose` | 0 | ✅ pass | 2100ms |\n| 2 | `npx tsc --noEmit` | 0 | ✅ pass | 3000ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/direct-booking/create-recurring/route.ts`\n- `src/lib/schemas/booking.ts`\n- `src/__tests__/create-recurring.test.ts`\n",
       "description": "Create the POST `/api/direct-booking/create-recurring` API route that: authenticates the parent, validates input via a new Zod schema, calls generateRecurringDates + checkDateConflicts, inserts a recurring_schedules row, batch-inserts booking rows, creates a Stripe Customer + PaymentIntent with `setup_future_usage: 'off_session'` and `capture_method: 'manual'`, and returns the client secret + session dates + skipped dates. Then write comprehensive integration tests following the exact `payment-intent.test.ts` mock pattern.\n\n## Steps\n\n1. Add `RecurringBookingSchema` to `src/lib/schemas/booking.ts`:\n   - teacherId: z.string().uuid()\n   - bookingDate: z.string().regex(YYYY-MM-DD) — the series start date\n   - startTime, endTime: z.string().regex(HH:MM)\n   - studentName: z.string().min(1).max(100)\n   - subject: z.string().min(1)\n   - notes: z.string().max(1000).optional()\n   - parentPhone: z.string().optional()\n   - parentSmsOptIn: z.boolean().optional().default(false)\n   - sessionTypeId: z.string().uuid().optional()\n   - frequency: z.enum(['weekly', 'biweekly'])\n   - totalSessions: z.number().int().min(2).max(26)\n\n2. Create `src/app/api/direct-booking/create-recurring/route.ts`:\n   - Auth: get user from Supabase session (401 if not logged in)\n   - Validate body with RecurringBookingSchema\n   - Fetch teacher: verify stripe_charges_enabled + stripe_account_id (400 if not connected)\n   - Determine amount per session (session type price OR hourly rate proration, same as create-intent)\n   - Call generateRecurringDates(bookingDate, frequency, totalSessions)\n   - Call checkDateConflicts(teacherId, dates, startTime, endTime, supabaseAdmin)\n   - Guard: if 0 available dates, return 409 'No available dates'\n   - Insert recurring_schedules row (teacher_id, parent_id, parent_email, frequency, total_sessions, start_date, start_time, end_time)\n   - Batch insert bookings: for each available date, insert with recurring_schedule_id, status='requested'; first date gets is_recurring_first=true\n   - Handle 23505 per-row: skip and add to skippedDates\n   - Create Stripe Customer: `stripe.customers.create({ email: user.email, metadata: { tutelo_user_id: user.id } })`\n   - Create PaymentIntent for first session: amount, currency:'usd', capture_method:'manual', setup_future_usage:'off_session', customer: customerId, transfer_data:{destination: stripe_account_id}, application_fee_amount: 7%, metadata:{booking_id: firstBookingId, teacher_id, recurring_schedule_id}\n   - Update recurring_schedules with stripe_customer_id and stripe_payment_method_id (payment_method comes after client confirms — for now store customer_id)\n   - Return JSON: { clientSecret, recurringScheduleId, sessionDates[], skippedDates[], totalCreated }\n   - On Stripe failure: delete all inserted bookings + schedule row, return 502\n\n3. Create `src/__tests__/create-recurring.test.ts` following payment-intent.test.ts patterns:\n   - Uses vi.hoisted for Stripe mock class with customers.create and paymentIntents.create\n   - Uses vi.mock for supabase/server and supabase/service\n   - Mock the recurring utility functions (generateRecurringDates, checkDateConflicts)\n   - Test cases:\n     a. Happy path: 6 weekly sessions, 1 skipped → returns clientSecret + 5 sessionDates + 1 skippedDate\n     b. Unauthenticated → 401\n     c. Teacher not Stripe-connected → 400\n     d. Zero available dates → 409\n     e. Invalid body (missing frequency) → 400\n     f. Stripe failure → 502 + cleanup",
       "estimate": "2h",
       "files": [
@@ -4213,6 +4220,28 @@
       "verdict": "✅ pass",
       "duration_ms": 12700,
       "created_at": "2026-03-31T13:48:33.835Z"
+    },
+    {
+      "id": 23,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx vitest run create-recurring --reporter=verbose",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 2100,
+      "created_at": "2026-03-31T13:51:40.268Z"
+    },
+    {
+      "id": 24,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M009",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-03-31T13:51:40.268Z"
     }
   ]
 }

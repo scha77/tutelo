@@ -15,3 +15,20 @@ export const BookingRequestSchema = z.object({
 })
 
 export type BookingRequestData = z.infer<typeof BookingRequestSchema>
+
+export const RecurringBookingSchema = z.object({
+  teacherId: z.string().uuid(),
+  bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM'),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM'),
+  studentName: z.string().min(1, 'Student name required').max(100),
+  subject: z.string().min(1, 'Subject required'),
+  notes: z.string().max(1000).optional(),
+  parentPhone: z.string().optional(),
+  parentSmsOptIn: z.boolean().optional().default(false),
+  sessionTypeId: z.string().uuid().optional(),
+  frequency: z.enum(['weekly', 'biweekly']),
+  totalSessions: z.number().int().min(2).max(26),
+})
+
+export type RecurringBookingData = z.infer<typeof RecurringBookingSchema>
