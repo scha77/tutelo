@@ -18,6 +18,11 @@ vi.mock('@/lib/utils/recurring', () => ({
   checkDateConflicts: vi.fn(),
 }))
 
+// Mock email module (imported by the route — Resend constructor throws without API key)
+vi.mock('@/lib/email', () => ({
+  sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+}))
+
 // Stripe mock (vi.hoisted pattern from payment-intent.test.ts)
 const { stripeCustomersCreateMock, stripePaymentIntentsCreateMock, MockStripeClass } = vi.hoisted(() => {
   const stripeCustomersCreateMock = vi.fn()
@@ -66,6 +71,9 @@ describe('POST /api/direct-booking/create-recurring', () => {
       checkDateConflicts: vi.fn(),
     }))
     vi.mock('stripe', () => ({ default: MockStripeClass }))
+    vi.mock('@/lib/email', () => ({
+      sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+    }))
 
     // Default Stripe mocks
     stripeCustomersCreateMock.mockResolvedValue({ id: 'cus_test123' })
@@ -119,6 +127,8 @@ describe('POST /api/direct-booking/create-recurring', () => {
       stripe_account_id: STRIPE_ACCOUNT_ID,
       stripe_charges_enabled: true,
       hourly_rate: 75,
+      full_name: 'Jane Smith',
+      social_email: 'jane@example.com',
     }
 
     const callCounters: Record<string, number> = {}

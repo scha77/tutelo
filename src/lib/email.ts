@@ -10,6 +10,7 @@ import { CancellationEmail } from '@/emails/CancellationEmail'
 import { SessionCompleteEmail } from '@/emails/SessionCompleteEmail'
 import { SessionReminderEmail } from '@/emails/SessionReminderEmail'
 import { WaitlistNotificationEmail } from '@/emails/WaitlistNotificationEmail'
+import { RecurringBookingConfirmationEmail } from '@/emails/RecurringBookingConfirmationEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -294,4 +295,73 @@ export async function sendWaitlistNotificationEmail(
     subject: `A spot just opened up — book with ${teacherName}`,
     react: WaitlistNotificationEmail({ teacherName, bookingLink }),
   })
+}
+
+export async function sendRecurringBookingConfirmationEmail(params: {
+  parentEmail: string
+  teacherName: string
+  teacherEmail: string | null
+  studentName: string
+  subject: string
+  frequency: 'weekly' | 'biweekly'
+  sessionDates: string[]
+  skippedDates: { date: string; reason: string }[]
+  startTime: string
+  accountUrl?: string
+}): Promise<void> {
+  const {
+    parentEmail,
+    teacherName,
+    teacherEmail,
+    studentName,
+    subject: subjectName,
+    frequency,
+    sessionDates,
+    skippedDates,
+    startTime,
+    accountUrl,
+  } = params
+
+  const from = 'Tutelo <noreply@tutelo.app>'
+  const teacherFirstName = teacherName.split(' ')[0]
+  const count = sessionDates.length
+
+  // Email parent
+  await resend.emails.send({
+    from,
+    to: parentEmail,
+    subject: `Recurring booking confirmed — ${count} ${frequency} sessions for ${studentName}`,
+    react: RecurringBookingConfirmationEmail({
+      recipientFirstName: 'there', // Parent name not collected at MVP
+      teacherName,
+      studentName,
+      subject: subjectName,
+      frequency,
+      sessionDates,
+      skippedDates,
+      startTime,
+      isTeacher: false,
+      accountUrl,
+    }),
+  })
+
+  // Email teacher (only if social_email is set)
+  if (teacherEmail) {
+    await resend.emails.send({
+      from,
+      to: teacherEmail,
+      subject: `New recurring booking — ${count} ${frequency} sessions with ${studentName}`,
+      react: RecurringBookingConfirmationEmail({
+        recipientFirstName: teacherFirstName,
+        teacherName,
+        studentName,
+        subject: subjectName,
+        frequency,
+        sessionDates,
+        skippedDates,
+        startTime,
+        isTeacher: true,
+      }),
+    })
+  }
 }

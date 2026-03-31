@@ -112,7 +112,7 @@
   - Estimate: 2h
   - Files: src/components/profile/RecurringOptions.tsx, src/app/api/direct-booking/check-conflicts/route.ts, src/components/profile/BookingCalendar.tsx
   - Verify: npx tsc --noEmit && npm run build
-- [ ] **T04: Create RecurringBookingConfirmationEmail and wire into create-recurring route** — Build the React Email template for recurring booking confirmations that shows the full series schedule (all session dates, skipped dates with reasons, frequency, total sessions). Then wire it into the create-recurring API route so confirmation emails are sent on successful booking creation.
+- [x] **T04: Created RecurringBookingConfirmationEmail React Email template with numbered session schedule, skipped-dates section, and auto-payment note; wired fire-and-forget sending into create-recurring route for both parent and teacher** — Build the React Email template for recurring booking confirmations that shows the full series schedule (all session dates, skipped dates with reasons, frequency, total sessions). Then wire it into the create-recurring API route so confirmation emails are sent on successful booking creation.
 
 ## Steps
 

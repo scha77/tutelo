@@ -5,6 +5,8 @@ import { computeSessionAmount } from '@/lib/utils/booking'
 import { generateRecurringDates, checkDateConflicts } from '@/lib/utils/recurring'
 import { RecurringBookingSchema } from '@/lib/schemas/booking'
 
+import { sendRecurringBookingConfirmationEmail } from '@/lib/email'
+
 /**
  * POST /api/direct-booking/create-recurring
  *
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
   // 3. Fetch teacher and verify Stripe is connected
   const { data: teacher } = await supabaseAdmin
     .from('teachers')
-    .select('id, stripe_account_id, stripe_charges_enabled, hourly_rate')
+    .select('id, stripe_account_id, stripe_charges_enabled, hourly_rate, full_name, social_email')
     .eq('id', teacherId)
     .single()
 
@@ -245,7 +247,26 @@ export async function POST(req: Request) {
     .update({ stripe_customer_id: customer.id })
     .eq('id', recurringScheduleId)
 
-  // 10. Return response
+  // 10. Fire-and-forget confirmation emails (don't fail the booking if email fails)
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
+    await sendRecurringBookingConfirmationEmail({
+      parentEmail: user.email!,
+      teacherName: teacher.full_name,
+      teacherEmail: teacher.social_email,
+      studentName,
+      subject: sessionTypeLabel ?? subject,
+      frequency,
+      sessionDates,
+      skippedDates: allSkipped,
+      startTime,
+      accountUrl: `${appUrl}/account`,
+    })
+  } catch (emailErr) {
+    console.error('[create-recurring] Email sending failed (non-fatal):', emailErr)
+  }
+
+  // 11. Return response
   return Response.json({
     clientSecret: paymentIntent.client_secret,
     recurringScheduleId,
