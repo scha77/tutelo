@@ -14,12 +14,12 @@ Tagline: "Shopify for teacher side hustles."
 
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
-- All 101 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02)
-- **Recurring Sessions (M009 — in progress 🔄):**
-  - S01 ✅ Schema & Recurring Booking Creation — `recurring_schedules` table, `generateRecurringDates` + `checkDateConflicts` utilities, `POST /api/direct-booking/create-recurring` (Stripe setup_future_usage), `RecurringOptions` UI component in BookingCalendar, `RecurringBookingConfirmationEmail` template. 25 tests passing, build clean.
-  - S02 ⬜ Saved Cards & Auto-Charge Cron
-  - S03 ⬜ Cancellation & Dashboard Series UX
-- 82 unit tests (25 M009 + 57 M007) + all prior tests passing; build clean
+- All 110 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02 + 9 recurring sessions from M009)
+- **Recurring Sessions (M009 — complete ✅):**
+  - S01 ✅ Schema & Recurring Booking Creation — `recurring_schedules` table, `generateRecurringDates` + `checkDateConflicts` utilities, `POST /api/direct-booking/create-recurring` (Stripe setup_future_usage), `RecurringOptions` UI component in BookingCalendar, `RecurringBookingConfirmationEmail` template. 25 tests passing.
+  - S02 ✅ Saved Cards & Auto-Charge Cron — Stripe Customer per schedule, per-session auto-charge cron (`/api/cron/recurring-charges`, runs noon UTC daily), `payment_failed` booking status, failed-charge notification emails.
+  - S03 ✅ Cancellation & Dashboard Series UX — `cancel_token` on `recurring_schedules` (migration 0016), `cancelSingleRecurringSession` + `cancelRecurringSeries` server actions, "Recurring" + "Payment Failed" badges on ConfirmedSessionCard, `/manage/[token]` parent self-service page (no login required), `/api/manage/cancel-session` + `/api/manage/cancel-series` token-gated routes. 26 tests passing.
+- 26 unit tests (S03) + prior M009 tests passing; build clean (56 routes); zero type errors
 - **Capacity & Pricing (M007 — complete ✅):**
   - capacity_limit on teachers table; profile shows "at capacity" state with waitlist form (S01 ✅)
   - `/dashboard/waitlist` page with entry management; `checkAndNotifyWaitlist` auto-emails waitlisted parents on capacity freed after cancellation (S02 ✅)
@@ -73,8 +73,8 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M006:** Growth Tools — QR codes, printable flyers, copy-paste announcement templates, OG image platform verification
 - [x] **M007:** Capacity & Pricing — capacity_limit gate + waitlist signup (S01), waitlist dashboard + auto-notifications on cancellation (S02), session types CRUD + variable Stripe pricing + backward-compat hourly_rate fallback (S03); 57 unit tests, tsc clean, build green
 - [x] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
-- [ ] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
+- [x] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [ ] **M010:** Parent & Admin — Multi-child management, saved payment methods, teacher-parent messaging, read-only admin dashboard
 
 ---
-*Last updated: 2026-03-31 after M009/S02 completion — Saved Cards & Auto-Charge Cron: payment_failed status migration, webhook PM storage on recurring_schedules, daily cron at /api/cron/recurring-charges (0 12 * * *), RecurringPaymentFailedEmail template, 16 tests pass (8 webhook-capture + 8 recurring-charges), tsc clean, build green. M009/S01 (Schema & Recurring Booking Creation) and M009/S02 complete; S03 (Cancellation & Dashboard Series UX) remaining.*
+*Last updated: 2026-03-31 after M009 completion — Recurring Sessions milestone complete. S01: recurring_schedules table (migration 0014), generateRecurringDates + checkDateConflicts utilities, POST /api/direct-booking/create-recurring (Stripe setup_future_usage:'off_session'), RecurringOptions UI in BookingCalendar, RecurringBookingConfirmationEmail, 25 tests. S02: payment_failed booking status (migration 0015), webhook stripe_payment_method_id storage, daily cron /api/cron/recurring-charges (0 12 * * *), RecurringPaymentFailedEmail, 16 tests. S03: cancel_token on recurring_schedules (migration 0016), cancelSingleRecurringSession + cancelRecurringSeries server actions, Recurring + Payment Failed badges on ConfirmedSessionCard, /manage/[token] parent self-service page (no login), /api/manage/cancel-session + cancel-series token-gated routes, 26 tests. Total: 67/67 tests pass, tsc clean, build green, 9 RECUR requirements validated.*

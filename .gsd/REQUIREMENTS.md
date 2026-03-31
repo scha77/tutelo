@@ -237,101 +237,101 @@ This file is the explicit capability and coverage contract for the project.
 
 ### RECUR-01 — Parent can set a recurring schedule when booking
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: During the booking flow, parent can opt for a recurring schedule: weekly or biweekly, for N weeks (e.g., "Every Tuesday at 4pm for 8 weeks").
 - Why it matters: Most tutoring relationships are ongoing. Rebooking manually every week is friction that kills retention.
 - Source: user
 - Primary owning slice: M009/S01
 - Supporting slices: none
-- Validation: unmapped
+- Validation: RecurringOptions.tsx frequency toggle + count slider + live projected-dates list wired into BookingCalendar 'recurring' step. check-conflicts endpoint provides real-time conflict preview. 8 conflict-detection unit tests pass. Delivered M009/S01.
 - Notes: UI shows recurring options after initial slot selection. Must validate all future slots are available.
 
 ### RECUR-02 — System auto-creates future booking rows for recurring schedule
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a recurring schedule is confirmed, the system creates individual booking rows for each future session. Each has its own date, status, and payment.
 - Why it matters: Individual rows enable per-session cancellation, payment tracking, and status management.
 - Source: user
 - Primary owning slice: M009/S01
 - Supporting slices: M009/S02
-- Validation: unmapped
+- Validation: Migration 0014 adds recurring_schedules table + bookings.recurring_schedule_id FK. create-recurring route inserts per-row bookings with 23505 unique-constraint skip for partial success. 9 create-recurring integration tests verify. Delivered M009/S01.
 - Notes: Linked via a recurring_schedule_id. Atomic creation to prevent partial series.
 
 ### RECUR-03 — Each recurring session has individual payment handling
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Each session in a recurring series has its own Stripe PaymentIntent. Payment is authorized per-session, not bulk upfront.
 - Why it matters: Per-session billing is fairer (parent isn't locked in), simpler for refunds, and matches the existing payment flow.
 - Source: user
 - Primary owning slice: M009/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: Cron creates individual PI per booking row from saved card. payment_failed status on Stripe error. 8 recurring-charges tests cover all paths including mixed results. Delivered M009/S02.
 - Notes: Payment authorization happens at series creation for near-term sessions. Future sessions may need "authorize on day-of" pattern.
 
 ### RECUR-04 — Teacher and parent can cancel individual sessions or entire recurring series
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Both teacher and parent can cancel a single session from a recurring series without affecting others, or cancel the entire remaining series at once.
 - Why it matters: Life happens. Flexibility in cancellation prevents frustration.
 - Source: user
 - Primary owning slice: M009/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: cancelSingleRecurringSession + cancelRecurringSeries server actions (teacher); /api/manage/cancel-session + cancel-series token-gated routes (parent). 16 cancel-recurring + 10 manage-cancel tests cover all paths. Delivered M009/S03.
 - Notes: Cancelling a series cancels all future sessions with status != completed. Past sessions unaffected.
 
 ### RECUR-05 — Recurring bookings respect availability and prevent double-booking
 - Class: continuity
-- Status: active
+- Status: validated
 - Description: When creating a recurring schedule, the system checks each future date against the teacher's availability (recurring + overrides) and the existing bookings unique constraint.
 - Why it matters: Can't create recurring sessions that conflict with existing bookings or fall outside availability windows.
 - Source: inferred
 - Primary owning slice: M009/S01
 - Supporting slices: none
-- Validation: unmapped
+- Validation: checkDateConflicts utility + unique constraint as fallback safety net. 8 conflict-detection unit tests cover booking conflict, no-availability, override-block, override-allow, all-clear, all-skipped, and mixed scenarios. Delivered M009/S01.
 - Notes: Must handle the case where some future dates are unavailable (warn parent, skip those dates). Partial series creation allowed — skip conflicting dates, show parent which were skipped.
 
 ### RECUR-06 — Saved card via Stripe Customer + SetupIntent for auto-charge
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: When a parent books a recurring series, a Stripe Customer is created (or reused) and their card is saved via a SetupIntent. Subsequent sessions in the series are auto-charged using the saved payment method 24 hours before the session.
 - Why it matters: Stripe PaymentIntent authorizations expire after 7 days. An 8-week series can't pre-authorize all sessions. Saved cards enable per-session auto-charging on schedule.
 - Source: inferred
 - Primary owning slice: M009/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: create-recurring creates Stripe Customer + PI with setup_future_usage:'off_session'. Webhook stores stripe_payment_method_id on confirmation (idempotency guard). 9 create-recurring + 8 webhook-capture tests pass. Delivered M009/S01+S02.
 - Notes: First session still uses the existing PaymentIntent authorize flow. SetupIntent saves the card for future charges. Parent must consent to card storage.
 
 ### RECUR-07 — Cron charges upcoming recurring sessions 24h before
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: The existing daily cron (stripe-reminders) is extended to find recurring sessions scheduled for tomorrow that haven't been charged yet, and creates PaymentIntents using the parent's saved card.
 - Why it matters: Automates the per-session billing without requiring the parent to return to the site each week.
 - Source: inferred
 - Primary owning slice: M009/S02
 - Supporting slices: none
-- Validation: unmapped
+- Validation: Dedicated /api/cron/recurring-charges route added to vercel.json at 0 12 * * *. Note: D021 supersedes original plan — dedicated route used instead of extending stripe-reminders (Vercel lifted cron limit to 100 in Jan 2026). 8 recurring-charges tests pass including idempotency and mixed-results. Delivered M009/S02.
 - Notes: Extends existing cron at /api/cron/stripe-reminders. Failed charges update booking status and notify both parties. Stays within Vercel Hobby cron limits.
 
 ### RECUR-08 — Parent self-service cancellation via secure link/page
 - Class: core-capability
-- Status: active
+- Status: validated
 - Description: Parent receives a secure link in booking confirmation and reminder emails that allows them to cancel an individual session or the remaining series without needing to contact the teacher.
 - Why it matters: Parents need agency over their recurring commitment. Requiring teacher involvement for every cancellation creates friction and resentment.
 - Source: inferred
 - Primary owning slice: M009/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: cancel_token (64-char hex, migration 0016) stored on recurring_schedules + manageUrl in parent confirmation email. /manage/[token] RSC page + CancelSeriesForm client component + /api/manage/cancel-session + cancel-series token-gated routes. 10 manage-cancel tests pass including invalid-token and ownership-mismatch cases. Delivered M009/S03.
 - Notes: Secure token-based link (similar to review token pattern). Page shows session details + cancel options (this session only / remaining series).
 
 ### RECUR-09 — Recurring sessions visible in dashboard with series badge
 - Class: quality-attribute
-- Status: active
+- Status: validated
 - Description: Recurring sessions appear in the teacher's /dashboard/sessions page with a visual series indicator (repeat icon, "Series: Tuesdays 4pm" badge). A "Cancel remaining series" action is available.
 - Why it matters: Teachers need to distinguish one-off sessions from recurring ones and manage series as a group when needed.
 - Source: inferred
 - Primary owning slice: M009/S03
 - Supporting slices: none
-- Validation: unmapped
+- Validation: ConfirmedSessionCard shows amber "Recurring" badge when recurringScheduleId is set, "Payment Failed" badge on payment_failed status, and "Cancel Series" button with confirm dialog. Sessions page query extended to include recurring_schedule_id and payment_failed status. Delivered M009/S03.
 - Notes: No separate management page. Series badge + cancel series action in existing session list.
 
 ### PARENT-04 — Parent can manage multiple children under one account
@@ -1002,15 +1002,15 @@ This file is the explicit capability and coverage contract for the project.
 | SEO-04 | differentiator | active | M008/S03 | M008/S01 | unmapped |
 | ANALYTICS-01 | core-capability | active | M008/S04 | none | unmapped |
 | ANALYTICS-02 | core-capability | active | M008/S04 | none | unmapped |
-| RECUR-01 | core-capability | active | M009/S01 | none | unmapped |
-| RECUR-02 | core-capability | active | M009/S01 | M009/S02 | unmapped |
-| RECUR-03 | core-capability | active | M009/S02 | none | unmapped |
-| RECUR-04 | core-capability | active | M009/S03 | none | unmapped |
-| RECUR-05 | continuity | active | M009/S01 | none | unmapped |
-| RECUR-06 | core-capability | active | M009/S02 | none | unmapped |
-| RECUR-07 | core-capability | active | M009/S02 | none | unmapped |
-| RECUR-08 | core-capability | active | M009/S03 | none | unmapped |
-| RECUR-09 | quality-attribute | active | M009/S03 | none | unmapped |
+| RECUR-01 | core-capability | validated | M009/S01 | none | M009/S01 |
+| RECUR-02 | core-capability | validated | M009/S01 | M009/S02 | M009/S01 |
+| RECUR-03 | core-capability | validated | M009/S02 | none | M009/S02 |
+| RECUR-04 | core-capability | validated | M009/S03 | none | M009/S03 |
+| RECUR-05 | continuity | validated | M009/S01 | none | M009/S01 |
+| RECUR-06 | core-capability | validated | M009/S02 | none | M009/S01+S02 |
+| RECUR-07 | core-capability | validated | M009/S02 | none | M009/S02 |
+| RECUR-08 | core-capability | validated | M009/S03 | none | M009/S03 |
+| RECUR-09 | quality-attribute | validated | M009/S03 | none | M009/S03 |
 | PARENT-04 | core-capability | active | M010/S01 | none | unmapped |
 | PARENT-05 | quality-attribute | active | M010/S02 | none | unmapped |
 | PARENT-06 | core-capability | active | M010/S03 | none | unmapped |

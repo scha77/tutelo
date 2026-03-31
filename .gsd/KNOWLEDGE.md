@@ -374,3 +374,74 @@ For cron-initiated Stripe PaymentIntent creates, always pass an idempotencyKey c
 ```
 This prevents duplicate charges if Vercel reruns the cron on a cold start or network error. The `.eq('status', 'requested')` guard on the booking update is a second layer — if the PI was created but the DB update failed, the next cron run finds 0 bookings with `status='requested'` for that date (Stripe's idempotency returns the same PI, booking is already confirmed).
 
+---
+
+## Token-Gated Self-Service Pages: RSC Resolves Token, Client Component Uses fetch()
+
+For parent-facing pages where the visitor has no auth session (e.g., `/manage/[token]`, `/review/[token]`), follow this split:
+
+1. **RSC shell** (`page.tsx`): resolves the token via `supabaseAdmin`, handles invalid/empty states, renders the client component only on valid token.
+2. **Client component** (`CancelSeriesForm.tsx`, etc.): receives pre-fetched data as props; all mutations go through dedicated `/api/manage/*` POST routes using `fetch()` — **not server actions**. Server actions require an active Next.js session; pages reached via email links have no session, so server actions will silently fail or throw auth errors.
+3. **API routes** (`/api/manage/cancel-session`, `/api/manage/cancel-series`): no auth middleware, but they validate the token owns the target resource on every call. This is the only security boundary — the token is a 64-char hex (256-bit) secret that is never shown in the teacher dashboard or any public surface.
+
+This pattern is established for both `/review/[token]` (post-session review) and `/manage/[token]` (self-service cancellation).
+
+## UTC Noon Anchor for Recurring Date Arithmetic (M009)
+
+When generating recurring dates (weekly/biweekly), always anchor at `T12:00:00Z`, never `T00:00:00Z`. Adding 7 or 14 days in milliseconds to a UTC midnight anchor can produce a date shift of ±1 day when a DST transition falls within the window. UTC noon is always "safe distance" from both day boundaries regardless of timezone.
+
+```ts
+// ✅ Safe
+const anchor = new Date(`${dateStr}T12:00:00Z`);
+const next = new Date(anchor.getTime() + 7 * 24 * 60 * 60 * 1000);
+const nextStr = next.toISOString().slice(0, 10); // always correct calendar date
+
+// ❌ Risky
+const anchor = new Date(`${dateStr}T00:00:00Z`);
+// +7 days during a "spring forward" night can produce wrong date
+```
+
+A DST boundary test (`America/New_York` March → November crossing) caught this during M009/S01/T01 development.
+
+## Two-Layer Idempotency for Cron Stripe PaymentIntents (M009)
+
+For cron jobs that create Stripe PIs, use both layers together:
+1. **Stripe idempotencyKey**: `recurring-charge-{bookingId}-{tomorrowUtc}` — prevents duplicate PIs on cron retry within the same day
+2. **DB `.eq('status','requested')` guard on booking update**: prevents the DB row from being double-updated if the Stripe operation succeeds but the cron crashes before the update
+
+Neither layer alone is sufficient. The idempotencyKey handles Stripe-side retries; the status guard handles cases where the PI was created but the booking update wasn't committed before a crash.
+
+## Mock `@/lib/email` in All Route Test Files That Touch Email (M009)
+
+Any test file that imports a Next.js route module which imports `@/lib/email` **must** add:
+
+```ts
+vi.mock('@/lib/email', () => ({
+  sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  // ... other functions as needed
+}));
+```
+
+Otherwise the Resend client constructor (`new Resend(process.env.RESEND_API_KEY)`) throws during module import in test environments, producing a confusing error unrelated to the test subject. The mock must be declared before any imports via `vi.mock` hoisting.
+
+## Exclude `.gsd/**` from Vitest (M009)
+
+Always add `.gsd/**` to the `exclude` list in `vitest.config.ts`. GSD worktrees from previous milestones can leave behind stale test files under `.gsd/` that pollute the test run with phantom failures. This is especially important in projects using GSD auto-mode where multiple milestone worktrees may have existed on the same machine.
+
+```ts
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    exclude: ['node_modules/**', '.gsd/**'],
+  },
+});
+```
+
+## `setup_future_usage: 'off_session'` + `capture_method: 'manual'` on One PI (M009)
+
+For recurring booking first-session authorization, a single PaymentIntent can simultaneously:
+1. Authorize (hold) the first session payment (via `capture_method: 'manual'`)
+2. Save the card for future off-session auto-charges (via `setup_future_usage: 'off_session'`)
+
+No separate SetupIntent is needed. After the parent confirms payment, the PI's `payment_method` is attached to the Stripe Customer and available for subsequent auto-charges. Retrieve it from `payment_intent.payment_method` in the webhook and store on `recurring_schedules.stripe_payment_method_id`.
+
