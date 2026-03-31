@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Instagram, Mail, Globe } from 'lucide-react'
 import { format, addDays, startOfToday } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/service'
+import { isBot } from '@/lib/utils/bot-filter'
 import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
@@ -143,6 +146,17 @@ export default async function TeacherProfilePage({
     .single()
 
   if (!teacher) return notFound()
+
+  // M008/S04: Fire-and-forget page view tracking (non-blocking, bot-filtered)
+  const headersList = await headers()
+  const userAgent = headersList.get('user-agent')
+  if (!isBot(userAgent)) {
+    void Promise.resolve(
+      supabaseAdmin
+        .from('page_views')
+        .insert({ teacher_id: teacher.id, user_agent: userAgent, is_bot: false })
+    ).catch(() => {}) // never block page render
+  }
 
   const isPreview = preview === 'true'
 

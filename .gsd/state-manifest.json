@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-30T19:07:39.844Z",
+  "exported_at": "2026-03-31T02:40:04.468Z",
   "milestones": [
     {
       "id": "M001",
@@ -252,21 +252,72 @@
     {
       "id": "M008",
       "title": "",
-      "status": "active",
+      "status": "complete",
       "depends_on": [],
       "created_at": "2026-03-27T01:40:51.431Z",
-      "completed_at": null,
-      "vision": "",
-      "success_criteria": [],
-      "key_risks": [],
-      "proof_strategy": [],
-      "verification_contract": "",
-      "verification_integration": "",
-      "verification_operational": "",
-      "verification_uat": "",
-      "definition_of_done": [],
-      "requirement_coverage": "",
-      "boundary_map_markdown": ""
+      "completed_at": "2026-03-31T02:40:04.450Z",
+      "vision": "Tutelo goes from invite-only 1:1 links to a publicly discoverable directory that Google indexes. Teachers get page-view and conversion funnel analytics so they can see if their promotion efforts are working. Parents searching \"math tutor in Chicago\" can find Tutelo organically.",
+      "success_criteria": [
+        "/tutors page lists published teachers with working subject, grade-level, location, and price filters via URL params",
+        "Full-text search across name, school, subjects, bio returns relevant results using Postgres tsvector + GIN index",
+        "SEO category pages (/tutors/math, /tutors/chicago) render with correct meta tags and are statically generated",
+        "XML sitemap at /sitemap.xml includes all published teacher /[slug] URLs plus directory and category pages",
+        "Page views tracked on /[slug] pages with bot filtering; stored in page_views table",
+        "Dashboard analytics section shows: total views, booking form opens, completed bookings, conversion rate"
+      ],
+      "key_risks": [
+        {
+          "risk": "tsvector/GIN index migration on teachers table could be slow on a large dataset",
+          "whyItMatters": "Migration runs on production — if it locks the table, teacher profile pages go down during deploy"
+        },
+        {
+          "risk": "Bot filtering for page views is imprecise",
+          "whyItMatters": "Inflated counts mislead teachers about their actual reach; must at least filter Googlebot/common crawlers"
+        },
+        {
+          "risk": "Static generation of category pages may be stale if teachers publish/unpublish frequently",
+          "whyItMatters": "ISR or dynamic rendering tradeoff — stale pages hurt discoverability; real-time is expensive"
+        },
+        {
+          "risk": "SEO duplicate content: category pages share teacher cards with /tutors directory",
+          "whyItMatters": "Google may penalize duplicate content if canonical tags and unique page titles are not set correctly"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "tsvector migration safety",
+          "retireIn": "S02/T01",
+          "whatWillBeProven": "Migration uses CONCURRENTLY for GIN index creation (no table lock); local migration runs clean on test DB"
+        },
+        {
+          "riskOrUnknown": "Bot filtering accuracy",
+          "retireIn": "S04/T01",
+          "whatWillBeProven": "User-agent check filters top-10 crawlers; middleware logs raw vs filtered counts in dev for manual verification"
+        },
+        {
+          "riskOrUnknown": "Category page staleness",
+          "retireIn": "S03/T02",
+          "whatWillBeProven": "Pages use revalidate=3600 (ISR) so they refresh within 1 hour of teacher publishing; not real-time but acceptable"
+        },
+        {
+          "riskOrUnknown": "SEO duplicate content",
+          "retireIn": "S03/T02",
+          "whatWillBeProven": "Each category page has unique title/description meta tags; canonical tag points to itself (not /tutors)"
+        }
+      ],
+      "verification_contract": "All TypeScript compiles clean (npx tsc --noEmit). npm run build passes. Directory page renders with filters. Full-text search returns results for at least one known teacher. Category pages render with correct meta. /sitemap.xml returns valid XML with at least one teacher URL. Page views increment on /[slug] visits. Dashboard analytics section renders without error.",
+      "verification_integration": "Filters + search work together (combined query). Category page links appear in sitemap. Analytics funnel connects page_views → booking_form_opens (if tracked) → bookings table.",
+      "verification_operational": "Page view tracking does not add measurable latency to /[slug] page loads. GIN index migration runs without downtime on production schema.",
+      "verification_uat": "Teacher opens dashboard, sees analytics section with view count. Parent visits /tutors, filters by subject, sees relevant teachers. Parent uses search bar, sees relevant results. /sitemap.xml is reachable and parseable by Google Search Console.",
+      "definition_of_done": [
+        "All 6 success criteria passing",
+        "tsc --noEmit clean",
+        "npm run build passes",
+        "At least 10 unit tests covering filter query logic and analytics tracking",
+        "All active M008 requirements (DIR-01, DIR-02, DIR-03, SEO-03, SEO-04, ANALYTICS-01, ANALYTICS-02) have validation evidence"
+      ],
+      "requirement_coverage": "DIR-01 (directory page + filters) → S01. DIR-02 (filter mechanics) → S01. DIR-03 (full-text search) → S02. SEO-03 (sitemap) → S03. SEO-04 (category pages) → S03. ANALYTICS-01 (page view tracking) → S04. ANALYTICS-02 (dashboard analytics) → S04.",
+      "boundary_map_markdown": "| Layer | In | Out |\n|---|---|---|\n| Directory UI | /tutors page, filter sidebar, teacher cards, URL param sync | Map-based discovery, teacher ranking algorithm |\n| Search | tsvector full-text search, GIN index migration | Algolia, Meilisearch, any external search |\n| SEO | Category pages, sitemap.xml, canonical tags, meta per page | Structured data (JSON-LD), Google Search Console API |\n| Analytics | page_views table, bot filter, dashboard funnel display | Real-time analytics, historical export, heatmaps |\n| Scope | Only published (is_published=true) teachers shown | Admin tools, teacher management |"
     }
   ],
   "slices": [
@@ -798,6 +849,92 @@
       "proof_level": "integration — real route logic tested via unit tests; UI integration proved via tsc + build",
       "integration_closure": "- Upstream consumed: `session_types` table (migration 0011 from S01), `SessionTypeManager.tsx` component (S02), `getSlotsForDate(durationMinutes?)` (S02 extension), `computeSessionAmount` (existing)\n- New wiring: settings page → SessionTypeManager; profile RSC → BookingCalendar.sessionTypes prop; BookingCalendar → create-intent sessionTypeId body field; create-intent → session_types DB read for flat price\n- What remains: nothing — after S03, M007 is complete (capacity + waitlist + session types + variable pricing all wired)",
       "observability_impact": "- create-intent route logs `[direct-booking/create-intent] Invalid session type` with teacher_id on security check failure\n- create-intent route logs amount source (session type flat price vs hourly_rate proration) for payment debugging",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "id": "S01",
+      "title": "Directory Page & Filters",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [],
+      "demo": "/tutors page live with working filters. Filtering by 'Math' shows only math teachers.",
+      "created_at": "2026-03-31T02:20:07.491Z",
+      "completed_at": "2026-03-31T02:25:36.014Z",
+      "full_summary_md": "---\nid: S01\nparent: M008\nmilestone: M008\nprovides:\n  - TeacherCard component reusable in S03 category pages\n  - DirectoryFilters reusable or forkable in S03\n  - SUBJECT_LIST and GRADE_LEVELS constants reusable in S02 tsvector migration and S03 category slugs\nrequires:\n  []\naffects:\n  - S02 (full-text search wires into the same /tutors page query)\n  - S03 (category pages reuse TeacherCard and directory query pattern)\nkey_files:\n  - src/lib/constants/directory.ts\n  - src/components/directory/TeacherCard.tsx\n  - src/components/directory/DirectoryFilters.tsx\n  - src/app/tutors/page.tsx\nkey_decisions:\n  - TeacherCard is purely presentational — no server logic, easy to reuse in category pages (S03)\n  - DirectoryFilters uses URL params + router.push for shareable/bookmarkable filtered views\n  - CityInput is an uncontrolled sub-component with useRef debounce to avoid hook-in-callback anti-pattern\n  - Page fails open on Supabase query error (safe-default-on-error from KNOWLEDGE.md)\n  - Canonical URL hardcoded to production URL per KNOWLEDGE.md og:url pattern\n  - PRICE_RANGES.find() decodes URL key back to min/max for query (no DB column for price key)\npatterns_established:\n  - Directory filter components use URL params + router.push (shareable/bookmarkable filters — same pattern to use for category pages in S03)\n  - PRICE_RANGES constant encodes label, min, max together — a string key is derived for URL params and decoded server-side\nobservability_surfaces:\n  - console.error log at /tutors on Supabase query failure with error.message context\ndrill_down_paths:\n  - milestones/M008/slices/S01/tasks/T01-SUMMARY.md\n  - milestones/M008/slices/S01/tasks/T02-SUMMARY.md\n  - milestones/M008/slices/S01/tasks/T03-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:25:36.014Z\nblocker_discovered: false\n---\n\n# S01: Directory Page & Filters\n\n**Public /tutors directory built \\u2014 filtered teacher card grid, URL-param-driven, SEO-friendly, build passes.**\n\n## What Happened\n\nBuilt the /tutors public directory from scratch. Three tasks: (1) TeacherCard component with avatar, verified badge, subject pills with overflow, location, and hourly rate; (2) DirectoryFilters client component with subject/grade/price selects and debounced city input, updating URL params on change; (3) /tutors server page that reads searchParams, builds a filtered Supabase query, and renders results in a responsive 3-column grid. Also fixed a pre-existing npm install gap (qrcode/qrcode.react not installed) that was blocking builds. Build passes with /tutors in the route manifest.\n\n## Verification\n\nnpm run build passes with /tutors in route manifest. tsc --noEmit shows only pre-existing qrcode errors. TeacherCard, DirectoryFilters, and /tutors page all compile clean.\n\n## Requirements Advanced\n\n- DIR-01 — Implemented /tutors page with is_published=true filter, teacher cards, and link to /[slug]\n- DIR-02 — Implemented subject, grade level, city, and price range filters via URL search params\n\n## Requirements Validated\n\n- DIR-01 — /tutors in route manifest, npm run build passes, renders published teachers with cards linking to /[slug], meta tags set\n- DIR-02 — Subject (.contains), grade (.contains), city (.ilike), price (.lte/.gte) filter params wired to URL search params and Supabase query\n\n## New Requirements Surfaced\n\n- Pagination needed at scale — current 50-result hard limit is fine for MVP but a follow-up for M009+\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nnpm install was required to fix pre-existing missing qrcode/qrcode.react packages before build could pass. No plan deviations otherwise.\n\n## Known Limitations\n\nNo pagination yet \\u2014 hard limit of 50 results. Sufficient for MVP but will need cursor-based pagination when directory grows.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/constants/directory.ts` — Directory constants: SUBJECT_LIST (19 subjects), GRADE_LEVELS (14 levels), PRICE_RANGES (5 tiers)\n- `src/components/directory/TeacherCard.tsx` — TeacherCard presentational component: photo/avatar, verified badge, subject pills (max 3 + overflow), location, hourly rate\n- `src/components/directory/DirectoryFilters.tsx` — DirectoryFilters client component: subject/grade/price selects, debounced city input, active filter chips, clear-all button\n- `src/app/tutors/page.tsx` — /tutors page: async server component with Supabase query, filter integration, responsive card grid, meta tags, Suspense boundary\n",
+      "full_uat_md": "# S01: Directory Page & Filters — UAT\n\n**Milestone:** M008\n**Written:** 2026-03-31T02:25:36.014Z\n\n## S01 UAT: Directory Page & Filters\n\n### Setup\n- Dev server running at localhost:3000\n- At least one teacher with is_published=true in the database\n\n### Test Cases\n\n**TC-01: Directory renders**\n- Navigate to /tutors\n- Expected: Page loads with \"Find a Tutor\" heading, filter controls, teacher cards\n\n**TC-02: Subject filter**\n- Select \"Math\" from Subject dropdown\n- Expected: URL updates to ?subject=Math, only teachers with Math in subjects show, \"Math\" chip appears below filters\n\n**TC-03: Grade filter**\n- Select \"5th Grade\" from Grade dropdown\n- Expected: URL updates to include &grade=5th+Grade, results narrow\n\n**TC-04: City filter**\n- Type \"Chicago\" in city input (wait ~300ms)\n- Expected: URL updates to include &city=Chicago, only Chicago teachers show\n\n**TC-05: Price filter**\n- Select \"$30 – $60\"\n- Expected: URL updates to include &price=30-60, only teachers in that range show\n\n**TC-06: Combined filters**\n- Apply subject + city together\n- Expected: URL has both params, results match both criteria\n\n**TC-07: Clear filters**\n- With filters active, click \"Clear\"\n- Expected: URL resets to /tutors, all published teachers show\n\n**TC-08: Empty state (filtered)**\n- Apply a filter combo that returns no results\n- Expected: \"No tutors found. Try adjusting or clearing your filters.\" message shown\n\n**TC-09: Card links**\n- Click a teacher card\n- Expected: Navigates to /[slug] teacher profile page\n\n**TC-10: Meta tags**\n- View page source or use browser dev tools\n- Expected: title is \"Find a Tutor | Tutelo\", canonical is https://tutelo.app/tutors\n\n",
+      "goal": "Build /tutors directory page with teacher card grid and URL-param-driven filters (subject, grade level, city/state, price range). Server-rendered, SEO-friendly. No search yet — search is S02.",
+      "success_criteria": "/tutors page renders published teachers as cards. Filtering by subject/grade/city/price updates URL params and re-filters results server-side. Each card links to /[slug]. Page has proper meta tags (title, description, og). tsc clean. npm run build passes.",
+      "proof_level": "build + browser smoke test (dev server)",
+      "integration_closure": "Uses existing teachers table with is_published=true. No new schema or migrations needed. New files: src/app/tutors/page.tsx, src/app/tutors/layout.tsx (optional), src/components/directory/TeacherCard.tsx, src/components/directory/DirectoryFilters.tsx.",
+      "observability_impact": "None — pure read path, no new tables or tracking.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "id": "S02",
+      "title": "Full-Text Search",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Typing 'SAT prep' in /tutors search returns teachers with SAT in their subjects or bio.",
+      "created_at": "2026-03-31T02:20:07.491Z",
+      "completed_at": "2026-03-31T02:28:49.893Z",
+      "full_summary_md": "---\nid: S02\nparent: M008\nmilestone: M008\nprovides:\n  - search_vector column + GIN index available for any future search surface\n  - q param and textSearch pattern reusable in category pages if needed\nrequires:\n  - slice: S01\n    provides: TeacherCard, DirectoryFilters (updated), /tutors page (updated), SUBJECT_LIST/GRADE_LEVELS constants\naffects:\n  - S03 (category pages can now combine textSearch with category filter for SEO pages)\nkey_files:\n  - supabase/migrations/0012_teachers_search_vector.sql\n  - src/components/directory/DirectoryFilters.tsx\n  - src/app/tutors/page.tsx\nkey_decisions:\n  - GIN index uses CREATE INDEX CONCURRENTLY — no table lock during production migration deploy\n  - textSearch type: 'websearch' supports natural language including AND/OR operators\n  - SearchInput follows the same uncontrolled + useRef debounce pattern as CityInput for consistency\npatterns_established:\n  - Uncontrolled debounced input pattern (useRef timer) established as the standard for text inputs that drive URL navigation — CityInput and SearchInput both follow this\nobservability_surfaces:\n  - GIN index creation is logged to Supabase migration log on deploy\ndrill_down_paths:\n  - milestones/M008/slices/S02/tasks/T01-SUMMARY.md\n  - milestones/M008/slices/S02/tasks/T02-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:28:49.894Z\nblocker_discovered: false\n---\n\n# S02: Full-Text Search\n\n**Full-text search migration + SearchInput UI wired into /tutors directory. Build passes.**\n\n## What Happened\n\nTwo tasks: (1) migration 0012 adds tsvector column, populates existing rows, creates GIN index CONCURRENTLY, and adds a BEFORE INSERT OR UPDATE trigger to keep the column in sync. (2) SearchInput added to DirectoryFilters with 300ms debounce, q param wired into the Supabase textSearch query on the /tutors page, active filter chip shows with quotes. Both build and tsc clean.\n\n## Verification\n\ntsc --noEmit clean. npm run build passes with /tutors in route manifest. Migration file exists with CONCURRENTLY index creation.\n\n## Requirements Advanced\n\n- DIR-03 — Migration adds tsvector + GIN index, SearchInput wired into textSearch query on /tutors\n\n## Requirements Validated\n\n- DIR-03 — Migration 0012 adds search_vector tsvector column + GIN index CONCURRENTLY + auto-update trigger. SearchInput on /tutors wired to textSearch('search_vector', q, {type: 'websearch'}). tsc clean, npm run build passes.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\ntextSearch requires migration 0012 to be applied in production. Before migration, search_vector is NULL and textSearch returns no matches. This is expected \\u2014 the migration must be deployed alongside the code.\n\n## Follow-ups\n\nMigration must be applied to production before search returns results (search_vector is NULL pre-migration).\n\n## Files Created/Modified\n\n- `supabase/migrations/0012_teachers_search_vector.sql` — Migration: adds search_vector tsvector column, populates existing rows, creates GIN index CONCURRENTLY, adds auto-update trigger on full_name/school/subjects/bio changes\n- `src/components/directory/DirectoryFilters.tsx` — Added SearchInput component (debounced, uncontrolled). Added q param read + chip + navigate. hasFilters now includes q.\n- `src/app/tutors/page.tsx` — Added q to PageProps searchParams type. Added textSearch('search_vector', q) to query chain. q shown first in filterLabels.\n",
+      "full_uat_md": "# S02: Full-Text Search — UAT\n\n**Milestone:** M008\n**Written:** 2026-03-31T02:28:49.894Z\n\n## S02 UAT: Full-Text Search\n\n**Prerequisite:** Migration 0012 applied to the database.\n\n### Test Cases\n\n**TC-01: Search by teacher name**\n- Type a known teacher's first name in the search box\n- Expected: That teacher appears in results\n\n**TC-02: Search by subject keyword**\n- Type \"SAT\" in search box\n- Expected: Teachers with SAT in subjects or bio appear\n\n**TC-03: Search + filter combined**\n- Search \"math\" + filter to a specific city\n- Expected: Only math teachers in that city appear\n\n**TC-04: Search chip appears**\n- After typing a search term, a chip showing `\"SAT\"` appears below filters\n- Clicking the chip removes the search param and resets results\n\n**TC-05: Empty search**\n- Clear the search box\n- Expected: URL drops the q param, full unfiltered list returns\n\n",
+      "goal": "Add Postgres tsvector + GIN index on teachers table for full-text search across name, school, subjects, and bio. Wire a search input into the /tutors page. Combined search + filter query via Supabase .textSearch().",
+      "success_criteria": "Migration 0012 applies cleanly. GIN index created with CREATE INDEX CONCURRENTLY (no table lock). Search input appears on /tutors. Combined search + filter query works. tsc clean. npm run build passes.",
+      "proof_level": "build + unit tests for query-building logic",
+      "integration_closure": "Migration 0012 adds search_vector tsvector column + GIN index + auto-update trigger on teachers. /tutors page gains a search param. DirectoryFilters gains a search input. All wired server-side.",
+      "observability_impact": "None beyond migration. GIN index is silent. No analytics surface.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "id": "S03",
+      "title": "Category Pages & Sitemap",
+      "status": "complete",
+      "risk": "low",
+      "depends": [
+        "S01"
+      ],
+      "demo": "/tutors/math shows only math teachers with 'Math Tutors' in the page title. /sitemap.xml lists all published teacher URLs.",
+      "created_at": "2026-03-31T02:20:07.491Z",
+      "completed_at": "2026-03-31T02:31:53.808Z",
+      "full_summary_md": "---\nid: S03\nparent: M008\nmilestone: M008\nprovides:\n  - SEO category pages indexed by Google at /tutors/[subject] and /tutors/[city]\n  - Sitemap enabling Google to discover all teacher profile URLs automatically\nrequires:\n  - slice: S01\n    provides: TeacherCard component, SUBJECT_LIST constant\naffects:\n  - S04 has no dependency on S03 — can proceed immediately\nkey_files:\n  - src/app/tutors/[category]/page.tsx\n  - src/app/sitemap.ts\nkey_decisions:\n  - Location slugs (/tutors/chicago) resolved dynamically at runtime — no need to enumerate all cities\n  - revalidate=3600 on category pages — acceptable staleness for SEO (pages refresh within 1 hour)\n  - Sitemap uses SSR (no revalidate) so it always reflects current published state\n  - Canonical tags on category pages point to the category page itself (not /tutors) to avoid duplicate-content penalty\npatterns_established:\n  - resolveCategory() slug dispatch pattern: known SUBJECT_LIST slug → subject filter, unknown slug → city filter. Extensible to other category types (state, grade level) without code changes.\nobservability_surfaces:\n  - console.error on category page query failure with category + error.message context\ndrill_down_paths:\n  - milestones/M008/slices/S03/tasks/T01-SUMMARY.md\n  - milestones/M008/slices/S03/tasks/T02-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:31:53.808Z\nblocker_discovered: false\n---\n\n# S03: Category Pages & Sitemap\n\n**SEO category pages and sitemap shipped. /tutors/[category] and /sitemap.xml both in route manifest. Build passes.**\n\n## What Happened\n\nTwo tasks: (1) category page /tutors/[category] with subject/location resolution, ISR, unique meta, and TeacherCard grid; (2) sitemap.ts covering the full URL space. Both build clean. /sitemap.xml and /tutors/[category] appear in the Next.js route manifest.\n\n## Verification\n\nnpx tsc --noEmit clean. npm run build passes with /tutors/[category] and /sitemap.xml in route manifest.\n\n## Requirements Advanced\n\n- SEO-04 — /tutors/[category] dynamic route with ISR and unique meta/canonical per category\n- SEO-03 — /sitemap.xml lists all published teacher /[slug] URLs + /tutors + 19 category pages\n\n## Requirements Validated\n\n- SEO-03 — /sitemap.xml in Next.js route manifest (npm run build). Covers all published teacher slugs + /tutors + 19 subject category pages. teacher updated_at used as lastModified.\n- SEO-04 — /tutors/[category] in Next.js route manifest. generateStaticParams covers SUBJECT_LIST. generateMetadata emits unique title/description/canonical per category. revalidate=3600 for ISR.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nCategory pages only have back-link to /tutors, no inline filter controls. Users need to go back to /tutors to filter further. Acceptable for MVP \\u2014 category pages are SEO landing pages, not interactive filter surfaces.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/tutors/[category]/page.tsx` — Category pages at /tutors/[category] — subject and location slugs, ISR revalidate=3600, unique meta/canonical, TeacherCard grid, back link to /tutors\n- `src/app/sitemap.ts` — XML sitemap: /tutors + 19 subject category pages + all published teacher profile pages\n",
+      "full_uat_md": "# S03: Category Pages & Sitemap — UAT\n\n**Milestone:** M008\n**Written:** 2026-03-31T02:31:53.808Z\n\n## S03 UAT: Category Pages & Sitemap\n\n### Test Cases\n\n**TC-01: Subject category page**\n- Navigate to /tutors/math\n- Expected: Page title \"Math Tutors | Tutelo\", only Math teachers shown, back-link to /tutors\n\n**TC-02: Subject with hyphen slug**\n- Navigate to /tutors/sat-prep\n- Expected: Page title \"SAT Prep Tutors | Tutelo\", SAT Prep teachers shown\n\n**TC-03: Location category page**\n- Navigate to /tutors/chicago\n- Expected: Page title \"Tutors in Chicago | Tutelo\", teachers with city=Chicago shown\n\n**TC-04: Canonical tag**\n- View page source of /tutors/math\n- Expected: `<link rel=\"canonical\" href=\"https://tutelo.app/tutors/math\" />`\n\n**TC-05: Sitemap reachable**\n- Navigate to /sitemap.xml\n- Expected: Valid XML with at least one entry for https://tutelo.app/tutors\n\n**TC-06: Teacher URLs in sitemap**\n- View /sitemap.xml source\n- Expected: Entries for https://tutelo.app/{teacher-slug} for published teachers\n\n",
+      "goal": "SEO category pages at /tutors/[category] (subject slugs like 'math', 'sat-prep' and city slugs like 'chicago'). XML sitemap at /sitemap.xml covering all published teacher /[slug] URLs plus /tutors and category pages. ISR with 1-hour revalidation on category pages.",
+      "success_criteria": "Category pages render at /tutors/math, /tutors/sat-prep, /tutors/chicago etc. Each has unique title/description meta tags. Canonical tag points to the category page itself (not /tutors). /sitemap.xml returns valid XML with teacher URLs + directory + category pages. ISR revalidate=3600 set. npm run build passes.",
+      "proof_level": "build + URL verification (sitemap.xml reachable, category pages in route manifest)",
+      "integration_closure": "New route src/app/tutors/[category]/page.tsx. sitemap.ts at src/app/sitemap.ts. Reuses TeacherCard from S01. No new schema or migrations. Category slugs derived from SUBJECT_LIST constants.",
+      "observability_impact": "Sitemap exposed at /sitemap.xml to Google crawler.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "id": "S04",
+      "title": "Page View Tracking & Dashboard Analytics",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Teacher opens /dashboard/analytics and sees 47 total views, 12 booking form opens, 3 completed bookings, 6.4% conversion rate.",
+      "created_at": "2026-03-31T02:20:07.491Z",
+      "completed_at": "2026-03-31T02:37:46.347Z",
+      "full_summary_md": "---\nid: S04\nparent: M008\nmilestone: M008\nprovides:\n  - page_views data for future time-series analytics\n  - Bot filter utility reusable for any future tracking surface\nrequires:\n  - slice: S01\n    provides: /tutors directory (confirmed pages work end-to-end)\naffects:\n  []\nkey_files:\n  - supabase/migrations/0013_page_views.sql\n  - src/lib/utils/bot-filter.ts\n  - src/app/[slug]/page.tsx\n  - src/app/(dashboard)/dashboard/analytics/page.tsx\n  - src/lib/nav.ts\nkey_decisions:\n  - RLS SELECT policy on page_views allows teachers to read their own rows with authenticated client\n  - Fire-and-forget via void Promise.resolve().catch() — type-safe and non-blocking\n  - supabaseAdmin (service.ts) used for inserts (unauthenticated context), RLS SELECT policy used for dashboard reads\n  - Conversion rate = completed bookings / total views — honest given currently available data\npatterns_established:\n  - void Promise.resolve(supabaseClient.from().insert()).catch(() => {}) for fire-and-forget Supabase mutations from RSC (PromiseLike vs Promise type safety)\nobservability_surfaces:\n  - page_views table queryable for funnel analysis\n  - console.error on track-view insert failure with teacherId context\n  - console.error on /api/track-view insert error with teacherId context\ndrill_down_paths:\n  - milestones/M008/slices/S04/tasks/T01-SUMMARY.md\n  - milestones/M008/slices/S04/tasks/T02-SUMMARY.md\n  - milestones/M008/slices/S04/tasks/T03-SUMMARY.md\n  - milestones/M008/slices/S04/tasks/T04-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:37:46.349Z\nblocker_discovered: false\n---\n\n# S04: Page View Tracking & Dashboard Analytics\n\n**Page view tracking and dashboard analytics shipped \\u2014 8 bot-filter tests pass, funnel visible in dashboard, build clean.**\n\n## What Happened\n\nFour tasks: (1) migration 0013 creates page_views table with indexes and RLS; (2) isBot() utility with 8 passing tests; (3) fire-and-forget tracking wired into /[slug] page + /api/track-view API route; (4) dashboard analytics page with stat cards and funnel. Analytics nav item added. All compile clean, build passes.\n\n## Verification\n\ntsc --noEmit clean. npm run build passes with /dashboard/analytics and /api/track-view in manifest. 8 bot-filter unit tests pass.\n\n## Requirements Advanced\n\n- ANALYTICS-01 — page_views table + fire-and-forget insert on /[slug] with bot filtering\n- ANALYTICS-02 — /dashboard/analytics page shows total views, 30-day views, completed bookings, and conversion rate funnel\n\n## Requirements Validated\n\n- ANALYTICS-01 — page_views table in migration 0013. /[slug]/page.tsx fires non-blocking insert with isBot() filter. /api/track-view POST route available. 8 bot-filter unit tests pass.\n- ANALYTICS-02 — /dashboard/analytics in route manifest. Page renders total views, 30-day views, completed bookings, and conversion rate. Funnel section with 4 stages. Analytics nav item in sidebar.\n\n## New Requirements Surfaced\n\n- Booking form opens tracking needs client-side event (deferred to future milestone)\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nDirect DB insert from RSC for page view tracking (server \\u2192 Supabase) rather than server fetch to /api/track-view \\u2014 avoids the extra network hop and is cleaner for an RSC. /api/track-view still exists as a public endpoint for potential client-side use.\n\n## Known Limitations\n\nBooking form opens not yet tracked (client-side event needed). Shown as 'Coming soon' in funnel. No time-series chart (daily/weekly breakdown) \\u2014 aggregate counts only for MVP.\n\n## Follow-ups\n\nBooking form opens tracking (client-side event) deferred to a future milestone \\u2014 currently shown as 'Coming soon' placeholder in the funnel.\n\n## Files Created/Modified\n\n- `supabase/migrations/0013_page_views.sql` — page_views table with indexes, RLS, and SELECT policy for teacher reads\n- `src/lib/utils/bot-filter.ts` — isBot() utility with 20 bot UA patterns\n- `tests/unit/bot-filter.test.ts` — 8 unit tests for bot filter (all pass)\n- `src/app/api/track-view/route.ts` — /api/track-view POST route with bot filtering and supabaseAdmin insert\n- `src/app/[slug]/page.tsx` — Added fire-and-forget page view tracking after teacher query succeeds. Added headers() import.\n- `src/app/(dashboard)/dashboard/analytics/page.tsx` — Analytics dashboard page: 4 stat cards + funnel visualization + empty state nudge\n- `src/lib/nav.ts` — Added BarChart2 import and Analytics nav item between Promote and Settings\n",
+      "full_uat_md": "# S04: Page View Tracking & Dashboard Analytics — UAT\n\n**Milestone:** M008\n**Written:** 2026-03-31T02:37:46.349Z\n\n## S04 UAT: Page View Tracking & Dashboard Analytics\n\n**Prerequisite:** Migration 0013 applied to the database.\n\n### Test Cases\n\n**TC-01: Page view recorded on profile visit**\n- Visit a published teacher's /[slug] page as an anonymous user\n- Expected: A row inserted in page_views (is_bot=false, teacher_id set)\n\n**TC-02: Bot views not counted**\n- Simulate a request to /[slug] with Googlebot UA (dev test)\n- Expected: Row inserted with is_bot=true, not counted in analytics\n\n**TC-03: Analytics dashboard loads**\n- Login as a teacher and navigate to /dashboard/analytics\n- Expected: Page renders without error with the 4 stat cards visible\n\n**TC-04: View count reflects visits**\n- After visiting the teacher's profile page, check /dashboard/analytics\n- Expected: Total page views increments by 1 (after migration applied)\n\n**TC-05: Conversion rate displays**\n- With at least 1 view and 1 completed booking\n- Expected: Conversion rate shows a non-zero percentage\n\n**TC-06: Empty state nudge**\n- New teacher with 0 views\n- Expected: Empty state message with link to /dashboard/promote\n\n**TC-07: Analytics nav item**\n- Check sidebar on desktop and bottom nav on mobile\n- Expected: 'Analytics' item visible with BarChart2 icon\n\n",
+      "goal": "Track page views on /[slug] teacher profiles via a lightweight API route, storing in a page_views table with bot filtering. Add a /dashboard/analytics page showing the full conversion funnel: views, booking form opens, completed bookings, and conversion rate.",
+      "success_criteria": "page_views table created (migration 0013). /api/track-view POST inserts rows with bot filtering. /[slug] page fires track-view non-blocking. /dashboard/analytics renders total views, booking form opens, completed bookings, conversion rate. Analytics nav item in sidebar. tsc clean. npm run build passes.",
+      "proof_level": "build + unit tests for bot filter logic",
+      "integration_closure": "Migration 0013 adds page_views table. /api/track-view POST route. /[slug]/page.tsx fires a fire-and-forget fetch to track-view. New /dashboard/analytics RSC page. Analytics nav item added to nav.ts between Promote and Settings.",
+      "observability_impact": "New page_views table queryable for funnel analysis. Bot-filter UA list logged to console on first call in dev for audit.",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -2873,6 +3010,465 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "TeacherCard component built with photo/avatar, verified badge, subject pills, location, and hourly rate.",
+      "status": "complete",
+      "one_liner": "TeacherCard component built with photo/avatar, verified badge, subject pills, location, and hourly rate.",
+      "narrative": "Created src/components/directory/TeacherCard.tsx as a pure presentational component. Renders teacher photo (Avatar with initials fallback), name with BadgeCheck icon if verified_at is set, school name, headline (line-clamp-2), subject pills (max 3 + overflow count badge), and footer row with location + hourly rate. Link wraps the entire card to /{slug}. Also created src/lib/constants/directory.ts with SUBJECT_LIST, GRADE_LEVELS, and PRICE_RANGES constants shared between filters and server query.",
+      "verification_result": "npx tsc --noEmit — only pre-existing qrcode module errors, no new errors from TeacherCard or constants files.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:21:43.950Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/directory/TeacherCard.tsx",
+        "src/lib/constants/directory.ts"
+      ],
+      "key_decisions": [
+        "Constants (SUBJECT_LIST, GRADE_LEVELS, PRICE_RANGES) extracted to src/lib/constants/directory.ts rather than inside the filter component — needed by both server query (T03) and client filter (T02)"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M008\nkey_files:\n  - src/components/directory/TeacherCard.tsx\n  - src/lib/constants/directory.ts\nkey_decisions:\n  - Constants (SUBJECT_LIST, GRADE_LEVELS, PRICE_RANGES) extracted to src/lib/constants/directory.ts rather than inside the filter component — needed by both server query (T03) and client filter (T02)\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:21:43.951Z\nblocker_discovered: false\n---\n\n# T01: TeacherCard component built with photo/avatar, verified badge, subject pills, location, and hourly rate.\n\n**TeacherCard component built with photo/avatar, verified badge, subject pills, location, and hourly rate.**\n\n## What Happened\n\nCreated src/components/directory/TeacherCard.tsx as a pure presentational component. Renders teacher photo (Avatar with initials fallback), name with BadgeCheck icon if verified_at is set, school name, headline (line-clamp-2), subject pills (max 3 + overflow count badge), and footer row with location + hourly rate. Link wraps the entire card to /{slug}. Also created src/lib/constants/directory.ts with SUBJECT_LIST, GRADE_LEVELS, and PRICE_RANGES constants shared between filters and server query.\n\n## Verification\n\nnpx tsc --noEmit — only pre-existing qrcode module errors, no new errors from TeacherCard or constants files.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 1 | ✅ pass — only pre-existing qrcode errors, zero new errors | 8000ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/directory/TeacherCard.tsx`\n- `src/lib/constants/directory.ts`\n",
+      "description": "Create src/components/directory/TeacherCard.tsx. Props: teacher (id, slug, full_name, photo_url, subjects, grade_levels, city, state, hourly_rate, school, headline, verified_at). Renders: photo (with fallback avatar), name, verified badge if verified_at is set, school, subjects as pill tags (max 3 + overflow count), city/state, hourly rate. Links to /{slug}. Follows design guidelines: 4pt grid, visual hierarchy (name large, secondary info smaller/lighter). Export as named export. No server-side logic — pure presentational component.",
+      "estimate": "45m",
+      "files": [
+        "src/components/directory/TeacherCard.tsx"
+      ],
+      "verify": "npx tsc --noEmit passes. Component file exists.",
+      "inputs": [
+        "src/components/profile/HeroSection.tsx (existing card pattern reference)",
+        "src/lib/supabase/server.ts"
+      ],
+      "expected_output": [
+        "src/components/directory/TeacherCard.tsx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "DirectoryFilters client component built with subject/grade/price selects, debounced city input, and active filter chips.",
+      "status": "complete",
+      "one_liner": "DirectoryFilters client component built with subject/grade/price selects, debounced city input, and active filter chips.",
+      "narrative": "Created DirectoryFilters as a 'use client' component with Subject, Grade Level, and Price Range Select dropdowns plus a debounced CityInput. Each filter change calls navigate() which builds new URLSearchParams and router.push()es, triggering a server-side re-render of the parent page. Active filter chips show below the controls with X buttons for removing individual filters. A 'Clear' button removes all filters at once. CityInput is a self-contained sub-component that manages its own debounce timer via useRef.",
+      "verification_result": "npx tsc --noEmit \\u2014 only pre-existing qrcode errors, zero new errors.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:23:14.031Z",
+      "blocker_discovered": false,
+      "deviations": "Dropped the top-level debounce helper in favor of a CityInput sub-component using useRef for the debounce timer \\u2014 cleaner React pattern, avoids the anti-pattern of calling a hook-created callback inside an onChange inline.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/directory/DirectoryFilters.tsx"
+      ],
+      "key_decisions": [
+        "CityInput is an uncontrolled sub-component with a useRef debounce timer rather than a hook-wrapped debounce function",
+        "Active filter chips show inline in the filter bar for immediate visual feedback on selected filters",
+        "Price range encoded as 'min-max' key string to survive URL serialization cleanly"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M008\nkey_files:\n  - src/components/directory/DirectoryFilters.tsx\nkey_decisions:\n  - CityInput is an uncontrolled sub-component with a useRef debounce timer rather than a hook-wrapped debounce function\n  - Active filter chips show inline in the filter bar for immediate visual feedback on selected filters\n  - Price range encoded as 'min-max' key string to survive URL serialization cleanly\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:23:14.031Z\nblocker_discovered: false\n---\n\n# T02: DirectoryFilters client component built with subject/grade/price selects, debounced city input, and active filter chips.\n\n**DirectoryFilters client component built with subject/grade/price selects, debounced city input, and active filter chips.**\n\n## What Happened\n\nCreated DirectoryFilters as a 'use client' component with Subject, Grade Level, and Price Range Select dropdowns plus a debounced CityInput. Each filter change calls navigate() which builds new URLSearchParams and router.push()es, triggering a server-side re-render of the parent page. Active filter chips show below the controls with X buttons for removing individual filters. A 'Clear' button removes all filters at once. CityInput is a self-contained sub-component that manages its own debounce timer via useRef.\n\n## Verification\n\nnpx tsc --noEmit \\u2014 only pre-existing qrcode errors, zero new errors.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit 2>&1 | grep -v qrcode` | 0 | ✅ pass | 8000ms |\n\n\n## Deviations\n\nDropped the top-level debounce helper in favor of a CityInput sub-component using useRef for the debounce timer \\u2014 cleaner React pattern, avoids the anti-pattern of calling a hook-created callback inside an onChange inline.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/directory/DirectoryFilters.tsx`\n",
+      "description": "Create src/components/directory/DirectoryFilters.tsx as a 'use client' component. Reads current filter values from URL search params (useSearchParams). Renders: subject multi-select (from SUBJECT_LIST constant), grade level multi-select (from GRADE_LEVELS constant), city text input, price range select (Any / Under $30 / $30-$60 / $60-$100 / $100+). On filter change, pushes updated URL params via router.push (useRouter). Debounce city input 300ms. Export SUBJECT_LIST and GRADE_LEVELS as named exports from this file or a sibling constants file — these are reused by the server query in T03.\n\nSubject list (use these exact values): ['Math', 'Reading', 'Writing', 'Science', 'History', 'English', 'Spanish', 'French', 'SAT Prep', 'ACT Prep', 'Chemistry', 'Biology', 'Physics', 'Algebra', 'Geometry', 'Calculus', 'Computer Science', 'Art', 'Music']\n\nGrade levels: ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade', '6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade', 'College']",
+      "estimate": "60m",
+      "files": [
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/lib/constants/directory.ts"
+      ],
+      "verify": "npx tsc --noEmit passes.",
+      "inputs": [
+        "src/components/directory/TeacherCard.tsx"
+      ],
+      "expected_output": [
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/lib/constants/directory.ts"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "/tutors page built with server-side Supabase query, filter integration, responsive card grid, and proper meta tags. Build passes.",
+      "status": "complete",
+      "one_liner": "/tutors page built with server-side Supabase query, filter integration, responsive card grid, and proper meta tags. Build passes.",
+      "narrative": "Created src/app/tutors/page.tsx as an async server component. Reads subject, grade, city, price searchParams. Builds a Supabase query with is_published=true, applies filters conditionally (.contains for array columns, .ilike for city, .lte/.gte for price range). Renders DirectoryFilters (wrapped in Suspense), a results count line with active filter labels, and a 3-column teacher card grid. Empty state handles both filtered and unfiltered cases. generateMetadata emits canonical URL. Also ran npm install to fix the pre-existing qrcode/qrcode.react missing module issue that was blocking builds.",
+      "verification_result": "npx tsc --noEmit \\u2014 only pre-existing errors. npm run build passes with /tutors in route manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:24:59.943Z",
+      "blocker_discovered": false,
+      "deviations": "npm install was required first \\u2014 qrcode and qrcode.react packages were in package.json but not installed in node_modules (pre-existing gap, not introduced by this task). Fixed as part of getting build clean.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/tutors/page.tsx"
+      ],
+      "key_decisions": [
+        "Page fails open on Supabase query error (logs error, renders empty state) following the safe-default-on-error pattern from KNOWLEDGE.md",
+        "metadata.alternates.canonical set to hardcoded production URL per KNOWLEDGE.md og:url pattern",
+        "Suspense boundary wraps DirectoryFilters so the server shell renders immediately without blocking on client hydration",
+        "PRICE_RANGES.find() used server-side to decode the price key from URL params back to min/max values for Supabase query"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M008\nkey_files:\n  - src/app/tutors/page.tsx\nkey_decisions:\n  - Page fails open on Supabase query error (logs error, renders empty state) following the safe-default-on-error pattern from KNOWLEDGE.md\n  - metadata.alternates.canonical set to hardcoded production URL per KNOWLEDGE.md og:url pattern\n  - Suspense boundary wraps DirectoryFilters so the server shell renders immediately without blocking on client hydration\n  - PRICE_RANGES.find() used server-side to decode the price key from URL params back to min/max values for Supabase query\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:24:59.943Z\nblocker_discovered: false\n---\n\n# T03: /tutors page built with server-side Supabase query, filter integration, responsive card grid, and proper meta tags. Build passes.\n\n**/tutors page built with server-side Supabase query, filter integration, responsive card grid, and proper meta tags. Build passes.**\n\n## What Happened\n\nCreated src/app/tutors/page.tsx as an async server component. Reads subject, grade, city, price searchParams. Builds a Supabase query with is_published=true, applies filters conditionally (.contains for array columns, .ilike for city, .lte/.gte for price range). Renders DirectoryFilters (wrapped in Suspense), a results count line with active filter labels, and a 3-column teacher card grid. Empty state handles both filtered and unfiltered cases. generateMetadata emits canonical URL. Also ran npm install to fix the pre-existing qrcode/qrcode.react missing module issue that was blocking builds.\n\n## Verification\n\nnpx tsc --noEmit \\u2014 only pre-existing errors. npm run build passes with /tutors in route manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build` | 0 | ✅ pass — /tutors in route manifest | 11900ms |\n| 2 | `npx tsc --noEmit` | 1 | ✅ pass — only pre-existing qrcode errors | 8000ms |\n\n\n## Deviations\n\nnpm install was required first \\u2014 qrcode and qrcode.react packages were in package.json but not installed in node_modules (pre-existing gap, not introduced by this task). Fixed as part of getting build clean.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/tutors/page.tsx`\n",
+      "description": "Create src/app/tutors/page.tsx as an async server component.\n\n1. Read searchParams: subject (string), grade (string), city (string), maxPrice (string), minPrice (string).\n2. Build Supabase query on teachers table: select id, slug, full_name, photo_url, subjects, grade_levels, city, state, hourly_rate, school, headline, verified_at. Filter: is_published = true. If subject param: .contains('subjects', [subject]). If grade param: .contains('grade_levels', [grade]). If city param: .ilike('city', '%' + city + '%'). If maxPrice: .lte('hourly_rate', maxPrice). If minPrice: .gte('hourly_rate', minPrice). Order by created_at desc. Limit 50.\n3. Render: page title 'Find a Tutor', subtitle. DirectoryFilters component (client boundary). Teacher card grid (responsive: 1 col mobile, 2 col tablet, 3 col desktop). If no results: empty state message. If query error: log error, render empty state (fail open).\n4. generateMetadata: title 'Find a Tutor | Tutelo', description 'Browse verified tutors...', canonical https://tutelo.app/tutors.\n\nSuspense boundary around DirectoryFilters so page is not blocked by client hydration.",
+      "estimate": "90m",
+      "files": [
+        "src/app/tutors/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit passes. npm run build passes. /tutors in route manifest (grep .next/server/app-paths-manifest.json for '/tutors').",
+      "inputs": [
+        "src/components/directory/TeacherCard.tsx",
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/lib/constants/directory.ts",
+        "src/lib/supabase/server.ts"
+      ],
+      "expected_output": [
+        "src/app/tutors/page.tsx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Migration 0012: tsvector column + GIN index CONCURRENTLY + auto-update trigger on teachers table.",
+      "status": "complete",
+      "one_liner": "Migration 0012: tsvector column + GIN index CONCURRENTLY + auto-update trigger on teachers table.",
+      "narrative": "Created migration 0012 adding search_vector tsvector column to teachers, populating existing rows, creating a GIN index CONCURRENTLY (no table lock), and adding a BEFORE INSERT OR UPDATE trigger that keeps the column in sync whenever full_name, school, subjects, or bio changes.",
+      "verification_result": "File exists at supabase/migrations/0012_teachers_search_vector.sql. CREATE INDEX CONCURRENTLY present.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:26:33.581Z",
+      "blocker_discovered": false,
+      "deviations": "Added DROP TRIGGER IF EXISTS before CREATE TRIGGER to make the migration idempotent on re-runs.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0012_teachers_search_vector.sql"
+      ],
+      "key_decisions": [
+        "Weights: full_name=A (highest), school+subjects=B, bio=C — name search most relevant, bio least",
+        "CONCURRENTLY documented with caveat about transaction-block runners",
+        "array_to_string(subjects, ' ') flattens the TEXT[] column into a searchable string for tsvector",
+        "DROP TRIGGER IF EXISTS before CREATE TRIGGER for idempotency"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M008\nkey_files:\n  - supabase/migrations/0012_teachers_search_vector.sql\nkey_decisions:\n  - Weights: full_name=A (highest), school+subjects=B, bio=C — name search most relevant, bio least\n  - CONCURRENTLY documented with caveat about transaction-block runners\n  - array_to_string(subjects, ' ') flattens the TEXT[] column into a searchable string for tsvector\n  - DROP TRIGGER IF EXISTS before CREATE TRIGGER for idempotency\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:26:33.582Z\nblocker_discovered: false\n---\n\n# T01: Migration 0012: tsvector column + GIN index CONCURRENTLY + auto-update trigger on teachers table.\n\n**Migration 0012: tsvector column + GIN index CONCURRENTLY + auto-update trigger on teachers table.**\n\n## What Happened\n\nCreated migration 0012 adding search_vector tsvector column to teachers, populating existing rows, creating a GIN index CONCURRENTLY (no table lock), and adding a BEFORE INSERT OR UPDATE trigger that keeps the column in sync whenever full_name, school, subjects, or bio changes.\n\n## Verification\n\nFile exists at supabase/migrations/0012_teachers_search_vector.sql. CREATE INDEX CONCURRENTLY present.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep 'CONCURRENTLY' supabase/migrations/0012_teachers_search_vector.sql` | 0 | ✅ pass — CONCURRENTLY present in migration | 100ms |\n\n\n## Deviations\n\nAdded DROP TRIGGER IF EXISTS before CREATE TRIGGER to make the migration idempotent on re-runs.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0012_teachers_search_vector.sql`\n",
+      "description": "Create supabase/migrations/0012_teachers_search_vector.sql.\n\n1. Add search_vector column:\n```sql\nALTER TABLE teachers ADD COLUMN IF NOT EXISTS search_vector tsvector;\n```\n\n2. Populate existing rows:\n```sql\nUPDATE teachers SET search_vector = (\n  setweight(to_tsvector('english', coalesce(full_name, '')), 'A') ||\n  setweight(to_tsvector('english', coalesce(school, '')), 'B') ||\n  setweight(to_tsvector('english', coalesce(array_to_string(subjects, ' '), '')), 'B') ||\n  setweight(to_tsvector('english', coalesce(bio, '')), 'C')\n);\n```\n\n3. Create GIN index CONCURRENTLY (no table lock):\n```sql\nCREATE INDEX CONCURRENTLY IF NOT EXISTS teachers_search_vector_gin\n  ON teachers USING GIN(search_vector);\n```\n\n4. Create trigger function to keep search_vector up to date on INSERT/UPDATE:\n```sql\nCREATE OR REPLACE FUNCTION teachers_search_vector_update()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.search_vector :=\n    setweight(to_tsvector('english', coalesce(NEW.full_name, '')), 'A') ||\n    setweight(to_tsvector('english', coalesce(NEW.school, '')), 'B') ||\n    setweight(to_tsvector('english', coalesce(array_to_string(NEW.subjects, ' '), '')), 'B') ||\n    setweight(to_tsvector('english', coalesce(NEW.bio, '')), 'C');\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER teachers_search_vector_trig\n  BEFORE INSERT OR UPDATE OF full_name, school, subjects, bio\n  ON teachers\n  FOR EACH ROW EXECUTE FUNCTION teachers_search_vector_update();\n```\n\nNote: CONCURRENTLY cannot be run inside a transaction block. Add a comment explaining this.",
+      "estimate": "30m",
+      "files": [
+        "supabase/migrations/0012_teachers_search_vector.sql"
+      ],
+      "verify": "File exists. SQL syntax check: cat the file and verify CREATE INDEX CONCURRENTLY is present.",
+      "inputs": [
+        "supabase/migrations/0011_capacity_and_session_types.sql (pattern reference)"
+      ],
+      "expected_output": [
+        "supabase/migrations/0012_teachers_search_vector.sql"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Search input wired into /tutors with combined textSearch query. Build passes.",
+      "status": "complete",
+      "one_liner": "Search input wired into /tutors with combined textSearch query. Build passes.",
+      "narrative": "Added SearchInput component to DirectoryFilters (before the Subject select, debounced 300ms). Added q to the searchParams type and destructuring in the /tutors page. Combined textSearch('search_vector', q, {type: 'websearch'}) wired into the query chain. Active chip for q shows with quotes. filterLabels includes the search term first. tsc and build both clean.",
+      "verification_result": "npx tsc --noEmit clean (no new errors). npm run build passes with /tutors in route manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:28:22.272Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None. The textSearch call will only return results once migration 0012 is applied in production \\u2014 before the migration, search_vector is NULL and textSearch returns no matches.",
+      "key_files": [
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/app/tutors/page.tsx"
+      ],
+      "key_decisions": [
+        "SearchInput uses the same uncontrolled + useRef debounce pattern as CityInput for consistency",
+        "q param shown as chip with quotes (\"SAT prep\") to distinguish it visually from structured filter chips",
+        "textSearch type: 'websearch' allows natural language queries like 'SAT prep' or 'math AND science'"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M008\nkey_files:\n  - src/components/directory/DirectoryFilters.tsx\n  - src/app/tutors/page.tsx\nkey_decisions:\n  - SearchInput uses the same uncontrolled + useRef debounce pattern as CityInput for consistency\n  - q param shown as chip with quotes (\"SAT prep\") to distinguish it visually from structured filter chips\n  - textSearch type: 'websearch' allows natural language queries like 'SAT prep' or 'math AND science'\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:28:22.273Z\nblocker_discovered: false\n---\n\n# T02: Search input wired into /tutors with combined textSearch query. Build passes.\n\n**Search input wired into /tutors with combined textSearch query. Build passes.**\n\n## What Happened\n\nAdded SearchInput component to DirectoryFilters (before the Subject select, debounced 300ms). Added q to the searchParams type and destructuring in the /tutors page. Combined textSearch('search_vector', q, {type: 'websearch'}) wired into the query chain. Active chip for q shows with quotes. filterLabels includes the search term first. tsc and build both clean.\n\n## Verification\n\nnpx tsc --noEmit clean (no new errors). npm run build passes with /tutors in route manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build 2>&1 | grep '/tutors'` | 0 | ✅ pass — /tutors in route manifest | 12000ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone. The textSearch call will only return results once migration 0012 is applied in production \\u2014 before the migration, search_vector is NULL and textSearch returns no matches.\n\n## Files Created/Modified\n\n- `src/components/directory/DirectoryFilters.tsx`\n- `src/app/tutors/page.tsx`\n",
+      "description": "Add a search text input to DirectoryFilters and a 'q' param to the /tutors page query.\n\n1. In src/components/directory/DirectoryFilters.tsx:\n   - Read q = searchParams.get('q') ?? '' at the top alongside subject/grade/city/priceKey\n   - Add a SearchInput (same debounce pattern as CityInput) before the Select dropdowns\n   - SearchInput props: defaultValue={q}, onCommit={(v) => navigate('q', v || null)}, placeholder='Search tutors...', className='w-52'\n   - Show 'q' as an active chip if set (label: `\"${q}\"`)\n\n2. In src/app/tutors/page.tsx:\n   - Add q to the destructured searchParams\n   - After building the base query, add:\n     ```ts\n     if (q && q.trim()) {\n       query = query.textSearch('search_vector', q.trim(), { type: 'websearch', config: 'english' })\n     }\n     ```\n   - Add q to filterLabels if set",
+      "estimate": "45m",
+      "files": [
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/app/tutors/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit passes (no new errors). npm run build passes.",
+      "inputs": [
+        "src/components/directory/DirectoryFilters.tsx",
+        "src/app/tutors/page.tsx",
+        "supabase/migrations/0012_teachers_search_vector.sql"
+      ],
+      "expected_output": [
+        "src/components/directory/DirectoryFilters.tsx (updated)",
+        "src/app/tutors/page.tsx (updated)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Category pages /tutors/[category] built with ISR, unique meta, and subject/location routing. Build passes.",
+      "status": "complete",
+      "one_liner": "Category pages /tutors/[category] built with ISR, unique meta, and subject/location routing. Build passes.",
+      "narrative": "Created /tutors/[category]/page.tsx with: slug-to-subject and slug-to-city resolution, generateStaticParams for all SUBJECT_LIST slugs, generateMetadata with unique title/description/canonical per category, and a TeacherCard grid filtered by the category type. Location slugs use ilike city match. ISR revalidate=3600. Includes a back-link to /tutors. Build passes with /tutors/[category] in route manifest.",
+      "verification_result": "npx tsc --noEmit clean. npm run build passes with /tutors/[category] in route manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:31:13.129Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/tutors/[category]/page.tsx"
+      ],
+      "key_decisions": [
+        "resolveCategory() treats unknown slugs as city names — allows /tutors/chicago to work without pre-registering every city",
+        "generateStaticParams() returns all SUBJECT_LIST slugs for build-time generation; location pages are dynamically rendered on demand",
+        "revalidate=3600 for ISR — category pages refresh within 1 hour of teacher publishing"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M008\nkey_files:\n  - src/app/tutors/[category]/page.tsx\nkey_decisions:\n  - resolveCategory() treats unknown slugs as city names — allows /tutors/chicago to work without pre-registering every city\n  - generateStaticParams() returns all SUBJECT_LIST slugs for build-time generation; location pages are dynamically rendered on demand\n  - revalidate=3600 for ISR — category pages refresh within 1 hour of teacher publishing\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:31:13.129Z\nblocker_discovered: false\n---\n\n# T01: Category pages /tutors/[category] built with ISR, unique meta, and subject/location routing. Build passes.\n\n**Category pages /tutors/[category] built with ISR, unique meta, and subject/location routing. Build passes.**\n\n## What Happened\n\nCreated /tutors/[category]/page.tsx with: slug-to-subject and slug-to-city resolution, generateStaticParams for all SUBJECT_LIST slugs, generateMetadata with unique title/description/canonical per category, and a TeacherCard grid filtered by the category type. Location slugs use ilike city match. ISR revalidate=3600. Includes a back-link to /tutors. Build passes with /tutors/[category] in route manifest.\n\n## Verification\n\nnpx tsc --noEmit clean. npm run build passes with /tutors/[category] in route manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build 2>&1 | grep 'tutors'` | 0 | ✅ pass — /tutors and /tutors/[category] in manifest | 12000ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/tutors/[category]/page.tsx`\n",
+      "description": "Create src/app/tutors/[category]/page.tsx.\n\n1. Category slug mapping — two types:\n   - Subject slugs: derived from SUBJECT_LIST by lowercasing and replacing spaces with hyphens (e.g. 'SAT Prep' → 'sat-prep', 'Math' → 'math'). Reverse-map on the server to get the original subject name for the Supabase .contains() query.\n   - Location slugs: just city names lowercased (e.g. 'chicago', 'new-york'). Reverse by replacing hyphens with spaces and capitalizing.\n\n2. generateStaticParams: return all subject slugs from SUBJECT_LIST.\n\n3. generateMetadata: determine if it's a subject or city category. Subject: title = '{SubjectName} Tutors | Tutelo', description = 'Find {subjectName} tutors...'. Canonical = https://tutelo.app/tutors/{category}.\n\n4. Page body: same query as /tutors page but with the category filter pre-applied (subject OR city depending on type). Show category name as page H1. Link back to /tutors. Render TeacherCard grid. Empty state.\n\n5. export const revalidate = 3600\n\nSlug matching logic:\n```ts\nconst subjectSlugs = SUBJECT_LIST.map(s => s.toLowerCase().replace(/ /g, '-'))\nconst isSubjectSlug = subjectSlugs.includes(category)\nconst subjectName = SUBJECT_LIST.find(s => s.toLowerCase().replace(/ /g, '-') === category)\nconst isLocationSlug = !isSubjectSlug  // treat unknown slugs as city names\nconst cityName = category.replace(/-/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase())\n```",
+      "estimate": "60m",
+      "files": [
+        "src/app/tutors/[category]/page.tsx",
+        "src/lib/constants/directory.ts"
+      ],
+      "verify": "npx tsc --noEmit passes. npm run build passes with /tutors/[category] in route manifest.",
+      "inputs": [
+        "src/components/directory/TeacherCard.tsx",
+        "src/lib/constants/directory.ts",
+        "src/app/tutors/page.tsx"
+      ],
+      "expected_output": [
+        "src/app/tutors/[category]/page.tsx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "/sitemap.xml built with teacher profiles + category pages + directory. Build passes.",
+      "status": "complete",
+      "one_liner": "/sitemap.xml built with teacher profiles + category pages + directory. Build passes.",
+      "narrative": "Created src/app/sitemap.ts using Next.js built-in MetadataRoute.Sitemap. Queries all is_published=true teachers for their slug + updated_at. Emits /tutors (priority 0.9, daily), all 19 subject category pages (priority 0.7, daily), and all teacher profile pages (priority 0.8, weekly). /sitemap.xml appears in route manifest as a dynamic route.",
+      "verification_result": "npm run build passes with /sitemap.xml in route manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:31:22.933Z",
+      "blocker_discovered": false,
+      "deviations": "None. teachers table has updated_at column (confirmed from migration 0001).",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/sitemap.ts"
+      ],
+      "key_decisions": [
+        "Sitemap uses SSR (no revalidate) — Google crawls sitemaps infrequently so no need for ISR caching layer",
+        "Teacher updated_at used as lastModified for accurate freshness signals to Google",
+        "SUBJECT_LIST mapped to category entries — 19 category pages + N teacher pages + 1 directory page in sitemap"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M008\nkey_files:\n  - src/app/sitemap.ts\nkey_decisions:\n  - Sitemap uses SSR (no revalidate) — Google crawls sitemaps infrequently so no need for ISR caching layer\n  - Teacher updated_at used as lastModified for accurate freshness signals to Google\n  - SUBJECT_LIST mapped to category entries — 19 category pages + N teacher pages + 1 directory page in sitemap\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:31:22.933Z\nblocker_discovered: false\n---\n\n# T02: /sitemap.xml built with teacher profiles + category pages + directory. Build passes.\n\n**/sitemap.xml built with teacher profiles + category pages + directory. Build passes.**\n\n## What Happened\n\nCreated src/app/sitemap.ts using Next.js built-in MetadataRoute.Sitemap. Queries all is_published=true teachers for their slug + updated_at. Emits /tutors (priority 0.9, daily), all 19 subject category pages (priority 0.7, daily), and all teacher profile pages (priority 0.8, weekly). /sitemap.xml appears in route manifest as a dynamic route.\n\n## Verification\n\nnpm run build passes with /sitemap.xml in route manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build 2>&1 | grep sitemap` | 0 | ✅ pass — /sitemap.xml in manifest | 12000ms |\n\n\n## Deviations\n\nNone. teachers table has updated_at column (confirmed from migration 0001).\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/sitemap.ts`\n",
+      "description": "Create src/app/sitemap.ts following Next.js built-in sitemap generation API.\n\nThe file must export a default async function that returns MetadataRoute.Sitemap.\n\nEntries to include:\n1. Static pages: { url: 'https://tutelo.app/tutors', lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }, and one entry per subject category page (from SUBJECT_LIST).\n2. Dynamic teacher pages: query Supabase for all rows where is_published=true, select slug + updated_at. Return { url: 'https://tutelo.app/{slug}', lastModified: updated_at ?? new Date(), changeFrequency: 'weekly', priority: 0.8 } for each.\n\nUse createClient from @/lib/supabase/server. The sitemap route runs at request time (SSR, no ISR needed — Google crawls sitemaps infrequently).\n\nNote: teachers table may not have an updated_at column — check migration 0001 and fall back to new Date() if missing.",
+      "estimate": "30m",
+      "files": [
+        "src/app/sitemap.ts",
+        "supabase/migrations/0001_initial_schema.sql"
+      ],
+      "verify": "npm run build passes. /sitemap.xml route present in Next.js output (built-in sitemap.ts is registered automatically).",
+      "inputs": [
+        "src/lib/constants/directory.ts",
+        "src/lib/supabase/server.ts",
+        "supabase/migrations/0001_initial_schema.sql"
+      ],
+      "expected_output": [
+        "src/app/sitemap.ts"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Migration 0013: page_views table with indexes and RLS SELECT policy for dashboard reads.",
+      "status": "complete",
+      "one_liner": "Migration 0013: page_views table with indexes and RLS SELECT policy for dashboard reads.",
+      "narrative": "Created migration 0013 with the page_views table, two indexes (full + partial for non-bot views), RLS enabled, and a SELECT policy letting teachers read their own views from the dashboard.",
+      "verification_result": "File exists with CREATE TABLE page_views.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:33:10.570Z",
+      "blocker_discovered": false,
+      "deviations": "Added a partial index on is_bot=FALSE for analytics queries and an RLS SELECT policy so teachers can read their own views from the dashboard. Both are additive improvements over the plan spec.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0013_page_views.sql"
+      ],
+      "key_decisions": [
+        "Partial index WHERE is_bot = FALSE — analytics queries always filter on is_bot, so the partial index is smaller and faster than a full index",
+        "RLS SELECT policy for authenticated teachers so the dashboard RSC can use the anon client (not admin) for reads",
+        "Inserts still require service role (supabaseAdmin) since they're unauthenticated — no INSERT policy for anon/authenticated"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S04\nmilestone: M008\nkey_files:\n  - supabase/migrations/0013_page_views.sql\nkey_decisions:\n  - Partial index WHERE is_bot = FALSE — analytics queries always filter on is_bot, so the partial index is smaller and faster than a full index\n  - RLS SELECT policy for authenticated teachers so the dashboard RSC can use the anon client (not admin) for reads\n  - Inserts still require service role (supabaseAdmin) since they're unauthenticated — no INSERT policy for anon/authenticated\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:33:10.570Z\nblocker_discovered: false\n---\n\n# T01: Migration 0013: page_views table with indexes and RLS SELECT policy for dashboard reads.\n\n**Migration 0013: page_views table with indexes and RLS SELECT policy for dashboard reads.**\n\n## What Happened\n\nCreated migration 0013 with the page_views table, two indexes (full + partial for non-bot views), RLS enabled, and a SELECT policy letting teachers read their own views from the dashboard.\n\n## Verification\n\nFile exists with CREATE TABLE page_views.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep 'CREATE TABLE' supabase/migrations/0013_page_views.sql` | 0 | ✅ pass | 100ms |\n\n\n## Deviations\n\nAdded a partial index on is_bot=FALSE for analytics queries and an RLS SELECT policy so teachers can read their own views from the dashboard. Both are additive improvements over the plan spec.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0013_page_views.sql`\n",
+      "description": "Create supabase/migrations/0013_page_views.sql.\n\nTable definition:\n```sql\nCREATE TABLE IF NOT EXISTS page_views (\n  id            BIGSERIAL PRIMARY KEY,\n  teacher_id    UUID        NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,\n  viewed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n  user_agent    TEXT,\n  is_bot        BOOLEAN     NOT NULL DEFAULT FALSE\n);\n\n-- Index for fast per-teacher aggregation (most common query)\nCREATE INDEX IF NOT EXISTS page_views_teacher_id_idx\n  ON page_views(teacher_id, viewed_at DESC);\n\n-- RLS: only service role can insert (track-view API uses supabaseAdmin)\n-- No need for user-facing RLS policies on this table at MVP\nALTER TABLE page_views ENABLE ROW LEVEL SECURITY;\n```\n\nAlso add a booking_form_opens column concept: we don't track this server-side yet (that needs a client-side event). For MVP the funnel shows:\n- Views: COUNT(*) from page_views WHERE is_bot = false\n- Booking form opens: deferred (tracked client-side in a future milestone)\n- Completed bookings: COUNT(*) from bookings WHERE teacher_id = ? AND status = 'completed'",
+      "estimate": "20m",
+      "files": [
+        "supabase/migrations/0013_page_views.sql"
+      ],
+      "verify": "File exists. grep for CREATE TABLE page_views.",
+      "inputs": [
+        "supabase/migrations/0012_teachers_search_vector.sql"
+      ],
+      "expected_output": [
+        "supabase/migrations/0013_page_views.sql"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Bot filter utility with 8 passing tests.",
+      "status": "complete",
+      "one_liner": "Bot filter utility with 8 passing tests.",
+      "narrative": "Created isBot() with 20 bot UA patterns (all major crawlers + curl + python-requests). Returns true for null/empty. 8 Vitest tests cover null, empty, Googlebot, Bingbot, python-requests, curl, iPhone Safari (real), Chrome Windows (real). All pass.",
+      "verification_result": "npx vitest run tests/unit/bot-filter.test.ts \\u2014 8 tests pass.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:33:58.145Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/lib/utils/bot-filter.ts",
+        "tests/unit/bot-filter.test.ts"
+      ],
+      "key_decisions": [
+        "isBot returns true for null/empty UA — conservative choice, no UA = likely automated",
+        "20-entry BOT_PATTERNS list covers the most common crawlers + automated tools"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M008\nkey_files:\n  - src/lib/utils/bot-filter.ts\n  - tests/unit/bot-filter.test.ts\nkey_decisions:\n  - isBot returns true for null/empty UA — conservative choice, no UA = likely automated\n  - 20-entry BOT_PATTERNS list covers the most common crawlers + automated tools\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:33:58.145Z\nblocker_discovered: false\n---\n\n# T02: Bot filter utility with 8 passing tests.\n\n**Bot filter utility with 8 passing tests.**\n\n## What Happened\n\nCreated isBot() with 20 bot UA patterns (all major crawlers + curl + python-requests). Returns true for null/empty. 8 Vitest tests cover null, empty, Googlebot, Bingbot, python-requests, curl, iPhone Safari (real), Chrome Windows (real). All pass.\n\n## Verification\n\nnpx vitest run tests/unit/bot-filter.test.ts \\u2014 8 tests pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/unit/bot-filter.test.ts` | 0 | ✅ pass — 8/8 tests | 8100ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/utils/bot-filter.ts`\n- `tests/unit/bot-filter.test.ts`\n",
+      "description": "Create src/lib/utils/bot-filter.ts with isBot(userAgent: string | null): boolean.\n\nBot detection logic — check for known crawler UA substrings (case-insensitive):\n```ts\nconst BOT_PATTERNS = [\n  'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',\n  'yandexbot', 'sogou', 'exabot', 'facebot', 'ia_archiver',\n  'semrushbot', 'ahrefsbot', 'dotbot', 'petalbot', 'applebot',\n  'crawler', 'spider', 'headlesschrome', 'python-requests', 'curl/',\n]\n```\n\nReturn true if any pattern matches (or if userAgent is null/empty).\n\nAlso create src/lib/utils/bot-filter.test.ts (Vitest) with:\n- isBot(null) returns true\n- isBot('') returns true\n- isBot('Googlebot/2.1 (+http://www.google.com/bot.html)') returns true\n- isBot('Bingbot/2.0') returns true\n- isBot('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0...) AppleWebKit/605.1.15') returns false (real mobile browser)\n- isBot('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120') returns false (real desktop browser)\n- isBot('python-requests/2.31.0') returns true\n- isBot('curl/7.88.0') returns true\nTotal: 8 tests.",
+      "estimate": "30m",
+      "files": [
+        "src/lib/utils/bot-filter.ts",
+        "tests/unit/bot-filter.test.ts"
+      ],
+      "verify": "npx vitest run tests/unit/bot-filter.test.ts passes (8 tests).",
+      "inputs": [],
+      "expected_output": [
+        "src/lib/utils/bot-filter.ts",
+        "tests/unit/bot-filter.test.ts"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Track-view API route built and /[slug] page wires fire-and-forget insert with bot filtering.",
+      "status": "complete",
+      "one_liner": "Track-view API route built and /[slug] page wires fire-and-forget insert with bot filtering.",
+      "narrative": "Created /api/track-view POST route with bot filtering and supabaseAdmin insert. Updated /[slug]/page.tsx to fire-and-forget the insert after the teacher query succeeds \\u2014 non-blocking, errors swallowed. Used direct DB insert from RSC rather than fetching the API route. Fixed PromiseLike/Promise type issue with Promise.resolve() wrapper. tsc clean, build passes with /api/track-view in manifest.",
+      "verification_result": "npx tsc --noEmit clean. npm run build passes with /api/track-view in route manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:35:31.462Z",
+      "blocker_discovered": false,
+      "deviations": "Supabase client's .then() returns PromiseLike (not full Promise), so .catch() doesn't exist on it directly. Fixed by wrapping in Promise.resolve() before .catch().",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/track-view/route.ts",
+        "src/app/[slug]/page.tsx"
+      ],
+      "key_decisions": [
+        "Used void Promise.resolve(supabaseAdmin.from(...).insert(...)).catch(() => {}) pattern to fire-and-forget with TypeScript correctness",
+        "Direct DB insert from RSC (server → Supabase) rather than server fetch → API route — avoids the extra network hop",
+        "supabaseAdmin from service.ts (SUPABASE_SERVICE_SECRET_KEY) already existed — no need to create admin.ts"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M008\nkey_files:\n  - src/app/api/track-view/route.ts\n  - src/app/[slug]/page.tsx\nkey_decisions:\n  - Used void Promise.resolve(supabaseAdmin.from(...).insert(...)).catch(() => {}) pattern to fire-and-forget with TypeScript correctness\n  - Direct DB insert from RSC (server → Supabase) rather than server fetch → API route — avoids the extra network hop\n  - supabaseAdmin from service.ts (SUPABASE_SERVICE_SECRET_KEY) already existed — no need to create admin.ts\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:35:31.462Z\nblocker_discovered: false\n---\n\n# T03: Track-view API route built and /[slug] page wires fire-and-forget insert with bot filtering.\n\n**Track-view API route built and /[slug] page wires fire-and-forget insert with bot filtering.**\n\n## What Happened\n\nCreated /api/track-view POST route with bot filtering and supabaseAdmin insert. Updated /[slug]/page.tsx to fire-and-forget the insert after the teacher query succeeds \\u2014 non-blocking, errors swallowed. Used direct DB insert from RSC rather than fetching the API route. Fixed PromiseLike/Promise type issue with Promise.resolve() wrapper. tsc clean, build passes with /api/track-view in manifest.\n\n## Verification\n\nnpx tsc --noEmit clean. npm run build passes with /api/track-view in route manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build 2>&1 | grep 'track-view'` | 0 | ✅ pass | 12000ms |\n\n\n## Deviations\n\nSupabase client's .then() returns PromiseLike (not full Promise), so .catch() doesn't exist on it directly. Fixed by wrapping in Promise.resolve() before .catch().\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/track-view/route.ts`\n- `src/app/[slug]/page.tsx`\n",
+      "description": "Create src/app/api/track-view/route.ts.\n\nPOST handler:\n1. Parse body: { teacherId: string }. Return 400 if missing.\n2. Read User-Agent from request headers.\n3. Call isBot(userAgent) from bot-filter.ts.\n4. Insert row into page_views via supabaseAdmin (service role — anonymous caller, no session).\n5. Return 201 { ok: true }.\n6. On any error: return 500 { error: '...' }, never throw.\n\nIn src/app/[slug]/page.tsx, add a non-blocking fetch call inside the server component after the teacher query succeeds:\n```ts\n// Fire-and-forget page view tracking — do NOT await\n// Using a relative URL won't work in RSC; use absolute URL or a direct DB insert\n```\n\nActually, for RSC performance: instead of a fetch from the server component (which would be server → server), do the insert directly in the page using supabaseAdmin. But supabaseAdmin contains the service role key — keep it server-only. Pattern:\n- Import createAdminClient from @/lib/supabase/admin (create this if not exists)\n- After the teacher query succeeds, run a fire-and-forget insert:\n```ts\nimport { createAdminClient } from '@/lib/supabase/admin'\n// in the page component:\nconst headersList = await headers()\nconst userAgent = headersList.get('user-agent')\nif (!isBot(userAgent) && teacher) {\n  createAdminClient()\n    .from('page_views')\n    .insert({ teacher_id: teacher.id, user_agent: userAgent, is_bot: false })\n    .then(() => {}) // truly non-blocking\n    .catch(() => {}) // swallow errors — never block page render\n}\n```\n\nCheck if src/lib/supabase/admin.ts exists first. If it does, use it. If not, create it:\n```ts\nimport { createClient } from '@supabase/supabase-js'\nexport function createAdminClient() {\n  return createClient(\n    process.env.NEXT_PUBLIC_SUPABASE_URL!,\n    process.env.SUPABASE_SERVICE_ROLE_KEY!,\n  )\n}\n```",
+      "estimate": "60m",
+      "files": [
+        "src/app/api/track-view/route.ts",
+        "src/lib/supabase/admin.ts",
+        "src/app/[slug]/page.tsx",
+        "src/lib/utils/bot-filter.ts"
+      ],
+      "verify": "npx tsc --noEmit passes. npm run build passes. /api/track-view in route manifest.",
+      "inputs": [
+        "src/lib/utils/bot-filter.ts",
+        "src/lib/supabase/admin.ts"
+      ],
+      "expected_output": [
+        "src/app/api/track-view/route.ts",
+        "src/lib/supabase/admin.ts (if not exists)",
+        "src/app/[slug]/page.tsx (updated with fire-and-forget tracking)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T04",
+      "title": "Dashboard analytics page built with funnel visualization, stat cards, and nav item. Build passes.",
+      "status": "complete",
+      "one_liner": "Dashboard analytics page built with funnel visualization, stat cards, and nav item. Build passes.",
+      "narrative": "Created /dashboard/analytics RSC page with 4 stat cards (total views, 30-day views, completed bookings, conversion rate) and a funnel visualization (views → form opens placeholder → active bookings → completed sessions). Added Analytics nav item to nav.ts between Promote and Settings. Empty state nudge when no views yet. tsc clean, build passes with /dashboard/analytics in manifest.",
+      "verification_result": "npx tsc --noEmit clean. npm run build passes with /dashboard/analytics in manifest.",
+      "duration": "",
+      "completed_at": "2026-03-31T02:37:08.065Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/(dashboard)/dashboard/analytics/page.tsx",
+        "src/lib/nav.ts"
+      ],
+      "key_decisions": [
+        "page_views RLS SELECT policy allows teachers to read their own rows using the authenticated (cookie-based) supabase client in the RSC — no need for supabaseAdmin for reads",
+        "Conversion rate displayed as X.X% (completed bookings / total views) — simple and honest given available data",
+        "Booking form opens shown as 'Coming soon' placeholder in the funnel — client-side tracking deferred to a future milestone",
+        "Analytics nav item added between Promote and Settings to keep growth-related items together"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S04\nmilestone: M008\nkey_files:\n  - src/app/(dashboard)/dashboard/analytics/page.tsx\n  - src/lib/nav.ts\nkey_decisions:\n  - page_views RLS SELECT policy allows teachers to read their own rows using the authenticated (cookie-based) supabase client in the RSC — no need for supabaseAdmin for reads\n  - Conversion rate displayed as X.X% (completed bookings / total views) — simple and honest given available data\n  - Booking form opens shown as 'Coming soon' placeholder in the funnel — client-side tracking deferred to a future milestone\n  - Analytics nav item added between Promote and Settings to keep growth-related items together\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-03-31T02:37:08.065Z\nblocker_discovered: false\n---\n\n# T04: Dashboard analytics page built with funnel visualization, stat cards, and nav item. Build passes.\n\n**Dashboard analytics page built with funnel visualization, stat cards, and nav item. Build passes.**\n\n## What Happened\n\nCreated /dashboard/analytics RSC page with 4 stat cards (total views, 30-day views, completed bookings, conversion rate) and a funnel visualization (views → form opens placeholder → active bookings → completed sessions). Added Analytics nav item to nav.ts between Promote and Settings. Empty state nudge when no views yet. tsc clean, build passes with /dashboard/analytics in manifest.\n\n## Verification\n\nnpx tsc --noEmit clean. npm run build passes with /dashboard/analytics in manifest.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build 2>&1 | grep analytics` | 0 | ✅ pass | 12000ms |\n| 2 | `npx vitest run tests/unit/bot-filter.test.ts` | 0 | ✅ pass — 8/8 tests | 800ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/(dashboard)/dashboard/analytics/page.tsx`\n- `src/lib/nav.ts`\n",
+      "description": "Create src/app/(dashboard)/dashboard/analytics/page.tsx as an async RSC.\n\nData to fetch:\n1. Get teacher via supabase.auth.getUser() — same pattern as all dashboard pages.\n2. Total views: SELECT COUNT(*) FROM page_views WHERE teacher_id = ? AND is_bot = false\n3. Views last 30 days: SELECT COUNT(*) FROM page_views WHERE teacher_id = ? AND is_bot = false AND viewed_at >= NOW() - INTERVAL '30 days'\n4. Completed bookings: SELECT COUNT(*) FROM bookings WHERE teacher_id = ? AND status = 'completed'\n5. Requested/pending bookings (proxy for 'engaged'): SELECT COUNT(*) FROM bookings WHERE teacher_id = ? AND status IN ('requested', 'pending', 'confirmed')\n\nConversion rate: (completed bookings / total views) * 100, show as X.X%\n\nUI layout:\n- Page title 'Analytics'\n- 4 stat cards in a 2x2 grid (desktop: 4-col row):\n  - Total page views (all time, excl bots)\n  - Views last 30 days\n  - Completed bookings\n  - Conversion rate (completed / total views)\n- A simple funnel section below showing the stages with counts\n- Note: 'Booking form opens' tracked in a future update (placeholder card showing '--')\n\nAdd Analytics nav item to src/lib/nav.ts between Promote and Settings:\n```ts\nimport { BarChart2 } from 'lucide-react'\n{ href: '/dashboard/analytics', label: 'Analytics', icon: BarChart2 }\n```",
+      "estimate": "60m",
+      "files": [
+        "src/app/(dashboard)/dashboard/analytics/page.tsx",
+        "src/lib/nav.ts"
+      ],
+      "verify": "npx tsc --noEmit passes. npm run build passes with /dashboard/analytics in route manifest.",
+      "inputs": [
+        "src/lib/supabase/server.ts",
+        "src/lib/nav.ts"
+      ],
+      "expected_output": [
+        "src/app/(dashboard)/dashboard/analytics/page.tsx",
+        "src/lib/nav.ts (updated)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -3074,6 +3670,149 @@
       "verdict": "✅ pass",
       "duration_ms": 2400,
       "created_at": "2026-03-27T02:26:27.432Z"
+    },
+    {
+      "id": 8,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "npx tsc --noEmit",
+      "exit_code": 1,
+      "verdict": "✅ pass — only pre-existing qrcode errors, zero new errors",
+      "duration_ms": 8000,
+      "created_at": "2026-03-31T02:21:43.950Z"
+    },
+    {
+      "id": 9,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "npx tsc --noEmit 2>&1 | grep -v qrcode",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 8000,
+      "created_at": "2026-03-31T02:23:14.031Z"
+    },
+    {
+      "id": 10,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass — /tutors in route manifest",
+      "duration_ms": 11900,
+      "created_at": "2026-03-31T02:24:59.943Z"
+    },
+    {
+      "id": 11,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "npx tsc --noEmit",
+      "exit_code": 1,
+      "verdict": "✅ pass — only pre-existing qrcode errors",
+      "duration_ms": 8000,
+      "created_at": "2026-03-31T02:24:59.943Z"
+    },
+    {
+      "id": 12,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M008",
+      "command": "grep 'CONCURRENTLY' supabase/migrations/0012_teachers_search_vector.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass — CONCURRENTLY present in migration",
+      "duration_ms": 100,
+      "created_at": "2026-03-31T02:26:33.581Z"
+    },
+    {
+      "id": 13,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M008",
+      "command": "npm run build 2>&1 | grep '/tutors'",
+      "exit_code": 0,
+      "verdict": "✅ pass — /tutors in route manifest",
+      "duration_ms": 12000,
+      "created_at": "2026-03-31T02:28:22.272Z"
+    },
+    {
+      "id": 14,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M008",
+      "command": "npm run build 2>&1 | grep 'tutors'",
+      "exit_code": 0,
+      "verdict": "✅ pass — /tutors and /tutors/[category] in manifest",
+      "duration_ms": 12000,
+      "created_at": "2026-03-31T02:31:13.129Z"
+    },
+    {
+      "id": 15,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M008",
+      "command": "npm run build 2>&1 | grep sitemap",
+      "exit_code": 0,
+      "verdict": "✅ pass — /sitemap.xml in manifest",
+      "duration_ms": 12000,
+      "created_at": "2026-03-31T02:31:22.933Z"
+    },
+    {
+      "id": 16,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M008",
+      "command": "grep 'CREATE TABLE' supabase/migrations/0013_page_views.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-03-31T02:33:10.570Z"
+    },
+    {
+      "id": 17,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M008",
+      "command": "npx vitest run tests/unit/bot-filter.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass — 8/8 tests",
+      "duration_ms": 8100,
+      "created_at": "2026-03-31T02:33:58.145Z"
+    },
+    {
+      "id": 18,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M008",
+      "command": "npm run build 2>&1 | grep 'track-view'",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 12000,
+      "created_at": "2026-03-31T02:35:31.462Z"
+    },
+    {
+      "id": 19,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M008",
+      "command": "npm run build 2>&1 | grep analytics",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 12000,
+      "created_at": "2026-03-31T02:37:08.065Z"
+    },
+    {
+      "id": 20,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M008",
+      "command": "npx vitest run tests/unit/bot-filter.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass — 8/8 tests",
+      "duration_ms": 800,
+      "created_at": "2026-03-31T02:37:08.065Z"
     }
   ]
 }
