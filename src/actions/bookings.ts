@@ -262,3 +262,127 @@ export async function declineBooking(
   revalidatePath('/dashboard', 'layout')
   return { success: true }
 }
+
+export async function cancelSingleRecurringSession(
+  bookingId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient()
+
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const userId = claimsData?.claims?.sub
+  if (!userId) return { error: 'Not authenticated' }
+
+  const { data: teacher, error: teacherError } = await supabase
+    .from('teachers')
+    .select('id')
+    .eq('user_id', userId)
+    .single()
+
+  if (teacherError || !teacher) return { error: 'Teacher not found' }
+
+  // Fetch booking — supports confirmed, requested, and payment_failed statuses
+  const { data: booking } = await supabaseAdmin
+    .from('bookings')
+    .select('id, stripe_payment_intent, status')
+    .eq('id', bookingId)
+    .eq('teacher_id', teacher.id)
+    .in('status', ['requested', 'confirmed', 'payment_failed'])
+    .maybeSingle()
+
+  if (!booking) return { error: 'Booking not found or not in cancellable state' }
+
+  // Void the Stripe PaymentIntent if present
+  if (booking.stripe_payment_intent) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+      await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
+    } catch (err) {
+      console.error(`[cancelSingleRecurringSession] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
+    }
+  }
+
+  // Update booking status
+  await supabaseAdmin
+    .from('bookings')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('id', bookingId)
+
+  // Send cancellation email — fire and forget
+  const { sendCancellationEmail } = await import('@/lib/email')
+  sendCancellationEmail(bookingId).catch(console.error)
+
+  revalidatePath('/dashboard/sessions')
+  revalidatePath('/dashboard', 'layout')
+  return { success: true }
+}
+
+export async function cancelRecurringSeries(
+  scheduleId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient()
+
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const userId = claimsData?.claims?.sub
+  if (!userId) return { error: 'Not authenticated' }
+
+  const { data: teacher, error: teacherError } = await supabase
+    .from('teachers')
+    .select('id')
+    .eq('user_id', userId)
+    .single()
+
+  if (teacherError || !teacher) return { error: 'Teacher not found' }
+
+  // Verify schedule belongs to this teacher
+  const { data: schedule } = await supabaseAdmin
+    .from('recurring_schedules')
+    .select('id, teacher_id')
+    .eq('id', scheduleId)
+    .eq('teacher_id', teacher.id)
+    .maybeSingle()
+
+  if (!schedule) return { error: 'Schedule not found or not owned by teacher' }
+
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  // Fetch all future non-cancelled bookings
+  const { data: futureBookings } = await supabaseAdmin
+    .from('bookings')
+    .select('id, stripe_payment_intent')
+    .eq('recurring_schedule_id', scheduleId)
+    .gte('booking_date', todayStr)
+    .in('status', ['requested', 'confirmed', 'payment_failed'])
+
+  const bookings = futureBookings ?? []
+
+  if (bookings.length === 0) {
+    return { success: true } // Nothing to cancel
+  }
+
+  // Void Stripe PIs for each booking (non-blocking on errors)
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+  for (const booking of bookings) {
+    if (booking.stripe_payment_intent) {
+      try {
+        await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
+      } catch (err) {
+        console.error(`[cancelRecurringSeries] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
+      }
+    }
+  }
+
+  // Batch update all matched bookings to cancelled
+  const bookingIds = bookings.map((b) => b.id)
+  await supabaseAdmin
+    .from('bookings')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .in('id', bookingIds)
+
+  // Send series cancellation email — fire and forget
+  const { sendRecurringCancellationEmail } = await import('@/lib/email')
+  sendRecurringCancellationEmail({ scheduleId }).catch(console.error)
+
+  revalidatePath('/dashboard/sessions')
+  revalidatePath('/dashboard', 'layout')
+  return { success: true }
+}

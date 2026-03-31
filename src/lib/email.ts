@@ -12,6 +12,7 @@ import { SessionReminderEmail } from '@/emails/SessionReminderEmail'
 import { WaitlistNotificationEmail } from '@/emails/WaitlistNotificationEmail'
 import { RecurringBookingConfirmationEmail } from '@/emails/RecurringBookingConfirmationEmail'
 import { RecurringPaymentFailedEmail } from '@/emails/RecurringPaymentFailedEmail'
+import { RecurringCancellationEmail } from '@/emails/RecurringCancellationEmail'
 import type { BookingRequestData } from '@/lib/schemas/booking'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -415,6 +416,85 @@ export async function sendRecurringPaymentFailedEmail(params: {
         bookingDate: data.booking_date,
         startTime: data.start_time,
         teacherName: teacher.full_name,
+        isTeacher: true,
+      }),
+    })
+  }
+}
+
+export async function sendRecurringCancellationEmail(params: {
+  scheduleId: string
+}): Promise<void> {
+  // Fetch schedule + cancelled future bookings
+  const { data: schedule } = await supabaseAdmin
+    .from('recurring_schedules')
+    .select('id, teacher_id, student_name, subject, start_time')
+    .eq('id', params.scheduleId)
+    .single()
+  if (!schedule) return
+
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  const { data: cancelledBookings } = await supabaseAdmin
+    .from('bookings')
+    .select('booking_date')
+    .eq('recurring_schedule_id', params.scheduleId)
+    .eq('status', 'cancelled')
+    .gte('booking_date', todayStr)
+    .order('booking_date', { ascending: true })
+
+  const cancelledDates = (cancelledBookings ?? []).map((b) => b.booking_date)
+  if (cancelledDates.length === 0) return
+
+  // Fetch teacher info
+  const { data: teacher } = await supabaseAdmin
+    .from('teachers')
+    .select('full_name, social_email')
+    .eq('id', schedule.teacher_id)
+    .single()
+  if (!teacher) return
+
+  const teacherFirstName = teacher.full_name.split(' ')[0]
+  const from = 'Tutelo <noreply@tutelo.app>'
+
+  // Fetch parent email from any booking in the series
+  const { data: anyBooking } = await supabaseAdmin
+    .from('bookings')
+    .select('parent_email')
+    .eq('recurring_schedule_id', params.scheduleId)
+    .limit(1)
+    .single()
+  if (!anyBooking) return
+
+  // Always email parent
+  await resend.emails.send({
+    from,
+    to: anyBooking.parent_email,
+    subject: `Your recurring series for ${schedule.student_name} has been cancelled`,
+    react: RecurringCancellationEmail({
+      recipientFirstName: 'there',
+      teacherName: teacher.full_name,
+      studentName: schedule.student_name,
+      subject: schedule.subject,
+      cancelledDates,
+      startTime: schedule.start_time,
+      isTeacher: false,
+    }),
+  })
+
+  // Email teacher if social_email set
+  if (teacher.social_email) {
+    await resend.emails.send({
+      from,
+      to: teacher.social_email,
+      subject: `Recurring series with ${schedule.student_name} has been cancelled`,
+      react: RecurringCancellationEmail({
+        recipientFirstName: teacherFirstName,
+        teacherName: teacher.full_name,
+        studentName: schedule.student_name,
+        subject: schedule.subject,
+        cancelledDates,
+        startTime: schedule.start_time,
         isTeacher: true,
       }),
     })

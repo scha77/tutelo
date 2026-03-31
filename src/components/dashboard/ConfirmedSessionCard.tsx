@@ -17,6 +17,9 @@ interface ConfirmedSessionCardProps {
   teacherTimezone: string
   markCompleteAction: (id: string) => Promise<{ success?: true; error?: string }>
   cancelSessionAction: (id: string) => Promise<{ success?: true; error?: string }>
+  recurringScheduleId?: string | null
+  bookingStatus?: string
+  cancelSeriesAction?: (id: string) => Promise<{ success?: true; error?: string }>
 }
 
 export function ConfirmedSessionCard({
@@ -24,12 +27,16 @@ export function ConfirmedSessionCard({
   teacherTimezone,
   markCompleteAction,
   cancelSessionAction,
+  recurringScheduleId,
+  bookingStatus,
+  cancelSeriesAction,
 }: ConfirmedSessionCardProps) {
   const [isCompletePending, startCompleteTransition] = useTransition()
   const [isCancelPending, startCancelTransition] = useTransition()
+  const [isCancelSeriesPending, startCancelSeriesTransition] = useTransition()
   const [, setDone] = useState(false)
 
-  const anyPending = isCompletePending || isCancelPending
+  const anyPending = isCompletePending || isCancelPending || isCancelSeriesPending
 
   // Format booking date/time in teacher's timezone
   const dt = new Date(`${booking.booking_date}T${booking.start_time.slice(0, 5)}`)
@@ -63,6 +70,24 @@ export function ConfirmedSessionCard({
     })
   }
 
+  function handleCancelSeries() {
+    if (!recurringScheduleId || !cancelSeriesAction) return
+
+    const confirmed = window.confirm(
+      'Cancel ALL remaining sessions in this recurring series? The parent will be notified and all payment authorizations will be released.'
+    )
+    if (!confirmed) return
+
+    startCancelSeriesTransition(async () => {
+      const result = await cancelSeriesAction(recurringScheduleId)
+      if (result.error) {
+        toast.error(`Failed to cancel series: ${result.error}`)
+      } else {
+        toast.success('Recurring series cancelled — parent notified')
+      }
+    })
+  }
+
   return (
     <div className="rounded-lg border bg-card p-4 shadow-sm">
       {/* Header: student name + subject badge */}
@@ -71,9 +96,20 @@ export function ConfirmedSessionCard({
         <span className="text-sm rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
           {booking.subject}
         </span>
-        <span className="text-sm rounded-full bg-green-100 px-2 py-0.5 text-green-700">
-          Confirmed
-        </span>
+        {recurringScheduleId && (
+          <span className="text-sm rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">
+            Recurring
+          </span>
+        )}
+        {bookingStatus === 'payment_failed' ? (
+          <span className="text-sm rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+            Payment Failed
+          </span>
+        ) : (
+          <span className="text-sm rounded-full bg-green-100 px-2 py-0.5 text-green-700">
+            Confirmed
+          </span>
+        )}
       </div>
 
       {/* Date/time in teacher timezone */}
@@ -107,6 +143,17 @@ export function ConfirmedSessionCard({
             {isCancelPending ? 'Cancelling…' : 'Cancel Session'}
           </button>
         </AnimatedButton>
+        {recurringScheduleId && cancelSeriesAction && (
+          <AnimatedButton className="inline-block">
+            <button
+              onClick={handleCancelSeries}
+              disabled={anyPending}
+              className="rounded-md border border-red-300 bg-red-50 px-4 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCancelSeriesPending ? 'Cancelling Series…' : 'Cancel Series'}
+            </button>
+          </AnimatedButton>
+        )}
       </div>
     </div>
   )

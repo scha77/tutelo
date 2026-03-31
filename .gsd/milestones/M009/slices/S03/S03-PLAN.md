@@ -38,7 +38,7 @@
   - Estimate: 30m
   - Files: supabase/migrations/0016_cancel_token.sql, src/app/api/direct-booking/create-recurring/route.ts, src/emails/RecurringBookingConfirmationEmail.tsx, src/lib/email.ts
   - Verify: npx tsc --noEmit && npm run build
-- [ ] **T02: Add teacher cancel actions, series badge in dashboard, and RecurringCancellationEmail** — Delivers the teacher-facing cancellation experience: new server actions for single-session and series cancel, dashboard sessions page extended to show recurring sessions with a badge, ConfirmedSessionCard with Cancel Series button, and a new RecurringCancellationEmail template.
+- [x] **T02: Added cancelSingleRecurringSession and cancelRecurringSeries server actions, RecurringCancellationEmail template, series/payment badges on dashboard cards, and 16 passing tests** — Delivers the teacher-facing cancellation experience: new server actions for single-session and series cancel, dashboard sessions page extended to show recurring sessions with a badge, ConfirmedSessionCard with Cancel Series button, and a new RecurringCancellationEmail template.
 
 ## Steps
 

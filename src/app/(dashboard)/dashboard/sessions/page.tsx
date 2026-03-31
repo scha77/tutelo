@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import { ConfirmedSessionCard } from '@/components/dashboard/ConfirmedSessionCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
-import { markSessionComplete, cancelSession } from '@/actions/bookings'
+import { markSessionComplete, cancelSession, cancelSingleRecurringSession, cancelRecurringSeries } from '@/actions/bookings'
 
 export default async function SessionsPage() {
   const supabase = await createClient()
@@ -27,9 +27,9 @@ export default async function SessionsPage() {
   const [upcomingResult, pastResult] = await Promise.all([
     supabase
       .from('bookings')
-      .select('id, student_name, subject, booking_date, start_time, parent_email')
+      .select('id, student_name, subject, booking_date, start_time, parent_email, recurring_schedule_id, status')
       .eq('teacher_id', teacher.id)
-      .eq('status', 'confirmed')
+      .in('status', ['confirmed', 'payment_failed'])
       .order('booking_date', { ascending: true }),
 
     supabase
@@ -60,7 +60,10 @@ export default async function SessionsPage() {
                   booking={booking}
                   teacherTimezone={teacherTimezone}
                   markCompleteAction={markSessionComplete}
-                  cancelSessionAction={cancelSession}
+                  cancelSessionAction={booking.recurring_schedule_id ? cancelSingleRecurringSession : cancelSession}
+                  recurringScheduleId={booking.recurring_schedule_id}
+                  bookingStatus={booking.status}
+                  cancelSeriesAction={cancelRecurringSeries}
                 />
               </AnimatedListItem>
             ))}
