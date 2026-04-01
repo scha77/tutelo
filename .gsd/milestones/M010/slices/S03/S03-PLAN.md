@@ -77,7 +77,7 @@ This is the core integration work — the migration and all three route modifica
   - Estimate: 1h30m
   - Files: supabase/migrations/0018_parent_profiles.sql, src/app/api/direct-booking/create-intent/route.ts, src/app/api/direct-booking/create-recurring/route.ts, src/app/api/stripe/webhook/route.ts
   - Verify: npx tsc --noEmit && test -f supabase/migrations/0018_parent_profiles.sql && grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts && grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts && grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts && grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts && npx vitest run
-- [ ] **T02: Build payment-method API routes and /parent/payment dashboard page** — ## Description
+- [x] **T02: Created GET/DELETE API routes for saved payment methods and a /parent/payment page with card display, remove action, and Payment nav item** — ## Description
 
 Creates the parent-facing surfaces for viewing and removing saved payment methods: a GET/DELETE API route at `/api/parent/payment-method` and a `/parent/payment` dashboard page. Also adds the Payment nav item to `parentNavItems` so both sidebar and mobile nav show it.
 

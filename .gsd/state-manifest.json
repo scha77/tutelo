@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T13:42:07.325Z",
+  "exported_at": "2026-04-01T13:45:06.271Z",
   "milestones": [
     {
       "id": "M001",
@@ -4594,19 +4594,27 @@
       "milestone_id": "M010",
       "slice_id": "S03",
       "id": "T02",
-      "title": "Build payment-method API routes and /parent/payment dashboard page",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Created GET/DELETE API routes for saved payment methods and a /parent/payment page with card display, remove action, and Payment nav item",
+      "status": "complete",
+      "one_liner": "Created GET/DELETE API routes for saved payment methods and a /parent/payment page with card display, remove action, and Payment nav item",
+      "narrative": "Created src/app/api/parent/payment-method/route.ts with GET (returns card display fields from parent_profiles) and DELETE (detaches PM from Stripe via paymentMethods.detach, clears card fields). Created src/app/(parent)/parent/payment/page.tsx as a client component with card display, remove confirmation dialog, empty state, and error handling. Updated src/lib/parent-nav.ts to add Payment nav item with CreditCard icon after My Bookings.",
+      "verification_result": "npx tsc --noEmit exits 0, API route and page files exist, CreditCard and payment present in parent-nav.ts, npx vitest run passes all 426 tests with no regressions. All 6 slice-level checks still pass.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T13:45:06.226Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/parent/payment-method/route.ts",
+        "src/app/(parent)/parent/payment/page.tsx",
+        "src/lib/parent-nav.ts"
+      ],
+      "key_decisions": [
+        "Lazy-import Stripe only in DELETE handler to keep GET lightweight",
+        "Payment page is fully client-side (fetches from API route) — matches children page pattern",
+        "brandDisplayName maps Stripe card brand strings to user-friendly names"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M010\nkey_files:\n  - src/app/api/parent/payment-method/route.ts\n  - src/app/(parent)/parent/payment/page.tsx\n  - src/lib/parent-nav.ts\nkey_decisions:\n  - Lazy-import Stripe only in DELETE handler to keep GET lightweight\n  - Payment page is fully client-side (fetches from API route) — matches children page pattern\n  - brandDisplayName maps Stripe card brand strings to user-friendly names\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:45:06.227Z\nblocker_discovered: false\n---\n\n# T02: Created GET/DELETE API routes for saved payment methods and a /parent/payment page with card display, remove action, and Payment nav item\n\n**Created GET/DELETE API routes for saved payment methods and a /parent/payment page with card display, remove action, and Payment nav item**\n\n## What Happened\n\nCreated src/app/api/parent/payment-method/route.ts with GET (returns card display fields from parent_profiles) and DELETE (detaches PM from Stripe via paymentMethods.detach, clears card fields). Created src/app/(parent)/parent/payment/page.tsx as a client component with card display, remove confirmation dialog, empty state, and error handling. Updated src/lib/parent-nav.ts to add Payment nav item with CreditCard icon after My Bookings.\n\n## Verification\n\nnpx tsc --noEmit exits 0, API route and page files exist, CreditCard and payment present in parent-nav.ts, npx vitest run passes all 426 tests with no regressions. All 6 slice-level checks still pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 9800ms |\n| 2 | `test -f src/app/api/parent/payment-method/route.ts` | 0 | ✅ pass | 50ms |\n| 3 | `test -f src/app/(parent)/parent/payment/page.tsx` | 0 | ✅ pass | 50ms |\n| 4 | `grep -q 'CreditCard' src/lib/parent-nav.ts` | 0 | ✅ pass | 50ms |\n| 5 | `grep -q 'payment' src/lib/parent-nav.ts` | 0 | ✅ pass | 50ms |\n| 6 | `npx vitest run` | 0 | ✅ pass | 11900ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/parent/payment-method/route.ts`\n- `src/app/(parent)/parent/payment/page.tsx`\n- `src/lib/parent-nav.ts`\n",
       "description": "## Description\n\nCreates the parent-facing surfaces for viewing and removing saved payment methods: a GET/DELETE API route at `/api/parent/payment-method` and a `/parent/payment` dashboard page. Also adds the Payment nav item to `parentNavItems` so both sidebar and mobile nav show it.\n\nThe GET route returns only safe display fields (brand, last4, exp). The DELETE route detaches the PM from Stripe and clears the card fields on parent_profiles. The page is a server component that queries parent_profiles via supabaseAdmin.\n\n## Steps\n\n1. Create `src/app/api/parent/payment-method/route.ts`:\n   - `GET`: `getUser()` auth guard → query `parent_profiles` via `supabaseAdmin` for `user.id` → return `{ card_brand, card_last4, card_exp_month, card_exp_year }` or `{ card: null }` if no row/no PM\n   - `DELETE`: `getUser()` auth guard → fetch `parent_profiles` for `user.id` → if no `stripe_payment_method_id` return 404 → `stripe.paymentMethods.detach(stripe_payment_method_id)` → update `parent_profiles` to null out `stripe_payment_method_id`, `card_brand`, `card_last4`, `card_exp_month`, `card_exp_year` → return 200\n   - Import Stripe only in DELETE handler (GET doesn't need it)\n\n2. Create `src/app/(parent)/parent/payment/page.tsx`:\n   - Server component with `getUser()` auth guard (redirect to `/login?redirect=/parent/payment` if no session)\n   - Query `parent_profiles` via supabaseAdmin for card fields\n   - If card exists: show Card component with brand icon/name, `•••• {last4}`, `Expires {month}/{year}`, and a \"Remove Card\" button\n   - If no card: show empty state explaining that cards are auto-saved on first booking with a link to find a tutor\n   - \"Remove Card\" button triggers fetch DELETE to `/api/parent/payment-method` then router.refresh()\n   - Use `'use client'` wrapper for the remove-card interaction (small client component inside server page, or make the whole page client)\n\n3. Update `src/lib/parent-nav.ts`:\n   - Import `CreditCard` from lucide-react\n   - Add `{ href: '/parent/payment', label: 'Payment', icon: CreditCard }` to `parentNavItems` array (after My Bookings)\n\n## Must-Haves\n\n- [ ] GET /api/parent/payment-method returns card display fields for authenticated parent\n- [ ] GET returns 401 for unauthenticated requests\n- [ ] GET returns `{ card: null }` when no saved card\n- [ ] DELETE /api/parent/payment-method detaches PM via Stripe and clears parent_profiles\n- [ ] DELETE returns 401 for unauthenticated, 404 when no saved card\n- [ ] /parent/payment page renders saved card or empty state\n- [ ] Payment nav item appears in parentNavItems with CreditCard icon\n- [ ] `npx tsc --noEmit` passes\n\n## Verification\n\n- `npx tsc --noEmit` exits 0\n- `test -f src/app/api/parent/payment-method/route.ts`\n- `test -f src/app/(parent)/parent/payment/page.tsx`\n- `grep -q 'CreditCard' src/lib/parent-nav.ts`\n- `grep -q 'payment' src/lib/parent-nav.ts`\n- `npx vitest run` — full suite passes (no regressions)",
       "estimate": "1h",
       "files": [
@@ -5870,6 +5878,72 @@
       "verdict": "✅ pass",
       "duration_ms": 10500,
       "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 75,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9800,
+      "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 76,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "test -f src/app/api/parent/payment-method/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 77,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "test -f src/app/(parent)/parent/payment/page.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 78,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'CreditCard' src/lib/parent-nav.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 79,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'payment' src/lib/parent-nav.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 80,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 11900,
+      "created_at": "2026-04-01T13:45:06.227Z"
     }
   ]
 }

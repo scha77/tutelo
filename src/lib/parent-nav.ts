@@ -5,13 +5,14 @@
  * to keep nav definitions in sync.
  */
 
-import { LayoutDashboard, Users, CalendarCheck } from 'lucide-react'
+import { LayoutDashboard, Users, CalendarCheck, CreditCard } from 'lucide-react'
 import type { NavItem } from '@/lib/nav'
 
 export const parentNavItems: NavItem[] = [
   { href: '/parent',          label: 'Overview',    icon: LayoutDashboard },
   { href: '/parent/children', label: 'My Children', icon: Users           },
   { href: '/parent/bookings', label: 'My Bookings', icon: CalendarCheck   },
+  { href: '/parent/payment',  label: 'Payment',     icon: CreditCard      },
 ]
 
 /**
