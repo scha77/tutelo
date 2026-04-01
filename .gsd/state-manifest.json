@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T02:46:27.095Z",
+  "exported_at": "2026-04-01T13:05:08.798Z",
   "milestones": [
     {
       "id": "M001",
@@ -4408,19 +4408,25 @@
       "milestone_id": "M010",
       "slice_id": "S01",
       "id": "T04",
-      "title": "Add test coverage for children CRUD, dashboard auth, and booking child selector",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Verified all 46 tests across three test files pass: children CRUD API (16), dashboard auth routing (15), and booking child selector (15)",
+      "status": "complete",
+      "one_liner": "Verified all 46 tests across three test files pass: children CRUD API (16), dashboard auth routing (15), and booking child selector (15)",
+      "narrative": "All three test files already existed from a prior execution with comprehensive coverage. The parent-children test file covers GET/POST/PUT/DELETE endpoints including auth guards, validation, ownership checks, invalid UUID handling, and DB error paths. The parent-dashboard test file covers auth routing decision logic, signIn server action routing, auth file consistency checks, and parent layout auth guard verification. The booking-child-selector test file covers the BookingCalendar component's child loading behavior, child selector state logic, and booking submission payload verification for deferred, direct, and recurring paths. All 419 tests pass across the full suite with zero failures and zero type errors.",
+      "verification_result": "Ran all three test files individually (parent-children: 16 pass, parent-dashboard: 15 pass, booking-child-selector: 15 pass), full vitest suite (419 pass, 0 fail), npx tsc --noEmit (0 errors), and grep confirmed /parent redirect in auth.ts.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T13:05:08.773Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None. All three test files were already present with comprehensive coverage from a prior execution.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/parent-children.test.ts",
+        "src/__tests__/parent-dashboard.test.ts",
+        "src/__tests__/booking-child-selector.test.ts"
+      ],
+      "key_decisions": [
+        "Tests were already created in a prior execution — T04 is a verification-only pass confirming all 46 tests pass"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M010\nkey_files:\n  - src/__tests__/parent-children.test.ts\n  - src/__tests__/parent-dashboard.test.ts\n  - src/__tests__/booking-child-selector.test.ts\nkey_decisions:\n  - Tests were already created in a prior execution — T04 is a verification-only pass confirming all 46 tests pass\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:05:08.774Z\nblocker_discovered: false\n---\n\n# T04: Verified all 46 tests across three test files pass: children CRUD API (16), dashboard auth routing (15), and booking child selector (15)\n\n**Verified all 46 tests across three test files pass: children CRUD API (16), dashboard auth routing (15), and booking child selector (15)**\n\n## What Happened\n\nAll three test files already existed from a prior execution with comprehensive coverage. The parent-children test file covers GET/POST/PUT/DELETE endpoints including auth guards, validation, ownership checks, invalid UUID handling, and DB error paths. The parent-dashboard test file covers auth routing decision logic, signIn server action routing, auth file consistency checks, and parent layout auth guard verification. The booking-child-selector test file covers the BookingCalendar component's child loading behavior, child selector state logic, and booking submission payload verification for deferred, direct, and recurring paths. All 419 tests pass across the full suite with zero failures and zero type errors.\n\n## Verification\n\nRan all three test files individually (parent-children: 16 pass, parent-dashboard: 15 pass, booking-child-selector: 15 pass), full vitest suite (419 pass, 0 fail), npx tsc --noEmit (0 errors), and grep confirmed /parent redirect in auth.ts.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/parent-children.test.ts` | 0 | ✅ pass | 6800ms |\n| 2 | `npx vitest run src/__tests__/parent-dashboard.test.ts` | 0 | ✅ pass | 6100ms |\n| 3 | `npx vitest run src/__tests__/booking-child-selector.test.ts` | 0 | ✅ pass | 10400ms |\n| 4 | `npx vitest run` | 0 | ✅ pass | 9600ms |\n| 5 | `npx tsc --noEmit` | 0 | ✅ pass | 11400ms |\n| 6 | `grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'` | 0 | ✅ pass | 100ms |\n\n\n## Deviations\n\nNone. All three test files were already present with comprehensive coverage from a prior execution.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/parent-children.test.ts`\n- `src/__tests__/parent-dashboard.test.ts`\n- `src/__tests__/booking-child-selector.test.ts`\n",
       "description": "Write comprehensive vitest tests covering the three key areas: children API CRUD operations, parent dashboard auth routing, and the BookingCalendar child selector behavior.\n\n## Steps\n\n1. Create `src/__tests__/parent-children.test.ts` — Children CRUD API tests:\n   - Mock `supabase.auth.getUser()` and `supabaseAdmin` Supabase client\n   - Test GET returns only the authenticated parent's children (mock parent_id filter)\n   - Test POST validates name (rejects empty, rejects >100 chars), creates child with correct parent_id\n   - Test PUT verifies ownership — returns 404 when child belongs to different parent\n   - Test DELETE verifies ownership — returns 404 when child belongs to different parent\n   - Test all endpoints return 401 when unauthenticated\n   - Pattern: import the route handler directly, pass mock Request objects\n\n2. Create `src/__tests__/parent-dashboard.test.ts` — Dashboard auth routing tests:\n   - Test auth routing logic (extracted to testable functions where possible):\n     - No user → would redirect to login\n     - User with teacher row → teacher dashboard path (has cross-link)\n     - User without teacher row → parent dashboard path\n     - Dual-role user → parent dashboard with hasTeacherRole=true\n   - Test `signIn` action routing: mock teacher lookup, verify redirect targets\n   - Test login page redirect logic: authenticated teacher → /dashboard, authenticated non-teacher → /parent\n\n3. Create `src/__tests__/booking-child-selector.test.ts` — BookingCalendar child selector tests:\n   - Mock `supabase.auth.getUser()` and `fetch` for children API\n   - Test: logged-in user with children → Select element rendered with child options\n   - Test: logged-in user with no children → text Input rendered (no Select)\n   - Test: unauthenticated user → text Input rendered (no Select)\n   - Test: selecting a child sets form.childId and form.name to child's name\n   - Test: selecting 'Someone else' clears childId, shows text Input\n   - Test: booking submission includes child_id when child is selected\n   - Note: BookingCalendar has many props — use minimal required props for focused tests\n\n## Must-Haves\n\n- [ ] Children CRUD tests cover: list, create, update, delete, auth guard, ownership guard\n- [ ] Dashboard auth tests cover: no user redirect, teacher routing, parent routing, dual-role\n- [ ] Booking child selector tests cover: children dropdown, guest fallback, form state\n- [ ] All tests pass with `npx vitest run`\n\n## Verification\n\n- `npx vitest run src/__tests__/parent-children.test.ts` — all pass\n- `npx vitest run src/__tests__/parent-dashboard.test.ts` — all pass\n- `npx vitest run src/__tests__/booking-child-selector.test.ts` — all pass\n- `npx vitest run` — full suite still passes (no regressions)",
       "estimate": "1h30m",
       "files": [
@@ -5343,6 +5349,72 @@
       "verdict": "✅ pass",
       "duration_ms": 50,
       "created_at": "2026-04-01T02:46:27.075Z"
+    },
+    {
+      "id": 57,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/parent-children.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6800,
+      "created_at": "2026-04-01T13:05:08.773Z"
+    },
+    {
+      "id": 58,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/parent-dashboard.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6100,
+      "created_at": "2026-04-01T13:05:08.774Z"
+    },
+    {
+      "id": 59,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/booking-child-selector.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10400,
+      "created_at": "2026-04-01T13:05:08.774Z"
+    },
+    {
+      "id": 60,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9600,
+      "created_at": "2026-04-01T13:05:08.774Z"
+    },
+    {
+      "id": 61,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 11400,
+      "created_at": "2026-04-01T13:05:08.774Z"
+    },
+    {
+      "id": 62,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-01T13:05:08.774Z"
     }
   ]
 }

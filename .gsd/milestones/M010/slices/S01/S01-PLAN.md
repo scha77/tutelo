@@ -198,7 +198,7 @@
   - Estimate: 1h30m
   - Files: src/app/api/parent/children/route.ts, src/app/api/parent/children/[id]/route.ts, src/lib/schemas/booking.ts, src/app/api/direct-booking/create-intent/route.ts, src/components/profile/BookingCalendar.tsx
   - Verify: npx tsc --noEmit && npx next build
-- [ ] **T04: Add test coverage for children CRUD, dashboard auth, and booking child selector** — Write comprehensive vitest tests covering the three key areas: children API CRUD operations, parent dashboard auth routing, and the BookingCalendar child selector behavior.
+- [x] **T04: Verified all 46 tests across three test files pass: children CRUD API (16), dashboard auth routing (15), and booking child selector (15)** — Write comprehensive vitest tests covering the three key areas: children API CRUD operations, parent dashboard auth routing, and the BookingCalendar child selector behavior.
 
 ## Steps
 
