@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T04",
+  "unitId": "M010/S01/T04",
+  "timestamp": 1775048716166,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx vitest run src/__tests__/parent-children.test.ts",
+      "exitCode": 0,
+      "durationMs": 1169,
+      "verdict": "pass"
+    },
+    {
+      "command": "npx vitest run src/__tests__/parent-dashboard.test.ts",
+      "exitCode": 0,
+      "durationMs": 1060,
+      "verdict": "pass"
+    },
+    {
+      "command": "npx vitest run src/__tests__/booking-child-selector.test.ts",
+      "exitCode": 0,
+      "durationMs": 2109,
+      "verdict": "pass"
+    }
+  ]
+}

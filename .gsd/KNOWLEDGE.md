@@ -437,6 +437,52 @@ export default defineConfig({
 });
 ```
 
+## Supabase Relation Join Types Are Always Arrays in TypeScript (M010)
+
+When using `.select('*, children(*), teachers(*)')` with Supabase JS, the TypeScript types for relation joins are **always arrays**, even for one-to-one joins. Access the first element explicitly:
+
+```ts
+// ❌ Wrong — TypeScript error + runtime undefined
+const childName = booking.children?.name
+
+// ✅ Correct
+const childName = (booking.children as Array<{name: string}>)[0]?.name
+```
+
+This applies to any Supabase query with related tables. Define `BookingRow` with `children: { name: string; grade: string | null }[]` (array, not object). Forgetting this causes TypeScript build failures when accessing nested join fields.
+
+---
+
+## BookingCalendar Child Selector: useEffect + fetch Pattern (M010)
+
+To add per-user personalization (child selector, saved cards, etc.) to `BookingCalendar` without making it a server component:
+
+1. `useState` for data (`children: Child[]`) and loading guard (`childrenLoaded: boolean`)
+2. `useEffect` on mount: `supabase.auth.getUser()` → if user, fetch API route → set state
+3. Conditional render: `if (childrenLoaded && children.length > 0)` → `<Select>`, else → `<Input>`
+4. All three submission paths (`createPaymentIntent`, `createRecurringIntent`, `handleSubmit`) must include the new field (`childId`) in the POST body
+
+The `childrenLoaded` guard prevents a flash of the select before the fetch completes. Without it, logged-out users briefly see the select before it hides. API errors fall back silently to the text input — never block the booking flow on a personalization fetch.
+
+---
+
+## Parent Auth Routing: maybeSingle() Not single() for Teacher Table Check (M010)
+
+When checking if a user has a teacher row (to decide `/parent` vs. `/dashboard` routing), always use `.maybeSingle()` not `.single()`. `.single()` throws a PostgrestError when no row is found, which propagates as a 500 instead of routing to `/parent`. `.maybeSingle()` returns `null` for no-match without error. Pattern used consistently in callback route, signIn action, and login page:
+
+```ts
+const { data: teacher } = await supabase
+  .from('teachers')
+  .select('id')
+  .eq('id', user.id)
+  .maybeSingle()
+
+if (teacher) return redirect('/dashboard')
+return redirect('/parent')
+```
+
+---
+
 ## `setup_future_usage: 'off_session'` + `capture_method: 'manual'` on One PI (M009)
 
 For recurring booking first-session authorization, a single PaymentIntent can simultaneously:
