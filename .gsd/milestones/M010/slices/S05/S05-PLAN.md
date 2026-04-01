@@ -41,7 +41,7 @@
   - Estimate: 45m
   - Files: src/app/(admin)/layout.tsx, src/app/(admin)/admin/page.tsx
   - Verify: npx tsc --noEmit
-- [ ] **T02: Add admin access gate and dashboard unit tests** — Write unit tests for the admin access gate logic and page rendering. Tests must cover: admin user allowed, non-admin user gets 404, missing ADMIN_USER_IDS env var gets 404, unauthenticated user redirects to /login. Follow established test patterns (vi.mock for supabase modules, mock auth responses).
+- [x] **T02: Added 9 unit tests for admin layout access gate (redirect, notFound, allow) and admin page metrics (queries, null revenue, empty feed)** — Write unit tests for the admin access gate logic and page rendering. Tests must cover: admin user allowed, non-admin user gets 404, missing ADMIN_USER_IDS env var gets 404, unauthenticated user redirects to /login. Follow established test patterns (vi.mock for supabase modules, mock auth responses).
 
 ## Negative Tests
 

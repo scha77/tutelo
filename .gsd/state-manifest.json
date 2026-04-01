@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T14:31:27.794Z",
+  "exported_at": "2026-04-01T14:33:52.781Z",
   "milestones": [
     {
       "id": "M001",
@@ -4927,19 +4927,24 @@
       "milestone_id": "M010",
       "slice_id": "S05",
       "id": "T02",
-      "title": "Add admin access gate and dashboard unit tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 9 unit tests for admin layout access gate (redirect, notFound, allow) and admin page metrics (queries, null revenue, empty feed)",
+      "status": "complete",
+      "one_liner": "Added 9 unit tests for admin layout access gate (redirect, notFound, allow) and admin page metrics (queries, null revenue, empty feed)",
+      "narrative": "Created src/__tests__/admin-dashboard.test.ts with two describe blocks. The access gate block (6 tests) covers: unauthenticated redirect to /login, non-admin user gets 404, empty ADMIN_USER_IDS gets 404, undefined ADMIN_USER_IDS gets 404, admin user renders children, and multi-ID allowlist with whitespace. The metrics block (3 tests) covers: successful metric fetching (all 9 queries dispatched), null revenue handling, and empty activity feed. Used vi.resetModules + dynamic import per test with thrown-error redirect/notFound mocks matching the project's existing patterns.",
+      "verification_result": "Ran npx vitest run src/__tests__/admin-dashboard.test.ts — all 9 tests passed (88ms). Then ran npx vitest run (full suite) — 474 tests passed across 49 test files with zero regressions.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T14:33:52.746Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Added extra test for whitespace-padded multi-ID ADMIN_USER_IDS and an empty activity feed test beyond what the plan specified. Both validate real edge cases.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/admin-dashboard.test.ts"
+      ],
+      "key_decisions": [
+        "Used thrown-error pattern for redirect/notFound mocks matching existing parent-dashboard.test.ts convention",
+        "Added extra test for multi-ID allowlist with whitespace and empty activity feed beyond plan spec"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S05\nmilestone: M010\nkey_files:\n  - src/__tests__/admin-dashboard.test.ts\nkey_decisions:\n  - Used thrown-error pattern for redirect/notFound mocks matching existing parent-dashboard.test.ts convention\n  - Added extra test for multi-ID allowlist with whitespace and empty activity feed beyond plan spec\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T14:33:52.746Z\nblocker_discovered: false\n---\n\n# T02: Added 9 unit tests for admin layout access gate (redirect, notFound, allow) and admin page metrics (queries, null revenue, empty feed)\n\n**Added 9 unit tests for admin layout access gate (redirect, notFound, allow) and admin page metrics (queries, null revenue, empty feed)**\n\n## What Happened\n\nCreated src/__tests__/admin-dashboard.test.ts with two describe blocks. The access gate block (6 tests) covers: unauthenticated redirect to /login, non-admin user gets 404, empty ADMIN_USER_IDS gets 404, undefined ADMIN_USER_IDS gets 404, admin user renders children, and multi-ID allowlist with whitespace. The metrics block (3 tests) covers: successful metric fetching (all 9 queries dispatched), null revenue handling, and empty activity feed. Used vi.resetModules + dynamic import per test with thrown-error redirect/notFound mocks matching the project's existing patterns.\n\n## Verification\n\nRan npx vitest run src/__tests__/admin-dashboard.test.ts — all 9 tests passed (88ms). Then ran npx vitest run (full suite) — 474 tests passed across 49 test files with zero regressions.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/admin-dashboard.test.ts` | 0 | ✅ pass | 7500ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 10900ms |\n\n\n## Deviations\n\nAdded extra test for whitespace-padded multi-ID ADMIN_USER_IDS and an empty activity feed test beyond what the plan specified. Both validate real edge cases.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/admin-dashboard.test.ts`\n",
       "description": "Write unit tests for the admin access gate logic and page rendering. Tests must cover: admin user allowed, non-admin user gets 404, missing ADMIN_USER_IDS env var gets 404, unauthenticated user redirects to /login. Follow established test patterns (vi.mock for supabase modules, mock auth responses).\n\n## Negative Tests\n\n- **Unauthenticated**: No user session → redirect to /login\n- **Non-admin user**: Valid session but user ID not in ADMIN_USER_IDS → notFound() called\n- **Empty env var**: ADMIN_USER_IDS is empty string → notFound() called\n- **Missing env var**: ADMIN_USER_IDS undefined → notFound() called\n- **Admin user**: Valid session + user ID in ADMIN_USER_IDS → page renders with metrics\n\n## Steps\n\n1. Create `src/__tests__/admin-dashboard.test.ts`:\n   - Mock `@/lib/supabase/server` (createClient returning mock auth)\n   - Mock `@/lib/supabase/service` (supabaseAdmin returning mock query results)\n   - Mock `next/navigation` (redirect, notFound as vi.fn())\n   - Mock `@/actions/auth` (signOut)\n\n2. Write access gate tests (test the layout component):\n   - `it('redirects to /login when no user session')` — mock getUser returning error → expect redirect('/login') called\n   - `it('returns 404 when user is not in ADMIN_USER_IDS')` — mock valid user with ID not in env var → expect notFound() called\n   - `it('returns 404 when ADMIN_USER_IDS is empty')` — set env to '' → expect notFound() called\n   - `it('returns 404 when ADMIN_USER_IDS is undefined')` — delete env var → expect notFound() called\n   - `it('renders children when user is admin')` — mock valid user with ID in ADMIN_USER_IDS → expect children rendered (no redirect, no notFound)\n\n3. Write page metric tests (test the page component):\n   - `it('fetches and displays metric counts')` — mock supabaseAdmin queries returning known counts → verify the page function returns without error and queries were called\n   - `it('handles null revenue gracefully')` — mock amount_cents sum returning null → verify no crash\n\n4. Verify: `npx vitest run src/__tests__/admin-dashboard.test.ts` passes, then `npx vitest run` (full suite) passes with no regressions",
       "estimate": "30m",
       "files": [
@@ -6606,6 +6611,28 @@
       "verdict": "✅ pass",
       "duration_ms": 17600,
       "created_at": "2026-04-01T14:31:27.707Z"
+    },
+    {
+      "id": 109,
+      "task_id": "T02",
+      "slice_id": "S05",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/admin-dashboard.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 7500,
+      "created_at": "2026-04-01T14:33:52.746Z"
+    },
+    {
+      "id": 110,
+      "task_id": "T02",
+      "slice_id": "S05",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10900,
+      "created_at": "2026-04-01T14:33:52.746Z"
     }
   ]
 }
