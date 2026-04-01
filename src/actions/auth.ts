@@ -48,7 +48,7 @@ export async function signIn(formData: FormData): Promise<{ error: string } | vo
     }
   }
 
-  redirect('/onboarding')
+  redirect('/parent')
 }
 
 export async function signOut(): Promise<void> {

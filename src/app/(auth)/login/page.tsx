@@ -8,11 +8,17 @@ export default async function LoginPage({
   searchParams: Promise<{ redirect?: string }>
 }) {
   const supabase = await createClient()
-  const { data } = await supabase.auth.getClaims()
-  const claims = data?.claims ?? null
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (claims) {
-    redirect('/dashboard')
+  if (user) {
+    // Teacher → dashboard, parent → parent dashboard
+    const { data: teacher } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    redirect(teacher ? '/dashboard' : '/parent')
   }
 
   const { redirect: redirectTo } = await searchParams

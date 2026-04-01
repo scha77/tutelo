@@ -4,336 +4,6 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Active
 
-### QR-01 — Teacher can download a high-res QR code PNG of their profile URL from dashboard
-- Class: core-capability
-- Status: validated
-- Description: Dashboard page shows a preview of the teacher's QR code encoding their tutelo.app/[slug] URL, with a download button for high-res PNG.
-- Why it matters: Education is paper-heavy — take-home folders, back-to-school flyers, syllabi. Teachers need a dead-simple way to get their booking link onto print materials.
-- Source: user
-- Primary owning slice: M006/S01
-- Supporting slices: none
-- Validation: M006/S01 — QRCodeCard renders 192px live preview and hidden 512px canvas for high-res PNG download via toDataURL; npx tsc --noEmit exits 0; npm run build passes; /dashboard/promote in route manifest.
-- Notes: No DB changes needed — purely derived from existing slug.
-
-### QR-02 — Teacher can download a printable mini-flyer (QR + name + subjects + CTA)
-- Class: differentiator
-- Status: validated
-- Description: A styled, print-ready flyer template featuring the QR code, teacher name, subjects, hourly rate, and "Book a session" CTA. Downloadable as PNG or PDF.
-- Why it matters: Teachers shouldn't have to design their own flyer — give them something ready to print and hand out at back-to-school night.
-- Source: user
-- Primary owning slice: M006/S01
-- Supporting slices: none
-- Validation: M006/S01 — /api/flyer/[slug] returns 1200×1600 ImageResponse PNG with teacher name, subject pill tags, hourly rate, QR code, and 'Scan to book a session' CTA; /api/flyer/[slug] in route manifest; npm run build passes.
-- Notes: Uses existing teacher profile data. No DB changes.
-
-### SWIPE-01 — Dashboard shows pre-written announcement templates interpolated with teacher data
-- Class: differentiator
-- Status: validated
-- Description: A dashboard page or section showing pre-written announcement templates (email signature block, parent newsletter blurb, Facebook/social post, back-to-school night handout text) with the teacher's name, subjects, link, and rate interpolated.
-- Why it matters: Teachers experience decision fatigue by 3:30 PM. They shouldn't have to figure out how to announce their tutoring business. Give them exact scripts.
-- Source: user
-- Primary owning slice: M006/S02
-- Supporting slices: none
-- Validation: M006/S02 — 4 announcement templates (Email Signature, Newsletter Blurb, Social Media Post, Back-to-School Handout) rendered in promote page with teacher data interpolated; 59 unit tests pass covering all edge cases
-- Notes: No DB changes. Content writing: craft compelling, teacher-voice templates.
-
-### SWIPE-02 — One-click copy-to-clipboard for each template
-- Class: quality-attribute
-- Status: validated
-- Description: Each announcement template has a copy button that copies the interpolated text to clipboard with a "Copied!" confirmation.
-- Why it matters: Friction kills adoption. One click from template to paste.
-- Source: user
-- Primary owning slice: M006/S02
-- Supporting slices: none
-- Validation: M006/S02 — SwipeFileCard copy button uses navigator.clipboard with execCommand fallback; shows "Copied!" for 2 seconds then resets; microPress animation on button; npm run build passes
-- Notes: Uses navigator.clipboard API.
-
-### OG-01 — OG image renders correctly across major platforms
-- Class: quality-attribute
-- Status: validated
-- Description: Verify that the existing dynamic OG image (opengraph-image.tsx) renders correctly in iMessage, WhatsApp, Facebook, LinkedIn, Slack, and Discord link previews. Fix any platform-specific quirks.
-- Why it matters: When a teacher texts their Tutelo link, it needs to unfurl into a professional preview card — not a grey box.
-- Source: user
-- Primary owning slice: M006/S03
-- Supporting slices: none
-- Validation: M006/S03 — openGraph.url added to generateMetadata in src/app/[slug]/page.tsx; 4 unit tests pass verifying og:url, og:title, og:type='profile', and twitter:card='summary_large_image' shape; npm run build passes. Manual platform unfurl verification (iMessage/WhatsApp/Facebook) is a UAT step post-deploy against live tutelo.app URL.
-- Notes: OG infrastructure (opengraph-image.tsx, metadataBase) was complete from M003. Only the og:url field was missing — added in M006/S03. The hardcoded canonical URL (https://tutelo.app/${slug}) ensures Facebook deduplication/caching works correctly across deployments.
-
-### CAP-01 — Teacher can set max active students or max weekly sessions in dashboard settings
-- Class: core-capability
-- Status: validated
-- Description: Dashboard settings include a capacity limit field (nullable — null means unlimited). System counts active bookings/students against this limit.
-- Why it matters: Side-hustling teachers may only have room for 3 students. They need to control capacity without removing their link.
-- Source: user
-- Primary owning slice: M007/S01
-- Supporting slices: none
-- Validation: M007/S01 — CapacitySettings component renders with toggle + number input + active student count; updateProfile ProfileUpdateSchema extended with capacity_limit (nullable integer, Zod-validated 1–100); settings page queries capacity_limit and active student count; tsc clean on all S01 files; npm run build passes.
-- Notes: New capacity_limit column on teachers table.
-
-### CAP-02 — Profile page shows "at capacity" state when limit reached
-- Class: core-capability
-- Status: validated
-- Description: When a teacher's capacity is reached, the profile page shows "Currently at capacity" instead of the booking calendar. The teacher's info remains visible.
-- Why it matters: Better than an empty calendar or a confusing "no slots available" message.
-- Source: user
-- Primary owning slice: M007/S01
-- Supporting slices: M007/S02
-- Validation: M007/S01 — Profile page conditionally renders AtCapacitySection vs BookingCalendar based on capacity_limit + active student count; BookNowCTA hidden when at capacity; HeroSection/CredentialsBar/AboutSection/ReviewsSection/SocialLinks always rendered in both states; tsc and build clean.
-- Notes: Must handle edge cases: concurrent bookings near capacity, cancellations freeing capacity.
-
-### WAIT-01 — Parent can join waitlist when teacher is at capacity
-- Class: core-capability
-- Status: validated
-- Description: When a teacher is at capacity, parents can enter their email to be notified when a spot opens.
-- Why it matters: Captures demand that would otherwise bounce. Teacher keeps their link active even when full.
-- Source: user
-- Primary owning slice: M007/S02
-- Supporting slices: none
-- Validation: M007/S01 — /api/waitlist POST route inserts into waitlist table via supabaseAdmin; unique constraint on (teacher_id, parent_email) returns 409 for duplicates; WaitlistForm shows distinct success/already-on-list/error states; 15 capacity unit tests pass.
-- Notes: New waitlist table: (id, teacher_id, parent_email, created_at, notified_at).
-
-### WAIT-02 — Teacher sees waitlist in dashboard and can manually open spots
-- Class: core-capability
-- Status: validated
-- Description: Dashboard shows waitlisted parents with email and join date. Teacher can manually adjust capacity or remove waitlist entries.
-- Why it matters: Teacher maintains control over their practice size.
-- Source: user
-- Primary owning slice: M007/S02
-- Supporting slices: none
-- Validation: M007/S02 — /dashboard/waitlist RSC page lists waitlist entries (email, join date, notified status badge); removeWaitlistEntry server action with teacher-gated ownership check deletes entries; WaitlistEntryRow client component with confirmation dialog + pending state; Waitlist nav item in sidebar between Students and Page; npx tsc --noEmit exits 0; npm run build passes with /dashboard/waitlist in route manifest.
-- Notes: none
-
-### WAIT-03 — Waitlisted parents auto-notified via email when capacity frees up
-- Class: core-capability
-- Status: validated
-- Description: When a booking is cancelled or a student leaves, freeing capacity below the limit, waitlisted parents are automatically notified via email with a link to book.
-- Why it matters: Closes the loop — parents who expressed interest shouldn't have to check back manually.
-- Source: user
-- Primary owning slice: M007/S02
-- Supporting slices: none
-- Validation: M007/S02 — checkAndNotifyWaitlist(teacherId) rechecks capacity after cancellation, sends WaitlistNotificationEmail to unnotified entries via sendWaitlistNotificationEmail, batch-stamps notified_at on successful sends only; cancelSession calls checkAndNotifyWaitlist as fire-and-forget; per-entry error handling; 7 unit tests + 1 cancel-session integration test all pass.
-- Notes: Triggered on booking cancellation. WaitlistNotificationEmail React Email template renders teacher name + booking link CTA.
-
-### SESS-01 — Teacher can define session types with custom labels, prices, and optional durations
-- Class: core-capability
-- Status: validated
-- Description: Dashboard settings allow teachers to create session types (e.g., "SAT Prep $45", "General Math $35") with label, price, and optional duration. Ordered by sort_order.
-- Why it matters: Some teachers charge differently for test prep vs homework help. A single flat rate is too limiting.
-- Source: user
-- Primary owning slice: M007/S03
-- Supporting slices: none
-- Validation: M007/S03 — SessionTypeManager CRUD UI in dashboard settings with create/edit/delete; createSessionType/updateSessionType/deleteSessionType server actions with teacher ownership verification; 8 session-type-pricing unit tests + tsc --noEmit pass.
-- Notes: New session_types table: (id, teacher_id, label, price, duration_minutes, sort_order).
-
-### SESS-02 — Booking flow shows session type selector with correct price per type
-- Class: core-capability
-- Status: validated
-- Description: When a teacher has session types defined, the booking form shows a session type selector. The displayed price updates based on selection.
-- Why it matters: Parents need to know what they're paying for and how much before committing.
-- Source: user
-- Primary owning slice: M007/S03
-- Supporting slices: none
-- Validation: M007/S03 — 18 booking-slots tests pass; BookingCalendar session type picker card UI wired to selectedSessionType state with price display ($XX · Label in form header); slot duration filtering via getSlotsForDate(durationMinutes).
-- Notes: Falls back to subject selector + hourly_rate when no session types defined.
-
-### SESS-03 — Stripe payment intent uses session-type price instead of flat hourly_rate
-- Class: core-capability
-- Status: validated
-- Description: The create-intent API route uses the selected session type's price to compute the payment amount, replacing the flat hourly_rate calculation.
-- Why it matters: Correct billing. Parents must be charged the price they saw.
-- Source: user
-- Primary owning slice: M007/S03
-- Supporting slices: none
-- Validation: M007/S03 — 8 unit tests covering flat-price path, wrong-teacher (400), dollar-to-cent conversion (Math.round(Number(price)*100)) all pass; session_type_id stored in PI metadata for Stripe dashboard audit trail.
-- Notes: Must validate session_type_id belongs to the teacher. Falls back to hourly_rate when no session type selected.
-
-### SESS-04 — Teachers without session types continue using single hourly_rate (backward compatible)
-- Class: continuity
-- Status: validated
-- Description: Existing teachers with no session types defined continue to work exactly as before — single hourly_rate, subject selector in booking form.
-- Why it matters: No breaking change for existing teachers. Migration must be seamless.
-- Source: user
-- Primary owning slice: M007/S03
-- Supporting slices: none
-- Validation: M007/S03 — Hourly-rate fallback unit test in session-type-pricing.test.ts passes; subject dropdown guard condition verified in BookingCalendar source; when sessionTypes prop is empty/absent, BookingCalendar shows subject dropdown and create-intent uses existing computeSessionAmount path unchanged.
-- Notes: Default behavior when session_types is empty.
-
-### DIR-01 — Public /tutors directory page listing published teachers with filters
-- Class: core-capability
-- Status: active
-- Description: A browseable /tutors page showing published teachers as cards, with filters for subject, grade level, location (city/state), and price range.
-- Why it matters: Right now parents can only find teachers via direct link. A directory enables organic discovery.
-- Source: user
-- Primary owning slice: M008/S01
-- Supporting slices: M008/S02, M008/S03
-- Validation: unmapped
-- Notes: Only shows is_published=true teachers. Must be SEO-friendly with proper meta tags.
-
-### DIR-02 — Filter by subject, grade level, location, and price range
-- Class: core-capability
-- Status: active
-- Description: Directory filters work via URL query params (shareable/bookmarkable). Filters are subject (multi-select from known list), grade level (multi-select), city/state, and hourly_rate range.
-- Why it matters: Parents need to narrow results to relevant teachers quickly.
-- Source: user
-- Primary owning slice: M008/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Supabase query filters. No full-text search needed for structured filters.
-
-### DIR-03 — Full-text search across teacher name, school, subjects, bio
-- Class: core-capability
-- Status: active
-- Description: Text search input on the directory page that searches across teacher name, school, subjects array, and bio text using Postgres full-text search with GIN index.
-- Why it matters: Some parents will search by teacher name or school. Others will type "SAT prep" or "reading specialist."
-- Source: user
-- Primary owning slice: M008/S02
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Requires tsvector column + GIN index migration. Supabase .textSearch() API.
-
-### SEO-03 — XML sitemap listing all published teacher profile URLs
-- Class: launchability
-- Status: active
-- Description: Auto-generated sitemap.xml at /sitemap.xml listing all published teacher /[slug] URLs plus the /tutors directory page and category pages.
-- Why it matters: Google can't efficiently discover and index teacher pages without a sitemap.
-- Source: inferred
-- Primary owning slice: M008/S03
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Next.js built-in sitemap generation via sitemap.ts route.
-
-### SEO-04 — SEO-optimized category pages (/tutors/math, /tutors/chicago, etc.)
-- Class: differentiator
-- Status: active
-- Description: Category pages for subjects (/tutors/math, /tutors/reading) and locations (/tutors/chicago, /tutors/texas) with proper titles, descriptions, and structured data. These pages are pre-rendered and indexable.
-- Why it matters: Long-tail SEO. Parents searching "math tutor in Chicago" should land on a Tutelo page.
-- Source: user
-- Primary owning slice: M008/S03
-- Supporting slices: M008/S01
-- Validation: unmapped
-- Notes: Category pages are filtered views of the directory. Dynamic route segments.
-
-### ANALYTICS-01 — Track page views on teacher /[slug] pages
-- Class: core-capability
-- Status: active
-- Description: Each visit to a teacher's public profile page is tracked. View counts are stored in a lightweight analytics table or counter.
-- Why it matters: Teachers want to know if anyone is actually looking at their page after sharing their link.
-- Source: user
-- Primary owning slice: M008/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Must be lightweight — middleware counter or edge function, not a heavy analytics service. Needs bot filtering.
-
-### ANALYTICS-02 — Teacher dashboard shows view count and booking conversion funnel
-- Class: core-capability
-- Status: active
-- Description: Dashboard analytics section showing: total page views, unique visitors, booking starts (form opens), completed bookings, and conversion rate.
-- Why it matters: Empowers teachers to understand their funnel and take action (share more, improve their page, adjust pricing).
-- Source: user
-- Primary owning slice: M008/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Funnel stages: view → booking form open → booking submitted. Data from analytics table + bookings table.
-
-### RECUR-01 — Parent can set a recurring schedule when booking
-- Class: core-capability
-- Status: validated
-- Description: During the booking flow, parent can opt for a recurring schedule: weekly or biweekly, for N weeks (e.g., "Every Tuesday at 4pm for 8 weeks").
-- Why it matters: Most tutoring relationships are ongoing. Rebooking manually every week is friction that kills retention.
-- Source: user
-- Primary owning slice: M009/S01
-- Supporting slices: none
-- Validation: RecurringOptions.tsx frequency toggle + count slider + live projected-dates list wired into BookingCalendar 'recurring' step. check-conflicts endpoint provides real-time conflict preview. 8 conflict-detection unit tests pass. Delivered M009/S01.
-- Notes: UI shows recurring options after initial slot selection. Must validate all future slots are available.
-
-### RECUR-02 — System auto-creates future booking rows for recurring schedule
-- Class: core-capability
-- Status: validated
-- Description: When a recurring schedule is confirmed, the system creates individual booking rows for each future session. Each has its own date, status, and payment.
-- Why it matters: Individual rows enable per-session cancellation, payment tracking, and status management.
-- Source: user
-- Primary owning slice: M009/S01
-- Supporting slices: M009/S02
-- Validation: Migration 0014 adds recurring_schedules table + bookings.recurring_schedule_id FK. create-recurring route inserts per-row bookings with 23505 unique-constraint skip for partial success. 9 create-recurring integration tests verify. Delivered M009/S01.
-- Notes: Linked via a recurring_schedule_id. Atomic creation to prevent partial series.
-
-### RECUR-03 — Each recurring session has individual payment handling
-- Class: core-capability
-- Status: validated
-- Description: Each session in a recurring series has its own Stripe PaymentIntent. Payment is authorized per-session, not bulk upfront.
-- Why it matters: Per-session billing is fairer (parent isn't locked in), simpler for refunds, and matches the existing payment flow.
-- Source: user
-- Primary owning slice: M009/S02
-- Supporting slices: none
-- Validation: Cron creates individual PI per booking row from saved card. payment_failed status on Stripe error. 8 recurring-charges tests cover all paths including mixed results. Delivered M009/S02.
-- Notes: Payment authorization happens at series creation for near-term sessions. Future sessions may need "authorize on day-of" pattern.
-
-### RECUR-04 — Teacher and parent can cancel individual sessions or entire recurring series
-- Class: core-capability
-- Status: validated
-- Description: Both teacher and parent can cancel a single session from a recurring series without affecting others, or cancel the entire remaining series at once.
-- Why it matters: Life happens. Flexibility in cancellation prevents frustration.
-- Source: user
-- Primary owning slice: M009/S03
-- Supporting slices: none
-- Validation: cancelSingleRecurringSession + cancelRecurringSeries server actions (teacher); /api/manage/cancel-session + cancel-series token-gated routes (parent). 16 cancel-recurring + 10 manage-cancel tests cover all paths. Delivered M009/S03.
-- Notes: Cancelling a series cancels all future sessions with status != completed. Past sessions unaffected.
-
-### RECUR-05 — Recurring bookings respect availability and prevent double-booking
-- Class: continuity
-- Status: validated
-- Description: When creating a recurring schedule, the system checks each future date against the teacher's availability (recurring + overrides) and the existing bookings unique constraint.
-- Why it matters: Can't create recurring sessions that conflict with existing bookings or fall outside availability windows.
-- Source: inferred
-- Primary owning slice: M009/S01
-- Supporting slices: none
-- Validation: checkDateConflicts utility + unique constraint as fallback safety net. 8 conflict-detection unit tests cover booking conflict, no-availability, override-block, override-allow, all-clear, all-skipped, and mixed scenarios. Delivered M009/S01.
-- Notes: Must handle the case where some future dates are unavailable (warn parent, skip those dates). Partial series creation allowed — skip conflicting dates, show parent which were skipped.
-
-### RECUR-06 — Saved card via Stripe Customer + SetupIntent for auto-charge
-- Class: core-capability
-- Status: validated
-- Description: When a parent books a recurring series, a Stripe Customer is created (or reused) and their card is saved via a SetupIntent. Subsequent sessions in the series are auto-charged using the saved payment method 24 hours before the session.
-- Why it matters: Stripe PaymentIntent authorizations expire after 7 days. An 8-week series can't pre-authorize all sessions. Saved cards enable per-session auto-charging on schedule.
-- Source: inferred
-- Primary owning slice: M009/S02
-- Supporting slices: none
-- Validation: create-recurring creates Stripe Customer + PI with setup_future_usage:'off_session'. Webhook stores stripe_payment_method_id on confirmation (idempotency guard). 9 create-recurring + 8 webhook-capture tests pass. Delivered M009/S01+S02.
-- Notes: First session still uses the existing PaymentIntent authorize flow. SetupIntent saves the card for future charges. Parent must consent to card storage.
-
-### RECUR-07 — Cron charges upcoming recurring sessions 24h before
-- Class: core-capability
-- Status: validated
-- Description: The existing daily cron (stripe-reminders) is extended to find recurring sessions scheduled for tomorrow that haven't been charged yet, and creates PaymentIntents using the parent's saved card.
-- Why it matters: Automates the per-session billing without requiring the parent to return to the site each week.
-- Source: inferred
-- Primary owning slice: M009/S02
-- Supporting slices: none
-- Validation: Dedicated /api/cron/recurring-charges route added to vercel.json at 0 12 * * *. Note: D021 supersedes original plan — dedicated route used instead of extending stripe-reminders (Vercel lifted cron limit to 100 in Jan 2026). 8 recurring-charges tests pass including idempotency and mixed-results. Delivered M009/S02.
-- Notes: Extends existing cron at /api/cron/stripe-reminders. Failed charges update booking status and notify both parties. Stays within Vercel Hobby cron limits.
-
-### RECUR-08 — Parent self-service cancellation via secure link/page
-- Class: core-capability
-- Status: validated
-- Description: Parent receives a secure link in booking confirmation and reminder emails that allows them to cancel an individual session or the remaining series without needing to contact the teacher.
-- Why it matters: Parents need agency over their recurring commitment. Requiring teacher involvement for every cancellation creates friction and resentment.
-- Source: inferred
-- Primary owning slice: M009/S03
-- Supporting slices: none
-- Validation: cancel_token (64-char hex, migration 0016) stored on recurring_schedules + manageUrl in parent confirmation email. /manage/[token] RSC page + CancelSeriesForm client component + /api/manage/cancel-session + cancel-series token-gated routes. 10 manage-cancel tests pass including invalid-token and ownership-mismatch cases. Delivered M009/S03.
-- Notes: Secure token-based link (similar to review token pattern). Page shows session details + cancel options (this session only / remaining series).
-
-### RECUR-09 — Recurring sessions visible in dashboard with series badge
-- Class: quality-attribute
-- Status: validated
-- Description: Recurring sessions appear in the teacher's /dashboard/sessions page with a visual series indicator (repeat icon, "Series: Tuesdays 4pm" badge). A "Cancel remaining series" action is available.
-- Why it matters: Teachers need to distinguish one-off sessions from recurring ones and manage series as a group when needed.
-- Source: inferred
-- Primary owning slice: M009/S03
-- Supporting slices: none
-- Validation: ConfirmedSessionCard shows amber "Recurring" badge when recurringScheduleId is set, "Payment Failed" badge on payment_failed status, and "Cancel Series" button with confirm dialog. Sessions page query extended to include recurring_schedule_id and payment_failed status. Delivered M009/S03.
-- Notes: No separate management page. Series badge + cancel series action in existing session list.
-
 ### PARENT-04 — Parent can manage multiple children under one account
 - Class: core-capability
 - Status: active
@@ -343,7 +13,7 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M010/S01
 - Supporting slices: none
 - Validation: unmapped
-- Notes: New children table. Replaces the current free-text student_name field in booking form with a child selector.
+- Notes: New children table. Replaces the current free-text student_name field in booking form with a child selector for logged-in parents.
 
 ### PARENT-05 — Parent can save payment methods for faster rebooking
 - Class: quality-attribute
@@ -351,21 +21,87 @@ This file is the explicit capability and coverage contract for the project.
 - Description: After first payment, parent's card is saved via Stripe Customer object. Future bookings can use saved card with one click.
 - Why it matters: Reduces booking friction. Parent doesn't re-enter card details every time.
 - Source: user
-- Primary owning slice: M010/S02
+- Primary owning slice: M010/S03
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Requires creating Stripe Customer records for parents. SetupIntent flow for saving cards.
+- Notes: Single saved card per parent. Auto-saved on first Stripe booking. Viewable/removable from parent dashboard.
 
 ### PARENT-06 — In-app messaging between parent and teacher
 - Class: core-capability
 - Status: active
-- Description: Real-time messaging thread between parent and teacher within the app. Linked to a booking or student relationship. New message notifications via email.
+- Description: Text-only messaging thread between parent and teacher within the app. One thread per teacher-parent relationship. New message notifications via email.
 - Why it matters: Teachers and parents need to coordinate logistics (rescheduling, homework focus areas, progress updates) without exchanging personal phone numbers.
 - Source: user
+- Primary owning slice: M010/S04
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Supabase Realtime for live updates. Per-relationship thread (not per-child or per-booking).
+
+### PARENT-07 — Parent gets a login-required dashboard with booking history and upcoming sessions
+- Class: core-capability
+- Status: active
+- Description: Authenticated parent dashboard at /parent with sidebar nav showing My Children, My Bookings (upcoming + history), Saved Card, and Messages. Layout mirrors teacher dashboard patterns.
+- Why it matters: Parents need a home base to manage their tutoring relationships across multiple teachers and children.
+- Source: inferred
+- Primary owning slice: M010/S01
+- Supporting slices: M010/S03, M010/S04
+- Validation: unmapped
+- Notes: Separate route group from teacher dashboard. Must handle dual-role users (someone who is both a teacher and a parent).
+
+### PARENT-08 — Booking form child selector replaces free-text student name for logged-in parents
+- Class: core-capability
+- Status: active
+- Description: When a logged-in parent with children on file books a session, the booking form shows a child dropdown instead of the free-text "Student's name" field. Guest bookings (no account) continue using free text.
+- Why it matters: Ties bookings to structured child records for history and analytics. Reduces typos and inconsistencies.
+- Source: inferred
+- Primary owning slice: M010/S01
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Backward compatible — existing bookings with free-text student_name stay as-is. New bookings from logged-in parents get child_id FK.
+
+### PARENT-09 — Parent Stripe Customer created at account level for saved card reuse across teachers
+- Class: core-capability
+- Status: active
+- Description: A Stripe Customer is created per parent account (not per teacher or per recurring schedule). The saved payment method is reusable across any teacher booking.
+- Why it matters: Parents booking with multiple teachers shouldn't re-enter card details for each one.
+- Source: inferred
 - Primary owning slice: M010/S03
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Heaviest feature in the roadmap. Could use Supabase Realtime for live updates. Needs careful scoping.
+- Notes: Existing recurring schedule Stripe Customers (per-schedule) stay as-is for backward compatibility. New parent-level Customer is the primary going forward.
+
+### MSG-01 — One messaging thread per teacher-parent relationship with text messages
+- Class: core-capability
+- Status: active
+- Description: A conversations table links teacher_id + parent_id. A messages table stores sender, body, and timestamp. Thread is auto-created on first message. Both teacher and parent can initiate.
+- Why it matters: Structured threads prevent message sprawl and enable read-state tracking.
+- Source: inferred
+- Primary owning slice: M010/S04
+- Supporting slices: none
+- Validation: unmapped
+- Notes: No file attachments. Text only.
+
+### MSG-02 — Real-time message delivery via Supabase Realtime postgres_changes
+- Class: quality-attribute
+- Status: active
+- Description: New messages appear instantly in the recipient's open chat without page refresh. Uses Supabase Realtime subscription on the messages table filtered by conversation_id.
+- Why it matters: Real-time messaging is table stakes — polling or refresh-to-see-new-messages would feel broken.
+- Source: inferred
+- Primary owning slice: M010/S04
+- Supporting slices: none
+- Validation: unmapped
+- Notes: First use of Supabase Realtime in the project. Requires enabling Realtime on the messages table in Supabase.
+
+### MSG-03 — Email notification to recipient on new message
+- Class: quality-attribute
+- Status: active
+- Description: When a message is sent, the recipient gets an email notification with a preview of the message and a link to the conversation. Rate-limited to prevent spam (e.g., batch messages within a 5-minute window into one email).
+- Why it matters: Parents and teachers aren't always in the app. Email notification closes the loop.
+- Source: inferred
+- Primary owning slice: M010/S04
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Uses existing Resend email infrastructure. New React Email template.
 
 ### ADMIN-01 — Admin dashboard with teacher count, booking volume, revenue metrics
 - Class: operability
@@ -373,10 +109,10 @@ This file is the explicit capability and coverage contract for the project.
 - Description: Protected admin route showing platform-wide metrics: total teachers, active teachers, total bookings, revenue (captured payments), conversion rates.
 - Why it matters: Platform operator needs visibility into business health without querying the database directly.
 - Source: user
-- Primary owning slice: M010/S04
+- Primary owning slice: M010/S05
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Read-only. Admin access gated on specific user IDs or admin role, not a general feature.
+- Notes: Read-only. Admin access gated by ADMIN_USER_IDS env var.
 
 ### ADMIN-02 — Admin can view recent activity (signups, bookings, completions)
 - Class: operability
@@ -384,10 +120,21 @@ This file is the explicit capability and coverage contract for the project.
 - Description: Activity feed showing recent platform events: new teacher signups, booking requests, session completions, Stripe connections.
 - Why it matters: Quick pulse check on platform activity without running queries.
 - Source: user
-- Primary owning slice: M010/S04
+- Primary owning slice: M010/S05
 - Supporting slices: none
 - Validation: unmapped
 - Notes: Derived from existing tables (teachers.created_at, bookings.created_at, etc.). No new event system needed.
+
+### ADMIN-04 — Admin access gated by ADMIN_USER_IDS env var allowlist
+- Class: operability
+- Status: active
+- Description: Admin dashboard access is controlled by a comma-separated list of Supabase user IDs in ADMIN_USER_IDS env var. Non-admin users see 404.
+- Why it matters: Simple, no-migration access control that fits pre-scale stage.
+- Source: inferred
+- Primary owning slice: M010/S05
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Can be upgraded to DB role later if needed.
 
 ### AUTH-03 — Teacher or parent can sign in with Google SSO
 - Class: core-capability
@@ -395,10 +142,10 @@ This file is the explicit capability and coverage contract for the project.
 - Description: A "Continue with Google" button on the login/signup page initiates OAuth via Supabase Google provider. On first sign-in, a new user record is created automatically. On return, the existing session is resumed. Works for both teacher and parent accounts.
 - Why it matters: Google SSO removes the password barrier — teachers and parents already have Google accounts and trust the flow. Reduces signup abandonment and "forgot password" support burden.
 - Source: user
-- Primary owning slice: none
+- Primary owning slice: M010/S02
 - Supporting slices: none
 - Validation: unmapped
-- Notes: AUTH-01 is already validated for email+password; this requirement specifically tracks the Google OAuth implementation as a distinct deliverable since it requires Supabase provider config, OAuth consent screen setup, and login UI changes. See decision D003 for interaction with school email verification.
+- Notes: LoginForm.tsx already has the Google OAuth button wired. Needs Supabase provider configured and end-to-end verification.
 
 ### AUTH-04 — Teacher can verify school affiliation via .edu email OTP after Google login
 - Class: differentiator
@@ -406,10 +153,10 @@ This file is the explicit capability and coverage contract for the project.
 - Description: After signing in with Google (or email+password), a teacher can still trigger the school email verification flow — entering their school email address, receiving a one-time code, and confirming it. The verified school email is stored independently of the auth provider email. A "verified" badge appears on their profile once confirmed.
 - Why it matters: Many teachers have a personal Gmail they use for everything, but their credibility signal is their school email. Decoupling auth from verification means they get the convenience of Google login without losing the trust badge.
 - Source: user
-- Primary owning slice: none
+- Primary owning slice: M010/S02
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Verification OTP flow already exists (VERIFY-01, M005/S03). This requirement tracks the explicit guarantee that it works post-Google-login — no regression where Google-authed accounts are blocked from the verification flow. See decision D003.
+- Notes: Verification OTP flow already exists (VERIFY-01, M005/S03). This requirement tracks the guarantee that it works post-Google-login.
 
 ## Validated
 
@@ -949,6 +696,216 @@ This file is the explicit capability and coverage contract for the project.
 - Primary Slice: M005/S01
 - Validated by: M005/S01+S02 — cancelSession: SMS + email in same request
 
+### QR-01 — Teacher can download a high-res QR code PNG of their profile URL from dashboard
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M006/S01
+- Validated by: M006/S01 — QRCodeCard renders 192px live preview and hidden 512px canvas for high-res PNG download
+
+### QR-02 — Teacher can download a printable mini-flyer (QR + name + subjects + CTA)
+- Class: differentiator
+- Status: validated
+- Source: user
+- Primary Slice: M006/S01
+- Validated by: M006/S01 — /api/flyer/[slug] returns 1200×1600 ImageResponse PNG
+
+### SWIPE-01 — Dashboard shows pre-written announcement templates interpolated with teacher data
+- Class: differentiator
+- Status: validated
+- Source: user
+- Primary Slice: M006/S02
+- Validated by: M006/S02 — 4 announcement templates rendered with teacher data; 59 unit tests pass
+
+### SWIPE-02 — One-click copy-to-clipboard for each template
+- Class: quality-attribute
+- Status: validated
+- Source: user
+- Primary Slice: M006/S02
+- Validated by: M006/S02 — SwipeFileCard copy button with navigator.clipboard + execCommand fallback
+
+### OG-01 — OG image renders correctly across major platforms
+- Class: quality-attribute
+- Status: validated
+- Source: user
+- Primary Slice: M006/S03
+- Validated by: M006/S03 — openGraph.url added to generateMetadata; 4 unit tests pass
+
+### CAP-01 — Teacher can set max active students or max weekly sessions in dashboard settings
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S01
+- Validated by: M007/S01 — CapacitySettings component with toggle + number input; Zod-validated 1–100
+
+### CAP-02 — Profile page shows "at capacity" state when limit reached
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S01
+- Validated by: M007/S01 — AtCapacitySection vs BookingCalendar conditional render; HeroSection always visible
+
+### WAIT-01 — Parent can join waitlist when teacher is at capacity
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S02
+- Validated by: M007/S01+S02 — /api/waitlist POST with supabaseAdmin; unique constraint; 15 capacity tests
+
+### WAIT-02 — Teacher sees waitlist in dashboard and can manually open spots
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S02
+- Validated by: M007/S02 — /dashboard/waitlist RSC page with removeWaitlistEntry server action
+
+### WAIT-03 — Waitlisted parents auto-notified via email when capacity frees up
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S02
+- Validated by: M007/S02 — checkAndNotifyWaitlist utility; 7 unit + 1 integration test pass
+
+### SESS-01 — Teacher can define session types with custom labels, prices, and optional durations
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S03
+- Validated by: M007/S03 — SessionTypeManager CRUD; 8 session-type-pricing unit tests pass
+
+### SESS-02 — Booking flow shows session type selector with correct price per type
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S03
+- Validated by: M007/S03 — BookingCalendar session type picker; 18 booking-slots tests pass
+
+### SESS-03 — Stripe payment intent uses session-type price instead of flat hourly_rate
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M007/S03
+- Validated by: M007/S03 — 8 unit tests; dollar-to-cent Math.round(Number(price)*100)
+
+### SESS-04 — Teachers without session types continue using single hourly_rate (backward compatible)
+- Class: continuity
+- Status: validated
+- Source: user
+- Primary Slice: M007/S03
+- Validated by: M007/S03 — Hourly-rate fallback test passes; subject dropdown guard verified
+
+### DIR-01 — Public /tutors directory page listing published teachers with filters
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M008/S01
+- Validated by: M008/S01 — /tutors page with working filters
+
+### DIR-02 — Filter by subject, grade level, location, and price range
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M008/S01
+- Validated by: M008/S01 — URL query param filters on /tutors
+
+### DIR-03 — Full-text search across teacher name, school, subjects, bio
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M008/S02
+- Validated by: M008/S02 — tsvector + GIN index; 'SAT prep' search returns matching teachers
+
+### SEO-03 — XML sitemap listing all published teacher profile URLs
+- Class: launchability
+- Status: validated
+- Source: inferred
+- Primary Slice: M008/S03
+- Validated by: M008/S03 — /sitemap.xml lists all published teacher URLs
+
+### SEO-04 — SEO-optimized category pages (/tutors/math, /tutors/chicago, etc.)
+- Class: differentiator
+- Status: validated
+- Source: user
+- Primary Slice: M008/S03
+- Validated by: M008/S03 — /tutors/math shows only math teachers with correct page title
+
+### ANALYTICS-01 — Track page views on teacher /[slug] pages
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M008/S04
+- Validated by: M008/S04 — page_views table + /api/track-view endpoint
+
+### ANALYTICS-02 — Teacher dashboard shows view count and booking conversion funnel
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M008/S04
+- Validated by: M008/S04 — /dashboard/analytics with views, form opens, bookings, conversion rate
+
+### RECUR-01 — Parent can set a recurring schedule when booking
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M009/S01
+- Validated by: M009/S01 — RecurringOptions.tsx + check-conflicts endpoint; 8 tests pass
+
+### RECUR-02 — System auto-creates future booking rows for recurring schedule
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M009/S01
+- Validated by: M009/S01 — recurring_schedules table + create-recurring route; 9 tests pass
+
+### RECUR-03 — Each recurring session has individual payment handling
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M009/S02
+- Validated by: M009/S02 — per-session PI from saved card; 8 tests pass
+
+### RECUR-04 — Teacher and parent can cancel individual sessions or entire recurring series
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M009/S03
+- Validated by: M009/S03 — cancelSingleRecurringSession + cancelRecurringSeries; 16+10 tests pass
+
+### RECUR-05 — Recurring bookings respect availability and prevent double-booking
+- Class: continuity
+- Status: validated
+- Source: inferred
+- Primary Slice: M009/S01
+- Validated by: M009/S01 — checkDateConflicts utility; 8 conflict tests pass
+
+### RECUR-06 — Saved card via Stripe Customer + SetupIntent for auto-charge
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M009/S02
+- Validated by: M009/S01+S02 — PI with setup_future_usage:'off_session'; webhook stores stripe_payment_method_id
+
+### RECUR-07 — Cron charges upcoming recurring sessions 24h before
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M009/S02
+- Validated by: M009/S02 — /api/cron/recurring-charges at 0 12 * * *; 8 tests pass
+
+### RECUR-08 — Parent self-service cancellation via secure link/page
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M009/S03
+- Validated by: M009/S03 — /manage/[token] + cancel routes; 10 tests pass
+
+### RECUR-09 — Recurring sessions visible in dashboard with series badge
+- Class: quality-attribute
+- Status: validated
+- Source: inferred
+- Primary Slice: M009/S03
+- Validated by: M009/S03 — Recurring + Payment Failed badges on ConfirmedSessionCard
+
 ## Deferred
 
 ### ADMIN-03 — Admin moderation (suspend teachers, remove reviews, refund bookings)
@@ -981,50 +938,27 @@ This file is the explicit capability and coverage contract for the project.
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| QR-01 | core-capability | validated | M006/S01 | none | M006/S01 |
-| QR-02 | differentiator | validated | M006/S01 | none | M006/S01 |
-| SWIPE-01 | differentiator | validated | M006/S02 | none | M006/S02 |
-| SWIPE-02 | quality-attribute | validated | M006/S02 | none | M006/S02 |
-| OG-01 | quality-attribute | validated | M006/S03 | none | M006/S03 |
-| CAP-01 | core-capability | active | M007/S01 | none | unmapped |
-| CAP-02 | core-capability | active | M007/S01 | M007/S02 | unmapped |
-| WAIT-01 | core-capability | active | M007/S02 | none | unmapped |
-| WAIT-02 | core-capability | active | M007/S02 | none | unmapped |
-| WAIT-03 | core-capability | active | M007/S02 | none | unmapped |
-| SESS-01 | core-capability | active | M007/S03 | none | unmapped |
-| SESS-02 | core-capability | active | M007/S03 | none | unmapped |
-| SESS-03 | core-capability | active | M007/S03 | none | unmapped |
-| SESS-04 | continuity | active | M007/S03 | none | unmapped |
-| DIR-01 | core-capability | active | M008/S01 | M008/S02, M008/S03 | unmapped |
-| DIR-02 | core-capability | active | M008/S01 | none | unmapped |
-| DIR-03 | core-capability | active | M008/S02 | none | unmapped |
-| SEO-03 | launchability | active | M008/S03 | none | unmapped |
-| SEO-04 | differentiator | active | M008/S03 | M008/S01 | unmapped |
-| ANALYTICS-01 | core-capability | active | M008/S04 | none | unmapped |
-| ANALYTICS-02 | core-capability | active | M008/S04 | none | unmapped |
-| RECUR-01 | core-capability | validated | M009/S01 | none | M009/S01 |
-| RECUR-02 | core-capability | validated | M009/S01 | M009/S02 | M009/S01 |
-| RECUR-03 | core-capability | validated | M009/S02 | none | M009/S02 |
-| RECUR-04 | core-capability | validated | M009/S03 | none | M009/S03 |
-| RECUR-05 | continuity | validated | M009/S01 | none | M009/S01 |
-| RECUR-06 | core-capability | validated | M009/S02 | none | M009/S01+S02 |
-| RECUR-07 | core-capability | validated | M009/S02 | none | M009/S02 |
-| RECUR-08 | core-capability | validated | M009/S03 | none | M009/S03 |
-| RECUR-09 | quality-attribute | validated | M009/S03 | none | M009/S03 |
 | PARENT-04 | core-capability | active | M010/S01 | none | unmapped |
-| PARENT-05 | quality-attribute | active | M010/S02 | none | unmapped |
-| PARENT-06 | core-capability | active | M010/S03 | none | unmapped |
-| ADMIN-01 | operability | active | M010/S04 | none | unmapped |
-| ADMIN-02 | operability | active | M010/S04 | none | unmapped |
-| AUTH-03 | core-capability | active | none | none | unmapped |
-| AUTH-04 | differentiator | active | none | none | unmapped |
+| PARENT-05 | quality-attribute | active | M010/S03 | none | unmapped |
+| PARENT-06 | core-capability | active | M010/S04 | none | unmapped |
+| PARENT-07 | core-capability | active | M010/S01 | M010/S03, M010/S04 | unmapped |
+| PARENT-08 | core-capability | active | M010/S01 | none | unmapped |
+| PARENT-09 | core-capability | active | M010/S03 | none | unmapped |
+| MSG-01 | core-capability | active | M010/S04 | none | unmapped |
+| MSG-02 | quality-attribute | active | M010/S04 | none | unmapped |
+| MSG-03 | quality-attribute | active | M010/S04 | none | unmapped |
+| ADMIN-01 | operability | active | M010/S05 | none | unmapped |
+| ADMIN-02 | operability | active | M010/S05 | none | unmapped |
+| ADMIN-04 | operability | active | M010/S05 | none | unmapped |
+| AUTH-03 | core-capability | active | M010/S02 | none | unmapped |
+| AUTH-04 | differentiator | active | M010/S02 | none | unmapped |
 | ADMIN-03 | operability | deferred | none | none | unmapped |
 | A2P-01 | operability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 37
-- Mapped to slices: 35
-- Validated: 87
+- Active requirements: 14
+- Mapped to slices: 14
+- Validated: 108
 - Deferred: 2
-- Unmapped active requirements: 2 (AUTH-03, AUTH-04 — pending milestone assignment)
+- Unmapped active requirements: 0

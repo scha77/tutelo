@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-03-31T15:00:12.847Z",
+  "exported_at": "2026-04-01T01:46:39.394Z",
   "milestones": [
     {
       "id": "M001",
@@ -380,6 +380,80 @@
       ],
       "requirement_coverage": "RECUR-01 (recurring schedule selection) → S01. RECUR-02 (auto-create booking rows) → S01. RECUR-03 (per-session payment) → S02. RECUR-04 (cancel individual/series) → S03. RECUR-05 (availability + double-booking prevention) → S01. RECUR-06 (saved card via SetupIntent) → S02. RECUR-07 (cron auto-charge) → S02. RECUR-08 (parent self-service cancel) → S03. RECUR-09 (dashboard series badge) → S03.",
       "boundary_map_markdown": "### S01 → S02\n\nProduces:\n- `supabase/migrations/0014_recurring_schedules.sql` → recurring_schedules table + bookings.recurring_schedule_id FK\n- `src/lib/utils/recurring.ts` → generateRecurringSeries(startDate, dayOfWeek, frequency, count), checkAvailabilityForDates(teacherId, dates, startTime, endTime)\n- `src/app/api/recurring-booking/route.ts` → POST handler that creates recurring_schedule + N booking rows atomically\n- BookingCalendar extended with recurring options UI (frequency selector, week count, skipped-date summary)\n\nConsumes:\n- nothing (first slice)\n\n### S02 → S03\n\nProduces:\n- Stripe Customer creation + SetupIntent card-saving flow integrated into recurring booking creation\n- `src/lib/utils/recurring-charge.ts` → chargeUpcomingRecurringSessions() for cron\n- Extended `/api/cron/stripe-reminders` with recurring charge logic\n- `stripe_customer_id` column on bookings or a parent-level record\n- Payment failure status + notification emails\n\nConsumes from S01:\n- recurring_schedules table schema\n- bookings.recurring_schedule_id FK\n- /api/recurring-booking route (extended with SetupIntent flow)\n\n### S01 → S03\n\nProduces:\n- recurring_schedules table + bookings.recurring_schedule_id (S03 reads these for cancel-series logic)\n\nConsumes from S01:\n- recurring_schedules table\n- bookings.recurring_schedule_id\n\n### S02 → S03\n\nProduces:\n- stripe_customer_id (S03 may need to void saved-card PIs on series cancellation)\n\nConsumes from S02:\n- Stripe Customer + saved payment method infrastructure"
+    },
+    {
+      "id": "M010",
+      "title": "",
+      "status": "queued",
+      "depends_on": [],
+      "created_at": "2026-04-01T01:29:48.674Z",
+      "completed_at": null,
+      "vision": "Transform Tutelo's parent side from anonymous guest-booking into a full account experience — login-required dashboard with multi-child management, saved payment cards, real-time teacher-parent messaging — and give the platform operator a read-only admin dashboard with metrics and activity feed. Verify Google SSO end-to-end.",
+      "success_criteria": [
+        "Parent can log in, see a dashboard with children, booking history, saved card, and message threads",
+        "Parent can add a child and book a session selecting that child from a dropdown instead of typing a name",
+        "Parent's card is auto-saved on first Stripe booking; subsequent bookings use saved card in one click",
+        "Teacher and parent can exchange text messages in real-time within the app, with email notifications",
+        "Google SSO works end-to-end for both teacher and parent accounts",
+        "Teacher who signed in via Google can still verify school email for the Verified badge",
+        "Platform operator visits /admin and sees teacher count, booking volume, revenue, and recent activity",
+        "All existing booking flows (guest, direct, recurring) continue working unchanged"
+      ],
+      "key_risks": [
+        {
+          "risk": "Supabase Realtime has never been used in this project",
+          "whyItMatters": "Subscription stability, RLS interaction, and reconnection behavior are unproven — messaging depends entirely on this"
+        },
+        {
+          "risk": "Parent dashboard is a new route group coexisting with teacher dashboard",
+          "whyItMatters": "Dual-role users (teacher + parent) need a coherent navigation experience; auth callback routing must handle both roles"
+        },
+        {
+          "risk": "Google OAuth provider may not be configured in Supabase dashboard",
+          "whyItMatters": "Configuration is external and untestable in unit tests — end-to-end verification requires manual setup"
+        },
+        {
+          "risk": "Saved card reuse requires parent-level Stripe Customer distinct from per-schedule Customers",
+          "whyItMatters": "Existing recurring schedule Customers are per-schedule; parent-level Customer is additive but must not break existing flows"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Supabase Realtime unproven",
+          "retireIn": "S04",
+          "whatWillBeProven": "Live Realtime subscription receives INSERT events on messages table, filtered by conversation_id, with RLS enforced"
+        },
+        {
+          "riskOrUnknown": "Parent dashboard route coexistence",
+          "retireIn": "S01",
+          "whatWillBeProven": "Parent can log in, see /parent dashboard, and teacher dashboard still works — auth callback routes correctly"
+        },
+        {
+          "riskOrUnknown": "Google OAuth provider config",
+          "retireIn": "S02",
+          "whatWillBeProven": "Full OAuth flow from button click through callback to dashboard landing, for both new and returning users"
+        },
+        {
+          "riskOrUnknown": "Parent-level Stripe Customer",
+          "retireIn": "S03",
+          "whatWillBeProven": "Parent-level Customer stores card, card is reusable across teacher bookings, existing recurring Customers unaffected"
+        }
+      ],
+      "verification_contract": "Unit tests for children CRUD, saved card flow, messaging thread/send, admin queries; tsc --noEmit clean; npm run build passes",
+      "verification_integration": "Parent round-trip: login → add child → book session → pay with saved card → send/receive message in real-time",
+      "verification_operational": "Google OAuth end-to-end; Realtime subscriptions connected; admin dashboard accessible for allowlisted users, 404 for others",
+      "verification_uat": "Manual verification of parent dashboard UX, messaging real-time feel, Google SSO flow, admin dashboard accuracy",
+      "definition_of_done": [
+        "All 14 active M010 requirements mapped and tested",
+        "Parent dashboard is fully functional — children, bookings, saved card, messages",
+        "Teacher-parent messaging works in real-time with email notifications",
+        "Google SSO verified end-to-end for both teacher and parent roles",
+        "Admin dashboard shows accurate metrics for allowlisted users",
+        "All existing flows (guest booking, direct booking, recurring) still work",
+        "tsc clean, build green, all new and existing tests pass"
+      ],
+      "requirement_coverage": "Covers: PARENT-04, PARENT-05, PARENT-06, PARENT-07, PARENT-08, PARENT-09, MSG-01, MSG-02, MSG-03, ADMIN-01, ADMIN-02, ADMIN-04, AUTH-03, AUTH-04. Leaves for later: ADMIN-03 (deferred). Orphan risks: none.",
+      "boundary_map_markdown": "### S01 → S03, S04\n\nProduces:\n- `children` table (id, parent_user_id, name, grade_level, created_at)\n- `parents` table or column on auth.users metadata (stripe_customer_id for parent-level Stripe Customer)\n- `/parent` route group with layout, sidebar, auth guard\n- `/parent/children` page with add/edit/remove child UI\n- `/parent/bookings` page with booking history\n- BookingCalendar child selector when parent is logged in with children on file\n- Auth callback route updated to handle parent-only users (no teacher row)\n\nConsumes: nothing (first slice)\n\n### S02 (independent)\n\nProduces:\n- Verified Google OAuth flow (Supabase provider configured)\n- Auth callback handles Google-authed users correctly\n- School email verification confirmed working post-Google-login\n\nConsumes: nothing (independent verification slice)\n\n### S03 → S04\n\nProduces:\n- Parent-level Stripe Customer (stripe_customer_id on parents/children table or user metadata)\n- `/parent/payment` page showing saved card (last-4, brand) with remove button\n- Booking flow detects saved card and offers \"Pay with saved card\" option\n- SetupIntent-based card save on first Stripe booking\n\nConsumes from S01:\n- Parent dashboard layout and auth guard\n- `/parent` route group structure\n\n### S04\n\nProduces:\n- `conversations` table (id, teacher_id, parent_user_id, created_at, updated_at)\n- `messages` table (id, conversation_id, sender_id, body, created_at, read_at)\n- `/parent/messages` page with conversation list and chat view\n- Teacher dashboard messages page (new page or section)\n- Supabase Realtime subscription for live message delivery\n- NewMessageEmail React Email template\n- Fire-and-forget email notification on new message\n\nConsumes from S01:\n- Parent dashboard layout and auth guard\n- Parent user identification pattern\n\n### S05 (independent)\n\nProduces:\n- `/admin` route group with layout, env var auth guard\n- Admin metrics page: teacher count, active teachers, booking volume, revenue, conversion rates\n- Admin activity feed: recent signups, bookings, completions\n- ADMIN_USER_IDS env var check in layout\n\nConsumes: nothing (reads from existing tables)"
     }
   ],
   "slices": [
@@ -1062,6 +1136,110 @@
       "proof_level": "Integration — real server actions + API routes with mocked DB/Stripe, type-checked, production build verified",
       "integration_closure": "- Upstream: recurring_schedules table (S01), bookings.recurring_schedule_id FK (S01), payment_failed status (S02), Stripe Customer + saved PM (S02)\n- New wiring: cancel_token on recurring_schedules → manageUrl in confirmation email → /manage/[token] page; cancelRecurringSeries server action → ConfirmedSessionCard \"Cancel Series\" button; token-gated /api/manage/* routes → CancelSeriesForm\n- Remaining for milestone: Nothing — S03 is the final slice in M009",
       "observability_impact": "- Runtime signals: console.error on Stripe PI cancel failures in new cancel actions (non-blocking); console.error on email send failures (fire-and-forget)\n- Inspection surfaces: booking.status = 'cancelled' queryable in Supabase; /api/manage/cancel-series returns JSON result summary\n- Failure visibility: Stripe void errors logged but don't block cancellation; invalid/missing token returns structured error response\n- Redaction: cancel_token is never exposed in teacher emails or dashboard UI — only in parent confirmation email",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S01",
+      "title": "Parent Dashboard & Multi-Child",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "Parent logs in, sees dashboard with My Children, adds a child, and books a session selecting that child from a dropdown instead of typing a name",
+      "created_at": "2026-04-01T01:35:50.348Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Parent logs in, sees a login-required dashboard at /parent with My Children, My Bookings, and Overview pages. Parent can add/edit/delete children. When booking a session, logged-in parents with children see a child dropdown instead of free-text student name. Auth routing correctly sends parent-only users to /parent (not /onboarding).",
+      "success_criteria": "## Must-Haves\n\n- `children` table exists with RLS, `child_id` nullable FK on `bookings`\n- Auth routing: parent-only users land at `/parent` after login/signup/OAuth (not `/onboarding`)\n- Parent layout with auth guard, sidebar nav (Overview, My Children, My Bookings), mobile bottom nav\n- Children CRUD API: list, create, update, delete — scoped to authenticated parent\n- BookingCalendar shows child `<Select>` for logged-in parents with children; guests see free-text `<Input>` unchanged\n- Booking submission sends `child_id` alongside `student_name` when child is selected\n- `/account` redirects to `/parent/bookings` for backward compatibility\n- Dual-role users see cross-link between teacher and parent dashboards\n- `npx tsc --noEmit` passes, `npx vitest run` passes, `npx next build` succeeds\n\n## Threat Surface\n\n- **Abuse**: Children CRUD API must enforce `parent_id = auth.uid()` on all operations. A parent must not be able to read/update/delete another parent's children. RLS on `children` table + server-side auth check in API routes.\n- **Data exposure**: Children names and grade are PII. RLS ensures only the owning parent can access. API routes must use `getUser()` (verified identity, not just session cookie).\n- **Input trust**: Child name/grade come from user input → sanitize via Zod schema (min/max length). `child_id` in booking form is a UUID → validate format. No SQL injection risk with Supabase client.\n\n## Requirement Impact\n\n- **Requirements touched**: PARENT-04, PARENT-07, PARENT-08\n- **Re-verify**: Existing booking flow (guest bookings must still work with free-text student_name), teacher dashboard booking display (student_name still populated), auth login flow for teachers (must still route to /dashboard)\n- **Decisions revisited**: None\n\n## Proof Level\n\n- This slice proves: integration\n- Real runtime required: yes (Supabase DB, auth session, API routes)\n- Human/UAT required: yes (booking flow end-to-end with child selector)\n\n## Verification\n\n- `npx tsc --noEmit` — zero type errors\n- `npx vitest run src/__tests__/parent-children.test.ts` — children CRUD tests pass\n- `npx vitest run src/__tests__/parent-dashboard.test.ts` — dashboard auth routing tests pass\n- `npx vitest run src/__tests__/booking-child-selector.test.ts` — child selector logic tests pass\n- `npx next build` — clean production build\n\n## Observability / Diagnostics\n\n- Runtime signals: API route console.error on children CRUD failures; BookingCalendar logs child fetch errors to console\n- Inspection surfaces: `/api/parent/children` GET returns children list for authenticated parent; `bookings` table `child_id` column populated on child-selected bookings\n- Failure visibility: 401 on unauthenticated API calls; 404 on non-existent child operations; booking form falls back to free-text input on children fetch failure\n- Redaction constraints: Children names are PII — no server-side logging of child names\n\n## Integration Closure\n\n- Upstream surfaces consumed: `src/lib/supabase/server.ts` (createClient), `src/lib/supabase/service.ts` (supabaseAdmin), `src/actions/auth.ts` (signIn/signOut), `src/components/auth/LoginForm.tsx` (existing login UI), `src/components/profile/BookingCalendar.tsx` (booking form)\n- New wiring introduced in this slice: `(parent)` route group with layout + 3 pages, `/api/parent/children` CRUD endpoints, `children` table + `child_id` FK on bookings, child selector in BookingCalendar\n- What remains before the milestone is truly usable end-to-end: S02 (Google SSO verification), S03 (saved payment methods — dashboard placeholder ready), S04 (messaging — dashboard placeholder ready), S05 (admin dashboard)",
+      "proof_level": "integration — real Supabase DB, auth session, API routes exercised via tests and manual verification",
+      "integration_closure": "Parent route group wired into Next.js App Router; children CRUD API connected to Supabase; BookingCalendar fetches children client-side and passes child_id through booking flow. Auth routing updated across login/callback/signIn to fork teacher vs parent.",
+      "observability_impact": "API routes log errors on CRUD failures; booking form degrades gracefully on children fetch failure; RLS enforces data isolation",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S02",
+      "title": "Google SSO Verification",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Teacher or parent clicks Continue with Google, completes OAuth flow, lands in the correct dashboard. Teacher can still verify school email post-Google-login",
+      "created_at": "2026-04-01T01:35:50.349Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Verify Google SSO works end-to-end: Supabase provider configured, OAuth flow completes, auth callback routes correctly, school email verification unaffected",
+      "success_criteria": "Google OAuth button initiates flow; callback exchanges code for session; new Google users are created; returning Google users resume session; school email verification flow works for Google-authed teachers",
+      "proof_level": "operational — full OAuth flow requires live Supabase + Google provider",
+      "integration_closure": "Auth callback handles Google-authed users with and without teacher rows; school email verification decoupled from auth provider",
+      "observability_impact": "Auth callback logs provider type for debugging; error page shows meaningful message on OAuth failure",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S03",
+      "title": "Saved Payment Methods",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Parent books a session, card is auto-saved to their Stripe Customer. On next booking, parent sees Pay with saved card and completes checkout in one click",
+      "created_at": "2026-04-01T01:35:50.349Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Create parent-level Stripe Customer, auto-save card on first booking via SetupIntent, show saved card in parent dashboard, offer one-click checkout with saved card",
+      "success_criteria": "First booking creates Stripe Customer and saves card; parent dashboard shows saved card (last-4, brand); next booking offers saved card checkout; parent can remove saved card; existing recurring schedule Customers unaffected",
+      "proof_level": "integration — Stripe Customer creation, card save, and reuse in booking flow",
+      "integration_closure": "Parent-level Stripe Customer coexists with per-schedule Customers from M009; booking flow detects and offers saved card",
+      "observability_impact": "Stripe Customer ID logged on creation; card save failures logged with parent context",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S04",
+      "title": "Teacher-Parent Messaging",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Teacher sends a message from their dashboard. Parent sees it appear in real-time on their dashboard. New message triggers email notification to recipient",
+      "created_at": "2026-04-01T01:35:50.349Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Build text-only messaging: conversations table, messages table, chat UI for both parent and teacher dashboards, Supabase Realtime for live delivery, email notification on new message",
+      "success_criteria": "Teacher can initiate conversation with a parent from their dashboard; parent sees message in real-time without refresh; both can reply; email notification sent on new message; conversations persist across sessions",
+      "proof_level": "integration — real-time message delivery via Supabase Realtime postgres_changes",
+      "integration_closure": "Messages table has RLS policies for both teacher and parent; Realtime subscription filtered by conversation_id; email notification uses existing Resend infrastructure",
+      "observability_impact": "Message send failures logged with conversation context; Realtime subscription errors surfaced to UI",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S05",
+      "title": "Admin Dashboard",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "Platform operator visits /admin, sees teacher count, total bookings, revenue, and recent activity feed. Non-admin users get 404",
+      "created_at": "2026-04-01T01:35:50.349Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Build read-only admin dashboard with platform metrics and activity feed, gated by ADMIN_USER_IDS env var",
+      "success_criteria": "Admin sees total teachers, active teachers, total bookings, revenue, conversion rates; activity feed shows recent signups, bookings, completions; non-admin users get 404; no mutations possible",
+      "proof_level": "contract — unit tests for metric queries + env var gating",
+      "integration_closure": "Admin queries use supabaseAdmin (service role) to bypass RLS; ADMIN_USER_IDS checked against getUser() result in layout",
+      "observability_impact": "Admin access attempts logged (allowed and denied)",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -4053,6 +4231,201 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Created children table with RLS, added child_id FK to bookings, and routed parent-only users to /parent in all auth paths",
+      "status": "complete",
+      "one_liner": "Created children table with RLS, added child_id FK to bookings, and routed parent-only users to /parent in all auth paths",
+      "narrative": "Created migration 0017 with children table (id, parent_id, name, grade, created_at), RLS owner policy, parent_id index, and child_id FK on bookings. Updated OAuth callback, email signIn, and login page to route non-teacher users to /parent instead of /onboarding. Replaced /account page with redirect to /parent/bookings. Used consistent getUser() + maybeSingle() teacher check pattern across all three auth paths.",
+      "verification_result": "npx tsc --noEmit passed with zero errors. grep confirms redirect.*parent present in auth.ts. No remaining /onboarding redirects in callback or login (only intentional one in signUp for new user flow).",
+      "duration": "",
+      "completed_at": "2026-04-01T01:46:39.357Z",
+      "blocker_discovered": false,
+      "deviations": "Callback route switched from getClaims() to getUser() for consistency with other auth paths — same effect, cleaner pattern.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0017_children_and_parent_dashboard.sql",
+        "src/app/(auth)/callback/route.ts",
+        "src/actions/auth.ts",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/account/page.tsx"
+      ],
+      "key_decisions": [
+        "Used getUser() instead of getClaims() in callback and login for consistency with signIn teacher check pattern",
+        "Kept signUp /onboarding redirect intentionally for new user flow"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M010\nkey_files:\n  - supabase/migrations/0017_children_and_parent_dashboard.sql\n  - src/app/(auth)/callback/route.ts\n  - src/actions/auth.ts\n  - src/app/(auth)/login/page.tsx\n  - src/app/account/page.tsx\nkey_decisions:\n  - Used getUser() instead of getClaims() in callback and login for consistency with signIn teacher check pattern\n  - Kept signUp /onboarding redirect intentionally for new user flow\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T01:46:39.358Z\nblocker_discovered: false\n---\n\n# T01: Created children table with RLS, added child_id FK to bookings, and routed parent-only users to /parent in all auth paths\n\n**Created children table with RLS, added child_id FK to bookings, and routed parent-only users to /parent in all auth paths**\n\n## What Happened\n\nCreated migration 0017 with children table (id, parent_id, name, grade, created_at), RLS owner policy, parent_id index, and child_id FK on bookings. Updated OAuth callback, email signIn, and login page to route non-teacher users to /parent instead of /onboarding. Replaced /account page with redirect to /parent/bookings. Used consistent getUser() + maybeSingle() teacher check pattern across all three auth paths.\n\n## Verification\n\nnpx tsc --noEmit passed with zero errors. grep confirms redirect.*parent present in auth.ts. No remaining /onboarding redirects in callback or login (only intentional one in signUp for new user flow).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 14200ms |\n| 2 | `npx tsc --noEmit && grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'` | 0 | ✅ pass | 14000ms |\n| 3 | `grep -rn 'onboarding' callback/route.ts login/page.tsx` | 1 | ✅ pass | 50ms |\n\n\n## Deviations\n\nCallback route switched from getClaims() to getUser() for consistency with other auth paths — same effect, cleaner pattern.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0017_children_and_parent_dashboard.sql`\n- `src/app/(auth)/callback/route.ts`\n- `src/actions/auth.ts`\n- `src/app/(auth)/login/page.tsx`\n- `src/app/account/page.tsx`\n",
+      "description": "Create the `children` table and add `child_id` FK to `bookings`. Fix auth routing so parent-only users (no teacher row) land at `/parent` instead of `/onboarding`. Redirect `/account` to `/parent/bookings`.\n\n## Steps\n\n1. Create `supabase/migrations/0017_children_and_parent_dashboard.sql`:\n   - `children` table: `id UUID PK DEFAULT gen_random_uuid()`, `parent_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `name TEXT NOT NULL`, `grade TEXT`, `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`\n   - Index on `parent_id`\n   - Enable RLS with policy `children_owner_all` for ALL using `parent_id = auth.uid()`\n   - `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS child_id UUID REFERENCES children(id)`\n\n2. Update `src/app/(auth)/callback/route.ts`:\n   - After successful code exchange, query `teachers` table for the user\n   - If teacher row exists → redirect to `/dashboard`\n   - If no teacher row → redirect to `/parent` (NOT `/onboarding`)\n   - Use `.maybeSingle()` instead of `.single()` to avoid error on no match\n\n3. Update `src/actions/auth.ts` `signIn` function:\n   - When no `redirectTo` is provided and no teacher row found → redirect to `/parent` (currently goes to `/onboarding`)\n   - The `signUp` function currently redirects to `/onboarding` — keep this for now (new users need onboarding or will reach parent dashboard via login)\n\n4. Update `src/app/(auth)/login/page.tsx`:\n   - Currently redirects all authenticated users to `/dashboard`\n   - Change: if `claims` exist, check teacher table. If teacher row → `/dashboard`, else → `/parent`\n   - Use `getUser()` + teacher query to decide (consistent with other auth checks)\n\n5. Update `src/app/account/page.tsx`:\n   - Replace the entire component body with a simple redirect to `/parent/bookings`\n   - Keep metadata export for SEO continuity\n\n## Must-Haves\n\n- [ ] Migration file creates `children` table with RLS and `child_id` on `bookings`\n- [ ] OAuth callback routes parent-only users to `/parent`\n- [ ] Email/password signIn routes parent-only users to `/parent`\n- [ ] Login page redirects authenticated parent-only users to `/parent`\n- [ ] `/account` redirects to `/parent/bookings`\n- [ ] Teacher users still route to `/dashboard` in all three auth paths\n\n## Verification\n\n- `npx tsc --noEmit` passes\n- Migration SQL is syntactically valid (no runtime test — applied manually)\n- Grep confirms no remaining hardcoded `/onboarding` redirect for non-teacher users in auth files",
+      "estimate": "45m",
+      "files": [
+        "supabase/migrations/0017_children_and_parent_dashboard.sql",
+        "src/app/(auth)/callback/route.ts",
+        "src/actions/auth.ts",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/account/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit && grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'",
+      "inputs": [
+        "`src/app/(auth)/callback/route.ts` — current OAuth callback routing logic",
+        "`src/actions/auth.ts` — current signIn/signUp/signOut server actions",
+        "`src/app/(auth)/login/page.tsx` — current login page with auth redirect",
+        "`src/app/account/page.tsx` — current parent account page to be replaced with redirect",
+        "`supabase/migrations/0016_cancel_token.sql` — last existing migration (naming reference)"
+      ],
+      "expected_output": [
+        "`supabase/migrations/0017_children_and_parent_dashboard.sql` — children table, RLS, child_id on bookings",
+        "`src/app/(auth)/callback/route.ts` — updated OAuth callback with parent routing",
+        "`src/actions/auth.ts` — updated signIn with parent routing fork",
+        "`src/app/(auth)/login/page.tsx` — updated login page redirect logic",
+        "`src/app/account/page.tsx` — redirect to /parent/bookings"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Build parent dashboard layout, sidebar, mobile nav, and all three pages",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create the `(parent)` route group with auth-guarded layout, ParentSidebar, ParentMobileNav, and three pages: overview, children management, and booking history. This is the full parent dashboard UI.\n\n## Steps\n\n1. Create `src/lib/parent-nav.ts` — parent navigation items:\n   - Overview → `/parent` (LayoutDashboard icon)\n   - My Children → `/parent/children` (Users icon)\n   - My Bookings → `/parent/bookings` (CalendarCheck icon)\n   - Export `parentNavItems` array and reuse `isActivePath` from `src/lib/nav.ts`\n\n2. Create `src/components/parent/ParentSidebar.tsx` — desktop sidebar:\n   - Mirrors `src/components/dashboard/Sidebar.tsx` structure\n   - Props: `userName: string`, `childrenCount: number`, `hasTeacherRole: boolean`\n   - Shows Tutelo logo, user name, nav items from `parentNavItems`\n   - If `hasTeacherRole`, show 'Go to Teacher Dashboard' link to `/dashboard`\n   - Badge on 'My Children' showing `childrenCount` if > 0\n   - Sign out button using `signOut` server action\n   - Mark as `'use client'` (uses `usePathname`)\n\n3. Create `src/components/parent/ParentMobileNav.tsx` — mobile bottom nav:\n   - Mirrors `src/components/dashboard/MobileBottomNav.tsx`\n   - Icon-only bottom tabs for the 3 parent nav items\n   - Mark as `'use client'`\n\n4. Create `src/app/(parent)/layout.tsx` — parent layout:\n   - Server component. Uses `getUser()` for auth (NOT `getClaims()`)\n   - If no user → `redirect('/login?redirect=/parent')`\n   - Query `teachers` table to check dual-role → pass `hasTeacherRole` boolean to sidebar\n   - Query `children` count for sidebar badge\n   - Render ParentSidebar + ParentMobileNav + `{children}` in same flex layout as teacher dashboard\n\n5. Create `src/app/(parent)/parent/page.tsx` — Overview page:\n   - Server component. Fetch user's children count and upcoming bookings count\n   - Display welcome message with user email/name\n   - Stats cards: number of children, upcoming sessions, past sessions\n   - Quick links to 'Add a Child' and 'Find a Tutor' (link to `/tutors`)\n\n6. Create `src/app/(parent)/parent/children/page.tsx` — Children management:\n   - Client component (`'use client'`) — needs interactivity for add/edit/delete\n   - Fetch children from `GET /api/parent/children` on mount\n   - Display children as cards (name, grade, created date)\n   - 'Add Child' button opens inline form (name input, optional grade input)\n   - Each child card has Edit and Delete buttons\n   - Edit shows inline form pre-filled with child data\n   - Delete shows confirmation dialog\n   - Uses shadcn/ui components: Card, Button, Input, Label, Dialog (for delete confirm)\n\n7. Create `src/app/(parent)/parent/bookings/page.tsx` — Booking history:\n   - Server component. Port logic from existing `src/app/account/page.tsx`\n   - Fetch bookings where `parent_id = user.id`, join teacher info\n   - Split into upcoming/past sections\n   - Show child name from `children` join when `child_id` is present, else `student_name`\n   - Include rebook link for past sessions\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Supabase getUser() | Redirect to /login | Redirect to /login | Redirect to /login |\n| Children API fetch | Show empty state + retry button | Show error toast | Show empty state |\n| Bookings query | Show 'No bookings yet' | Show loading skeleton | Show empty state |\n\n## Must-Haves\n\n- [ ] Parent layout with `getUser()` auth guard\n- [ ] ParentSidebar with nav items, dual-role cross-link, sign out\n- [ ] ParentMobileNav with icon-only bottom tabs\n- [ ] Overview page with stats cards\n- [ ] Children page with full add/edit/delete UI\n- [ ] Bookings page with upcoming/past split\n- [ ] All components use shadcn/ui consistently\n\n## Verification\n\n- `npx tsc --noEmit` passes\n- `npx next build` succeeds (all new pages compile)\n- All 7 new files exist and are non-empty",
+      "estimate": "2h",
+      "files": [
+        "src/lib/parent-nav.ts",
+        "src/components/parent/ParentSidebar.tsx",
+        "src/components/parent/ParentMobileNav.tsx",
+        "src/app/(parent)/layout.tsx",
+        "src/app/(parent)/parent/page.tsx",
+        "src/app/(parent)/parent/children/page.tsx",
+        "src/app/(parent)/parent/bookings/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx next build",
+      "inputs": [
+        "`src/app/(dashboard)/dashboard/layout.tsx` — teacher layout pattern to mirror",
+        "`src/components/dashboard/Sidebar.tsx` — teacher sidebar pattern to mirror",
+        "`src/components/dashboard/MobileBottomNav.tsx` — teacher mobile nav pattern to mirror",
+        "`src/lib/nav.ts` — navigation helpers (isActivePath) to reuse",
+        "`src/app/account/page.tsx` — existing booking history logic to port",
+        "`src/actions/auth.ts` — signOut action for sidebar",
+        "`supabase/migrations/0017_children_and_parent_dashboard.sql` — children table schema (from T01)"
+      ],
+      "expected_output": [
+        "`src/lib/parent-nav.ts` — parent navigation items and helpers",
+        "`src/components/parent/ParentSidebar.tsx` — parent desktop sidebar",
+        "`src/components/parent/ParentMobileNav.tsx` — parent mobile bottom nav",
+        "`src/app/(parent)/layout.tsx` — parent layout with auth guard",
+        "`src/app/(parent)/parent/page.tsx` — parent overview page",
+        "`src/app/(parent)/parent/children/page.tsx` — children management page",
+        "`src/app/(parent)/parent/bookings/page.tsx` — booking history page"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Children CRUD API routes and BookingCalendar child selector graft",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create the children CRUD API endpoints and graft the child selector into BookingCalendar.tsx. Update BookingRequestSchema to accept optional `child_id` and pass it through the booking creation flow.\n\n## Steps\n\n1. Create `src/app/api/parent/children/route.ts` — GET + POST:\n   - GET: `getUser()` → 401 if not authenticated. Query `children` where `parent_id = user.id`, order by `created_at`. Return JSON array.\n   - POST: `getUser()` → 401. Parse body with Zod: `{ name: string (1-100 chars), grade?: string (max 50 chars) }`. Insert via `supabaseAdmin` with `parent_id = user.id`. Return created child JSON.\n\n2. Create `src/app/api/parent/children/[id]/route.ts` — PUT + DELETE:\n   - PUT: `getUser()` → 401. Fetch child by id, verify `parent_id = user.id` → 404 if not owner. Update name/grade. Return updated child.\n   - DELETE: `getUser()` → 401. Fetch child by id, verify `parent_id = user.id` → 404 if not owner. Delete. Return 204.\n   - Both routes: validate `id` param is UUID.\n\n3. Update `src/lib/schemas/booking.ts`:\n   - Add `child_id: z.string().uuid().optional()` to `BookingRequestSchema`\n   - Add `childId: z.string().uuid().optional()` to `RecurringBookingSchema`\n\n4. Update `src/app/api/direct-booking/create-intent/route.ts`:\n   - Destructure `childId` from validated body (alongside existing fields)\n   - Add `child_id: childId ?? null` to the bookings INSERT object\n   - No other changes needed — `student_name` is still populated from `studentName`\n\n5. Graft child selector into `src/components/profile/BookingCalendar.tsx`:\n   - Add `childId: string | null` to form state (default `null`)\n   - Add `children` state: `{ id: string; name: string; grade: string | null }[]` (default `[]`)\n   - Add `childrenLoaded` state boolean (default `false`)\n   - In a `useEffect` on mount: call `supabase.auth.getUser()`. If user exists, fetch `GET /api/parent/children`. Set `children` state + `childrenLoaded = true`.\n   - In the form JSX (around line 706-720, the student name field):\n     - If `childrenLoaded && children.length > 0`: render `<Select>` with children as options + 'Someone else (type name)' option. When a child is selected, set `form.name = child.name` and `form.childId = child.id`. When 'Someone else' selected, set `form.childId = null` and show the text `<Input>`.\n     - If user logged in but no children: show existing text `<Input>` unchanged\n     - If user not logged in: show existing text `<Input>` unchanged\n   - Update `createPaymentIntent()` to include `childId: form.childId` in the POST body\n   - Update `createRecurringIntent()` to include `childId: form.childId` in the POST body\n   - Update `handleSubmit()` deferred path to include `childId: form.childId`\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| GET /api/parent/children | Set children=[], show text input | Set children=[], show text input | Set children=[], show text input |\n| supabase.auth.getUser() | Treat as guest, show text input | Treat as guest, show text input | Treat as guest, show text input |\n\n## Negative Tests\n\n- **Malformed inputs**: POST /api/parent/children with empty name → 400; with name > 100 chars → 400; with missing body → 400\n- **Error paths**: GET /api/parent/children without auth → 401; DELETE /api/parent/children/[id] with non-owner id → 404\n- **Boundary conditions**: Parent with 0 children → text input shown; parent with 1 child → select shown with that child + 'Someone else'\n\n## Must-Haves\n\n- [ ] GET /api/parent/children returns only the authenticated parent's children\n- [ ] POST /api/parent/children validates name and creates child\n- [ ] PUT /api/parent/children/[id] verifies ownership before update\n- [ ] DELETE /api/parent/children/[id] verifies ownership before delete\n- [ ] BookingRequestSchema accepts optional child_id\n- [ ] create-intent route passes child_id to booking INSERT\n- [ ] BookingCalendar shows Select for logged-in parent with children\n- [ ] BookingCalendar falls back to text Input for guests\n- [ ] Selecting a child sets both form.name (child's name) and form.childId\n\n## Verification\n\n- `npx tsc --noEmit` passes\n- `npx next build` succeeds\n- Manual: API routes return correct responses (tested via curl or browser dev tools)",
+      "estimate": "1h30m",
+      "files": [
+        "src/app/api/parent/children/route.ts",
+        "src/app/api/parent/children/[id]/route.ts",
+        "src/lib/schemas/booking.ts",
+        "src/app/api/direct-booking/create-intent/route.ts",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx next build",
+      "inputs": [
+        "`src/lib/supabase/server.ts` — createClient for auth in API routes",
+        "`src/lib/supabase/service.ts` — supabaseAdmin for mutations",
+        "`src/lib/schemas/booking.ts` — existing BookingRequestSchema to extend",
+        "`src/app/api/direct-booking/create-intent/route.ts` — existing booking creation to add child_id",
+        "`src/components/profile/BookingCalendar.tsx` — 856-line booking form to graft child selector into",
+        "`supabase/migrations/0017_children_and_parent_dashboard.sql` — children table schema (from T01)"
+      ],
+      "expected_output": [
+        "`src/app/api/parent/children/route.ts` — GET + POST children API",
+        "`src/app/api/parent/children/[id]/route.ts` — PUT + DELETE child API",
+        "`src/lib/schemas/booking.ts` — updated with optional child_id",
+        "`src/app/api/direct-booking/create-intent/route.ts` — updated to pass child_id to booking INSERT",
+        "`src/components/profile/BookingCalendar.tsx` — updated with child selector"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Add test coverage for children CRUD, dashboard auth, and booking child selector",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write comprehensive vitest tests covering the three key areas: children API CRUD operations, parent dashboard auth routing, and the BookingCalendar child selector behavior.\n\n## Steps\n\n1. Create `src/__tests__/parent-children.test.ts` — Children CRUD API tests:\n   - Mock `supabase.auth.getUser()` and `supabaseAdmin` Supabase client\n   - Test GET returns only the authenticated parent's children (mock parent_id filter)\n   - Test POST validates name (rejects empty, rejects >100 chars), creates child with correct parent_id\n   - Test PUT verifies ownership — returns 404 when child belongs to different parent\n   - Test DELETE verifies ownership — returns 404 when child belongs to different parent\n   - Test all endpoints return 401 when unauthenticated\n   - Pattern: import the route handler directly, pass mock Request objects\n\n2. Create `src/__tests__/parent-dashboard.test.ts` — Dashboard auth routing tests:\n   - Test auth routing logic (extracted to testable functions where possible):\n     - No user → would redirect to login\n     - User with teacher row → teacher dashboard path (has cross-link)\n     - User without teacher row → parent dashboard path\n     - Dual-role user → parent dashboard with hasTeacherRole=true\n   - Test `signIn` action routing: mock teacher lookup, verify redirect targets\n   - Test login page redirect logic: authenticated teacher → /dashboard, authenticated non-teacher → /parent\n\n3. Create `src/__tests__/booking-child-selector.test.ts` — BookingCalendar child selector tests:\n   - Mock `supabase.auth.getUser()` and `fetch` for children API\n   - Test: logged-in user with children → Select element rendered with child options\n   - Test: logged-in user with no children → text Input rendered (no Select)\n   - Test: unauthenticated user → text Input rendered (no Select)\n   - Test: selecting a child sets form.childId and form.name to child's name\n   - Test: selecting 'Someone else' clears childId, shows text Input\n   - Test: booking submission includes child_id when child is selected\n   - Note: BookingCalendar has many props — use minimal required props for focused tests\n\n## Must-Haves\n\n- [ ] Children CRUD tests cover: list, create, update, delete, auth guard, ownership guard\n- [ ] Dashboard auth tests cover: no user redirect, teacher routing, parent routing, dual-role\n- [ ] Booking child selector tests cover: children dropdown, guest fallback, form state\n- [ ] All tests pass with `npx vitest run`\n\n## Verification\n\n- `npx vitest run src/__tests__/parent-children.test.ts` — all pass\n- `npx vitest run src/__tests__/parent-dashboard.test.ts` — all pass\n- `npx vitest run src/__tests__/booking-child-selector.test.ts` — all pass\n- `npx vitest run` — full suite still passes (no regressions)",
+      "estimate": "1h30m",
+      "files": [
+        "src/__tests__/parent-children.test.ts",
+        "src/__tests__/parent-dashboard.test.ts",
+        "src/__tests__/booking-child-selector.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/parent-children.test.ts && npx vitest run src/__tests__/parent-dashboard.test.ts && npx vitest run src/__tests__/booking-child-selector.test.ts",
+      "inputs": [
+        "`src/app/api/parent/children/route.ts` — children API to test (from T03)",
+        "`src/app/api/parent/children/[id]/route.ts` — children API to test (from T03)",
+        "`src/actions/auth.ts` — signIn routing logic to test (from T01)",
+        "`src/app/(auth)/login/page.tsx` — login redirect logic to test (from T01)",
+        "`src/components/profile/BookingCalendar.tsx` — child selector to test (from T03)",
+        "`src/app/(parent)/layout.tsx` — parent layout auth logic to test (from T02)",
+        "`src/__tests__/parent-auth.test.ts` — existing test patterns to follow",
+        "`src/__tests__/parent-account.test.ts` — existing test patterns to follow"
+      ],
+      "expected_output": [
+        "`src/__tests__/parent-children.test.ts` — children CRUD API tests",
+        "`src/__tests__/parent-dashboard.test.ts` — parent dashboard auth routing tests",
+        "`src/__tests__/booking-child-selector.test.ts` — BookingCalendar child selector tests"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -4318,6 +4691,18 @@
       "rationale": "Recurring series can span 6+ months — expiring tokens would lock parents out. The 256-bit random token (randomBytes(32)) is cryptographically secure and unguessable. Token-only auth follows the established review/[token] pattern and matches how subscription services handle self-service cancellation. The token is effectively the parent's credential for this specific series — scoped to a single recurring_schedule_id, not a general auth token.",
       "revisable": "Yes — could add expiry or rate-limiting if abuse is detected",
       "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 33,
+      "id": "D023",
+      "when_context": "M010 planning",
+      "scope": "architecture",
+      "decision": "Saved payment method scope per parent",
+      "choice": "Single saved card per parent (auto-saved on first Stripe booking), not multiple cards with selector",
+      "rationale": "Multiple saved cards adds a management UI (card picker, set default, remove individual cards) that most parents won't need. Single card covers the primary use case — rebooking friction reduction. Parent can update their card from the dashboard.",
+      "revisable": "Yes — add multi-card if parent feedback requests it",
+      "made_by": "collaborative",
       "superseded_by": null
     }
   ],
@@ -4816,6 +5201,39 @@
       "verdict": "✅ pass",
       "duration_ms": 13100,
       "created_at": "2026-03-31T14:49:34.093Z"
+    },
+    {
+      "id": 46,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14200,
+      "created_at": "2026-04-01T01:46:39.357Z"
+    },
+    {
+      "id": 47,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit && grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14000,
+      "created_at": "2026-04-01T01:46:39.357Z"
+    },
+    {
+      "id": 48,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "grep -rn 'onboarding' callback/route.ts login/page.tsx",
+      "exit_code": 1,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T01:46:39.357Z"
     }
   ]
 }

@@ -10,28 +10,29 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Check if teacher profile exists — redirect to /dashboard or /onboarding
-      // try/catch: teachers table does not exist yet (Plan 03 creates schema)
+      // Check if teacher profile exists — route teachers to /dashboard, parents to /parent
       try {
-        const { data } = await supabase.auth.getClaims()
-        const claims = data?.claims ?? null
+        const { data: { user } } = await supabase.auth.getUser()
 
-        if (claims?.sub) {
+        if (user) {
           const { data: teacher } = await supabase
             .from('teachers')
             .select('id')
-            .eq('user_id', claims.sub)
-            .single()
+            .eq('user_id', user.id)
+            .maybeSingle()
 
           if (teacher) {
             return NextResponse.redirect(`${origin}/dashboard`)
           }
+
+          // Non-teacher user → parent dashboard
+          return NextResponse.redirect(`${origin}/parent`)
         }
       } catch {
-        // teachers table doesn't exist yet — fall through to /onboarding
+        // Fallback: send to /parent if teacher check fails
       }
 
-      return NextResponse.redirect(`${origin}/onboarding`)
+      return NextResponse.redirect(`${origin}/parent`)
     }
   }
 
