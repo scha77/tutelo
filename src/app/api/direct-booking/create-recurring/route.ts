@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     sessionTypeId,
     frequency,
     totalSessions,
+    childId,
   } = parsed.data
 
   // 2. Authenticate the parent
@@ -167,6 +168,7 @@ export async function POST(req: Request) {
         notes: notes ?? null,
         parent_phone: parentPhone ?? null,
         parent_sms_opt_in: parentSmsOptIn ?? false,
+        child_id: childId ?? null,
         booking_date: date,
         start_time: startTime,
         end_time: endTime,

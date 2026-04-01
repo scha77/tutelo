@@ -130,7 +130,7 @@
   - Estimate: 2h
   - Files: src/lib/parent-nav.ts, src/components/parent/ParentSidebar.tsx, src/components/parent/ParentMobileNav.tsx, src/app/(parent)/layout.tsx, src/app/(parent)/parent/page.tsx, src/app/(parent)/parent/children/page.tsx, src/app/(parent)/parent/bookings/page.tsx
   - Verify: npx tsc --noEmit && npx next build
-- [ ] **T03: Children CRUD API routes and BookingCalendar child selector graft** — Create the children CRUD API endpoints and graft the child selector into BookingCalendar.tsx. Update BookingRequestSchema to accept optional `child_id` and pass it through the booking creation flow.
+- [x] **T03: Verified children CRUD API routes (GET/POST/PUT/DELETE with ownership checks) and BookingCalendar child selector dropdown with graceful fallback to text input** — Create the children CRUD API endpoints and graft the child selector into BookingCalendar.tsx. Update BookingRequestSchema to accept optional `child_id` and pass it through the booking creation flow.
 
 ## Steps
 

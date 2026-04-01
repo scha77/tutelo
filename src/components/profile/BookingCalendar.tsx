@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Globe, CheckCircle2, Phone } from 'lucide-react'
 import {
@@ -83,6 +83,7 @@ export function BookingCalendar({
     notes: '',
     phone: '',
     smsOptIn: false,
+    childId: null as string | null,
   })
   const [submitting, setSubmitting] = useState(false)
   const [bookingConfirmation, setBookingConfirmation] = useState<{
@@ -98,10 +99,41 @@ export function BookingCalendar({
   const [creatingIntent, setCreatingIntent] = useState(false)
   const [selectedSessionType, setSelectedSessionType] = useState<SessionType | null>(null)
   const [recurringData, setRecurringData] = useState<RecurringConfirmData | null>(null)
+  const [children, setChildren] = useState<{ id: string; name: string; grade: string | null }[]>([])
+  const [childrenLoaded, setChildrenLoaded] = useState(false)
 
   const hasSessionTypes = !!(sessionTypes && sessionTypes.length > 0)
 
   const supabase = createClient()
+
+  // Fetch parent's children on mount (graceful degradation: any failure → show text input)
+  useEffect(() => {
+    let cancelled = false
+    async function loadChildren() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || cancelled) {
+          setChildrenLoaded(true)
+          return
+        }
+        const res = await fetch('/api/parent/children')
+        if (!res.ok) {
+          setChildrenLoaded(true)
+          return
+        }
+        const data = await res.json()
+        if (!cancelled && Array.isArray(data)) {
+          setChildren(data)
+        }
+      } catch {
+        // Treat any error as "no children available" — show text input
+      } finally {
+        if (!cancelled) setChildrenLoaded(true)
+      }
+    }
+    loadChildren()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const visitorTimezone = useMemo(() => {
     try {
@@ -174,6 +206,7 @@ export function BookingCalendar({
       notes: '',
       phone: '',
       smsOptIn: false,
+      childId: null,
     })
     setBookingConfirmation(null)
     setErrorMessage(null)
@@ -198,6 +231,7 @@ export function BookingCalendar({
         parentPhone: form.phone.trim() || undefined,
         parentSmsOptIn: form.phone.trim() ? form.smsOptIn : false,
         ...(selectedSessionType ? { sessionTypeId: selectedSessionType.id } : {}),
+        ...(form.childId ? { childId: form.childId } : {}),
       }),
     })
     setCreatingIntent(false)
@@ -245,6 +279,7 @@ export function BookingCalendar({
         parentPhone: form.phone.trim() || undefined,
         parentSmsOptIn: form.phone.trim() ? form.smsOptIn : false,
         ...(selectedSessionType ? { sessionTypeId: selectedSessionType.id } : {}),
+        ...(form.childId ? { childId: form.childId } : {}),
         frequency: recurringData.frequency,
         totalSessions: recurringData.count,
       }),
@@ -313,6 +348,7 @@ export function BookingCalendar({
         parent_phone: form.phone.trim() || undefined,
         parent_sms_opt_in: form.phone.trim() ? form.smsOptIn : false,
         ...(selectedSessionType ? { session_type_id: selectedSessionType.id } : {}),
+        ...(form.childId ? { child_id: form.childId } : {}),
       })
       setSubmitting(false)
       if (result.success) {
@@ -703,16 +739,57 @@ export function BookingCalendar({
 
             {/* Form — field order: Student's name → Subject (if visible) → Email → Notes */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5 max-w-md">
-              {/* Student's name */}
+              {/* Student's name — child selector for logged-in parents with children */}
               <div className="space-y-1.5">
                 <Label htmlFor="name">Student&apos;s name</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  required
-                  placeholder="Alex Johnson"
-                />
+                {childrenLoaded && children.length > 0 ? (
+                  <>
+                    <Select
+                      value={form.childId ?? '__other__'}
+                      onValueChange={(value) => {
+                        if (value === '__other__') {
+                          setForm((f) => ({ ...f, childId: null, name: '' }))
+                        } else {
+                          const child = children.find((c) => c.id === value)
+                          if (child) {
+                            setForm((f) => ({ ...f, childId: child.id, name: child.name }))
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger id="child-select">
+                        <SelectValue placeholder="Select a child" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {children.map((child) => (
+                          <SelectItem key={child.id} value={child.id}>
+                            {child.name}{child.grade ? ` (${child.grade})` : ''}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__other__">Someone else (type name)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* Show text input when "Someone else" is selected */}
+                    {!form.childId && (
+                      <Input
+                        id="name"
+                        value={form.name}
+                        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                        required
+                        placeholder="Alex Johnson"
+                        className="mt-1.5"
+                      />
+                    )}
+                  </>
+                ) : (
+                  <Input
+                    id="name"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    required
+                    placeholder="Alex Johnson"
+                  />
+                )}
               </div>
 
               {/* Subject — shown only when teacher has multiple subjects AND no session types */}

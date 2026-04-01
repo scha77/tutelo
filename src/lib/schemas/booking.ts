@@ -12,6 +12,7 @@ export const BookingRequestSchema = z.object({
   parent_phone: z.string().optional(),
   parent_sms_opt_in: z.boolean().optional().default(false),
   session_type_id: z.string().uuid().optional(),
+  child_id: z.string().uuid().optional(),
 })
 
 export type BookingRequestData = z.infer<typeof BookingRequestSchema>
@@ -29,6 +30,7 @@ export const RecurringBookingSchema = z.object({
   sessionTypeId: z.string().uuid().optional(),
   frequency: z.enum(['weekly', 'biweekly']),
   totalSessions: z.number().int().min(2).max(26),
+  childId: z.string().uuid().optional(),
 })
 
 export type RecurringBookingData = z.infer<typeof RecurringBookingSchema>
