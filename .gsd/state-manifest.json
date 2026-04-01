@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T13:19:36.710Z",
+  "exported_at": "2026-04-01T13:21:34.275Z",
   "milestones": [
     {
       "id": "M001",
@@ -4499,19 +4499,23 @@
       "milestone_id": "M010",
       "slice_id": "S02",
       "id": "T02",
-      "title": "Write callback route handler tests and AUTH-04 provider-agnostic smoke test",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 5 tests covering all 4 OAuth callback paths plus AUTH-04 provider-agnostic smoke test",
+      "status": "complete",
+      "one_liner": "Added 5 tests covering all 4 OAuth callback paths plus AUTH-04 provider-agnostic smoke test",
+      "narrative": "Created src/__tests__/google-sso-callback.test.ts with two describe blocks. The first tests the OAuth callback route handler (src/app/(auth)/callback/route.ts) by mocking createClient from @/lib/supabase/server using vi.hoisted() pattern. Four tests cover all execution paths: teacher user redirects to /dashboard, non-teacher redirects to /parent, missing code param redirects to /login?error=auth, and exchange failure redirects to /login?error=auth. The second describe block is the AUTH-04 smoke test which reads src/actions/verification.ts source and asserts it uses getUser() with no provider-specific logic (no 'provider', 'google', or 'getSession().provider' references).",
+      "verification_result": "Ran npx vitest run src/__tests__/google-sso-callback.test.ts — 5 tests pass. Ran npx vitest run — full suite: 426 tests pass across 46 test files, 0 failures, no regressions.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T13:21:34.250Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/google-sso-callback.test.ts"
+      ],
+      "key_decisions": [
+        "Used vi.hoisted() for mock factory so mockExchangeCodeForSession, mockGetUser, and mockFrom are available at module-scope before vi.mock runs"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M010\nkey_files:\n  - src/__tests__/google-sso-callback.test.ts\nkey_decisions:\n  - Used vi.hoisted() for mock factory so mockExchangeCodeForSession, mockGetUser, and mockFrom are available at module-scope before vi.mock runs\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:21:34.251Z\nblocker_discovered: false\n---\n\n# T02: Added 5 tests covering all 4 OAuth callback paths plus AUTH-04 provider-agnostic smoke test\n\n**Added 5 tests covering all 4 OAuth callback paths plus AUTH-04 provider-agnostic smoke test**\n\n## What Happened\n\nCreated src/__tests__/google-sso-callback.test.ts with two describe blocks. The first tests the OAuth callback route handler (src/app/(auth)/callback/route.ts) by mocking createClient from @/lib/supabase/server using vi.hoisted() pattern. Four tests cover all execution paths: teacher user redirects to /dashboard, non-teacher redirects to /parent, missing code param redirects to /login?error=auth, and exchange failure redirects to /login?error=auth. The second describe block is the AUTH-04 smoke test which reads src/actions/verification.ts source and asserts it uses getUser() with no provider-specific logic (no 'provider', 'google', or 'getSession().provider' references).\n\n## Verification\n\nRan npx vitest run src/__tests__/google-sso-callback.test.ts — 5 tests pass. Ran npx vitest run — full suite: 426 tests pass across 46 test files, 0 failures, no regressions.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/google-sso-callback.test.ts` | 0 | ✅ pass | 542ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 9890ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/google-sso-callback.test.ts`\n",
       "description": "The OAuth callback route (`src/app/(auth)/callback/route.ts`) correctly routes teachers to `/dashboard` and parents to `/parent`, but has no direct unit tests. This task writes tests that call the GET handler with mocked Supabase, covering all four paths. It also adds an AUTH-04 smoke test proving `requestSchoolEmailVerification` is provider-agnostic (uses `getUser()`, not provider-specific checks).\n\n## Steps\n\n1. Create `src/__tests__/google-sso-callback.test.ts`. Mock `@/lib/supabase/server` using `vi.mock()` with `vi.hoisted()` pattern (see `verification.test.ts` for reference).\n2. Write test: 'routes teacher to /dashboard' — mock `exchangeCodeForSession` success, `getUser` returns user, `teachers` query returns a row. Import GET from the callback route. Call `GET(new NextRequest('http://localhost/callback?code=test-code'))`. Assert response is a redirect to URL containing `/dashboard`.\n3. Write test: 'routes non-teacher to /parent' — same as above but teachers query returns null. Assert redirect to `/parent`.\n4. Write test: 'redirects to /login?error=auth when code is missing' — call GET with no `code` param. Assert redirect to `/login?error=auth`.\n5. Write test: 'redirects to /login?error=auth when code exchange fails' — mock `exchangeCodeForSession` returning an error. Assert redirect to `/login?error=auth`.\n6. Write AUTH-04 smoke test: read `src/actions/verification.ts` source with `fs.readFileSync`. Assert it contains `supabase.auth.getUser()` call. Assert it does NOT contain `provider`, `google`, or `getSession().provider` — proving the verification flow is auth-provider-agnostic.\n7. Run `npx vitest run src/__tests__/google-sso-callback.test.ts` to confirm all pass. Then run `npx vitest run` to confirm no regressions (419+ tests).\n\n## Must-Haves\n\n- [ ] Callback route test: teacher → /dashboard redirect\n- [ ] Callback route test: non-teacher → /parent redirect\n- [ ] Callback route test: missing code → /login?error=auth\n- [ ] Callback route test: exchange failure → /login?error=auth\n- [ ] AUTH-04 smoke: verification action uses getUser(), has no provider-specific logic\n- [ ] Full test suite passes (419+ tests)",
       "estimate": "35m",
       "files": [
@@ -5597,6 +5601,28 @@
       "verdict": "✅ pass",
       "duration_ms": 9200,
       "created_at": "2026-04-01T13:19:36.680Z"
+    },
+    {
+      "id": 65,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/google-sso-callback.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 542,
+      "created_at": "2026-04-01T13:21:34.250Z"
+    },
+    {
+      "id": 66,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9890,
+      "created_at": "2026-04-01T13:21:34.250Z"
     }
   ]
 }

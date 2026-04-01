@@ -23,7 +23,7 @@
   - Estimate: 25m
   - Files: src/components/auth/LoginForm.tsx, src/__tests__/google-sso-login.test.tsx
   - Verify: npx vitest run src/__tests__/google-sso-login.test.tsx && npx vitest run 2>&1 | tail -5
-- [ ] **T02: Write callback route handler tests and AUTH-04 provider-agnostic smoke test** — The OAuth callback route (`src/app/(auth)/callback/route.ts`) correctly routes teachers to `/dashboard` and parents to `/parent`, but has no direct unit tests. This task writes tests that call the GET handler with mocked Supabase, covering all four paths. It also adds an AUTH-04 smoke test proving `requestSchoolEmailVerification` is provider-agnostic (uses `getUser()`, not provider-specific checks).
+- [x] **T02: Added 5 tests covering all 4 OAuth callback paths plus AUTH-04 provider-agnostic smoke test** — The OAuth callback route (`src/app/(auth)/callback/route.ts`) correctly routes teachers to `/dashboard` and parents to `/parent`, but has no direct unit tests. This task writes tests that call the GET handler with mocked Supabase, covering all four paths. It also adds an AUTH-04 smoke test proving `requestSchoolEmailVerification` is provider-agnostic (uses `getUser()`, not provider-specific checks).
 
 ## Steps
 
