@@ -606,3 +606,67 @@ if (convError.code === '23505' || convError.message?.includes('unique')) {
 ```
 
 This pattern avoids a transaction or advisory lock while still handling the race gracefully.
+
+---
+
+## Admin Route Group: notFound() vs redirect() for Access Control (M010/S05)
+
+For the `(admin)` route group access gate, `notFound()` (not `redirect()`) is the correct call for unauthorized users. `redirect('/login')` would leak information that the admin route exists. `notFound()` returns a 404, making the route appear to not exist at all. This is a security pattern — use it for any operator-only route where existence should not be revealed.
+
+Pattern for env-var-based access gating:
+```ts
+const allowlist = process.env.ADMIN_USER_IDS?.split(',').map((s) => s.trim()).filter(Boolean) ?? []
+if (allowlist.length === 0 || !allowlist.includes(user.id)) {
+  notFound()
+}
+```
+
+The `filter(Boolean)` is essential: without it, `['']` (from an empty env var) has `.length === 1`, so the `allowlist.length === 0` guard doesn't fire. Trailing commas or spaces in `ADMIN_USER_IDS` also get cleaned up by `trim()` + `filter(Boolean)`.
+
+---
+
+## Admin Dashboard Testing: vi.resetModules + Dynamic Import Pattern (M010/S05)
+
+The admin layout directly reads `process.env.ADMIN_USER_IDS` at the module level (inside the component function). To test different env var states per test, each test must reset modules and dynamically import the component fresh. Using `vi.mock` with a static mock is insufficient because the env var is read at call time, not import time.
+
+Pattern (matches existing `parent-dashboard.test.ts`):
+```ts
+beforeEach(() => {
+  vi.resetModules()
+})
+
+it('returns 404 when ADMIN_USER_IDS is empty', async () => {
+  process.env.ADMIN_USER_IDS = ''
+  const { default: AdminLayout } = await import('@/app/(admin)/layout.tsx')
+  // ...
+})
+```
+
+---
+
+## Next.js Route Groups Strip Parenthesized Directory Segments from URLs (M010/S02)
+
+`src/app/(auth)/callback/route.ts` is accessible at `/callback`, NOT `/auth/callback`. Next.js route groups strip the `(groupname)` directory from the URL. Always verify OAuth `redirectTo` values and any hardcoded paths against the actual accessible URL, not the filesystem path. This was the root cause of the Google SSO bug fixed in S02: `LoginForm.tsx` was passing `redirectTo: .../auth/callback` when the route lives at `/callback`.
+
+---
+
+## getUser() + maybySingle() Is the Canonical Auth Pattern for Teacher-vs-Parent Routing (M010/S01)
+
+For all three auth paths (OAuth callback route, `signIn` server action, login page `getServerSideProps`-style check), the consistent pattern is:
+1. `const { data: { user } } = await supabase.auth.getUser()` — verified identity, not JWT claims
+2. Query `teachers` table with `.eq('user_id', user.id).maybeSingle()` — returns null if no teacher row (parent-only account)
+3. Teacher row found → redirect to `/dashboard`; no teacher row → redirect to `/parent`
+
+**Do NOT use `getClaims()`** — unreliable on POST re-renders in Next.js 16. This pattern is established across the entire codebase as of M010.
+
+---
+
+## Pending Production Operations for M010 Features
+
+Before M010 features work in production, these operational steps are required:
+1. Run `supabase db push` (or apply via Supabase dashboard) for migrations 0017 (children), 0018 (parent_profiles), 0019 (conversations/messages)
+2. Set `ADMIN_USER_IDS` env var in Vercel with comma-separated UUID(s) of operator accounts
+3. Confirm Supabase Realtime publication for the `messages` table is active (migration 0019 adds it, but confirm in Supabase dashboard)
+4. Configure Google OAuth in Supabase Authentication settings (Client ID + Secret from Google Cloud Console) and set the authorized redirect URI to `https://tutelo.app/callback`
+
+Without these, the parent dashboard will render but children/payment will fail (DB tables missing), messaging Realtime won't fire, and admin dashboard will return 404 for all users.

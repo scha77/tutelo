@@ -938,20 +938,20 @@ This file is the explicit capability and coverage contract for the project.
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| PARENT-04 | core-capability | active | M010/S01 | none | unmapped |
-| PARENT-05 | quality-attribute | active | M010/S03 | none | unmapped |
-| PARENT-06 | core-capability | active | M010/S04 | none | unmapped |
-| PARENT-07 | core-capability | active | M010/S01 | M010/S03, M010/S04 | unmapped |
-| PARENT-08 | core-capability | active | M010/S01 | none | unmapped |
-| PARENT-09 | core-capability | active | M010/S03 | none | unmapped |
-| MSG-01 | core-capability | active | M010/S04 | none | unmapped |
-| MSG-02 | quality-attribute | active | M010/S04 | none | unmapped |
-| MSG-03 | quality-attribute | active | M010/S04 | none | unmapped |
-| ADMIN-01 | operability | active | M010/S05 | none | unmapped |
-| ADMIN-02 | operability | active | M010/S05 | none | unmapped |
-| ADMIN-04 | operability | active | M010/S05 | none | unmapped |
-| AUTH-03 | core-capability | active | M010/S02 | none | unmapped |
-| AUTH-04 | differentiator | active | M010/S02 | none | unmapped |
+| PARENT-04 | core-capability | validated | M010/S01 | none | M010/S01 |
+| PARENT-05 | quality-attribute | validated | M010/S03 | none | M010/S03 |
+| PARENT-06 | core-capability | validated | M010/S04 | none | M010/S04 |
+| PARENT-07 | core-capability | validated | M010/S01 | M010/S03, M010/S04 | M010/S01 |
+| PARENT-08 | core-capability | validated | M010/S01 | none | M010/S01 |
+| PARENT-09 | core-capability | validated | M010/S03 | none | M010/S03 |
+| MSG-01 | core-capability | validated | M010/S04 | none | M010/S04 |
+| MSG-02 | quality-attribute | validated | M010/S04 | none | M010/S04 |
+| MSG-03 | quality-attribute | validated | M010/S04 | none | M010/S04 |
+| ADMIN-01 | operability | validated | M010/S05 | none | M010/S05 |
+| ADMIN-02 | operability | validated | M010/S05 | none | M010/S05 |
+| ADMIN-04 | operability | validated | M010/S05 | none | M010/S05 |
+| AUTH-03 | core-capability | validated | M010/S02 | none | M010/S02 |
+| AUTH-04 | differentiator | validated | M010/S02 | none | M010/S02 |
 | ADMIN-03 | operability | deferred | none | none | unmapped |
 | A2P-01 | operability | deferred | none | none | unmapped |
 
