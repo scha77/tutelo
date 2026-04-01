@@ -124,7 +124,7 @@ The GET route returns only safe display fields (brand, last4, exp). The DELETE r
   - Estimate: 1h
   - Files: src/app/api/parent/payment-method/route.ts, src/app/(parent)/parent/payment/page.tsx, src/lib/parent-nav.ts
   - Verify: npx tsc --noEmit && test -f src/app/api/parent/payment-method/route.ts && test -f src/app/(parent)/parent/payment/page.tsx && grep -q 'CreditCard' src/lib/parent-nav.ts && npx vitest run
-- [ ] **T03: Add comprehensive test coverage for saved payment method flows** — ## Description
+- [x] **T03: Created saved-payment-methods.test.ts with 18 tests covering create-intent Customer attachment, create-recurring Customer reuse, webhook PM upsert, and GET/DELETE payment-method API routes** — ## Description
 
 Creates `src/__tests__/saved-payment-methods.test.ts` with 15+ unit tests covering all new and modified code paths from T01 and T02. Tests follow the established mock patterns from `payment-intent.test.ts` and `parent-children.test.ts` — vi.hoisted for Stripe mocks, vi.mock for supabase server/service.
 

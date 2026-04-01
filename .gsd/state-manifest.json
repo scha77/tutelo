@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T13:45:06.271Z",
+  "exported_at": "2026-04-01T13:50:03.410Z",
   "milestones": [
     {
       "id": "M001",
@@ -4643,19 +4643,24 @@
       "milestone_id": "M010",
       "slice_id": "S03",
       "id": "T03",
-      "title": "Add comprehensive test coverage for saved payment method flows",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Created saved-payment-methods.test.ts with 18 tests covering create-intent Customer attachment, create-recurring Customer reuse, webhook PM upsert, and GET/DELETE payment-method API routes",
+      "status": "complete",
+      "one_liner": "Created saved-payment-methods.test.ts with 18 tests covering create-intent Customer attachment, create-recurring Customer reuse, webhook PM upsert, and GET/DELETE payment-method API routes",
+      "narrative": "Created src/__tests__/saved-payment-methods.test.ts with 5 test groups (18 total tests) following the established vi.hoisted + vi.mock patterns. Tests cover: create-intent Customer attachment (5 tests: new Customer creation, setup_future_usage/customer on PI, Customer reuse, parent_id metadata, backward-compat params), create-recurring Customer reuse (3 tests: existing Customer reuse via retrieve, new Customer creation, recurring_schedules update), webhook PM upsert (4 tests: paymentMethods.retrieve + parent_profiles upsert, skip when no parent_id, skip when no payment_method, idempotent re-delivery), GET payment-method (3 tests: card details, null card, 401), DELETE payment-method (3 tests: detach + clear, 404, 401). Fixed initial TS2702 error by using any type for mock PI objects in webhook tests.",
+      "verification_result": "All verification checks pass: npx vitest run src/__tests__/saved-payment-methods.test.ts (18 pass), npx vitest run (444 pass, 0 fail), npx tsc --noEmit (exit 0), grep -c returns 18 (≥15), all 7 slice-level grep checks pass.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T13:50:03.370Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Used any type for mock PaymentIntent objects in webhook tests instead of Stripe.PaymentIntent to avoid TS2702 with vi.mock'd stripe module.",
+      "known_issues": "Non-fatal stderr warnings about sendRecurringBookingConfirmationEmail in create-recurring tests (route wraps email in try/catch, so tests still pass).",
+      "key_files": [
+        "src/__tests__/saved-payment-methods.test.ts"
+      ],
+      "key_decisions": [
+        "Used any type for mock PI objects in webhook tests rather than importing Stripe namespace (avoids TS2702 with vi.mock'd stripe module)",
+        "Webhook route tests use stripeWebhooksConstructEventMock to bypass signature verification and inject custom event payloads"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M010\nkey_files:\n  - src/__tests__/saved-payment-methods.test.ts\nkey_decisions:\n  - Used any type for mock PI objects in webhook tests rather than importing Stripe namespace (avoids TS2702 with vi.mock'd stripe module)\n  - Webhook route tests use stripeWebhooksConstructEventMock to bypass signature verification and inject custom event payloads\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:50:03.370Z\nblocker_discovered: false\n---\n\n# T03: Created saved-payment-methods.test.ts with 18 tests covering create-intent Customer attachment, create-recurring Customer reuse, webhook PM upsert, and GET/DELETE payment-method API routes\n\n**Created saved-payment-methods.test.ts with 18 tests covering create-intent Customer attachment, create-recurring Customer reuse, webhook PM upsert, and GET/DELETE payment-method API routes**\n\n## What Happened\n\nCreated src/__tests__/saved-payment-methods.test.ts with 5 test groups (18 total tests) following the established vi.hoisted + vi.mock patterns. Tests cover: create-intent Customer attachment (5 tests: new Customer creation, setup_future_usage/customer on PI, Customer reuse, parent_id metadata, backward-compat params), create-recurring Customer reuse (3 tests: existing Customer reuse via retrieve, new Customer creation, recurring_schedules update), webhook PM upsert (4 tests: paymentMethods.retrieve + parent_profiles upsert, skip when no parent_id, skip when no payment_method, idempotent re-delivery), GET payment-method (3 tests: card details, null card, 401), DELETE payment-method (3 tests: detach + clear, 404, 401). Fixed initial TS2702 error by using any type for mock PI objects in webhook tests.\n\n## Verification\n\nAll verification checks pass: npx vitest run src/__tests__/saved-payment-methods.test.ts (18 pass), npx vitest run (444 pass, 0 fail), npx tsc --noEmit (exit 0), grep -c returns 18 (≥15), all 7 slice-level grep checks pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/saved-payment-methods.test.ts` | 0 | ✅ pass | 850ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 11520ms |\n| 3 | `npx tsc --noEmit` | 0 | ✅ pass | 4000ms |\n| 4 | `grep -c 'it(' src/__tests__/saved-payment-methods.test.ts` | 0 | ✅ pass | 50ms |\n| 5 | `test -f supabase/migrations/0018_parent_profiles.sql` | 0 | ✅ pass | 50ms |\n| 6 | `grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts` | 0 | ✅ pass | 50ms |\n| 7 | `grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts` | 0 | ✅ pass | 50ms |\n| 8 | `grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts` | 0 | ✅ pass | 50ms |\n| 9 | `grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts` | 0 | ✅ pass | 50ms |\n| 10 | `grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts` | 0 | ✅ pass | 50ms |\n\n\n## Deviations\n\nUsed any type for mock PaymentIntent objects in webhook tests instead of Stripe.PaymentIntent to avoid TS2702 with vi.mock'd stripe module.\n\n## Known Issues\n\nNon-fatal stderr warnings about sendRecurringBookingConfirmationEmail in create-recurring tests (route wraps email in try/catch, so tests still pass).\n\n## Files Created/Modified\n\n- `src/__tests__/saved-payment-methods.test.ts`\n",
       "description": "## Description\n\nCreates `src/__tests__/saved-payment-methods.test.ts` with 15+ unit tests covering all new and modified code paths from T01 and T02. Tests follow the established mock patterns from `payment-intent.test.ts` and `parent-children.test.ts` — vi.hoisted for Stripe mocks, vi.mock for supabase server/service.\n\nThis is the verification task that proves the slice works correctly at the unit level.\n\n## Negative Tests\n\n- Unauthenticated requests to GET/DELETE payment-method → 401\n- DELETE when no saved card exists → 404\n- Webhook PI with no parent_id metadata → skips PM upsert without error\n- Webhook PI with no payment_method → skips PM upsert without error\n- create-intent with existing parent_profiles Customer → reuses, doesn't create new\n\n## Steps\n\n1. Create `src/__tests__/saved-payment-methods.test.ts` with the following test groups:\n\n   **create-intent Customer attachment (4-5 tests):**\n   - When parent has no parent_profiles row → creates Stripe Customer, upserts to parent_profiles, PI includes `customer` + `setup_future_usage: 'off_session'`\n   - When parent has existing stripe_customer_id in parent_profiles → reuses Customer, no `stripe.customers.create()` call\n   - PI metadata includes `parent_id: user.id`\n   - Backward compat: existing PI creation params (capture_method, transfer_data, etc.) still present\n\n   **create-recurring Customer reuse (3-4 tests):**\n   - When parent has existing parent_profiles Customer → reuses it, no new Customer created\n   - When parent has no parent_profiles row → creates Customer, upserts to parent_profiles AND recurring_schedules\n   - Still stores customer on recurring_schedules for cron backward compat\n\n   **Webhook PM upsert (3-4 tests):**\n   - PI with customer + payment_method + parent_id metadata → calls paymentMethods.retrieve, upserts card details to parent_profiles\n   - PI with no parent_id in metadata (pre-S03 booking) → skips PM upsert, no error\n   - PI with no payment_method → skips PM upsert\n   - Idempotent: second webhook delivery with same PM data → upsert succeeds without error\n\n   **GET /api/parent/payment-method (3 tests):**\n   - Authenticated parent with saved card → returns card_brand, card_last4, card_exp_month, card_exp_year\n   - Authenticated parent with no parent_profiles row → returns { card: null }\n   - Unauthenticated → 401\n\n   **DELETE /api/parent/payment-method (3 tests):**\n   - Authenticated with saved card → calls stripe.paymentMethods.detach, clears card fields on parent_profiles, returns 200\n   - Authenticated with no saved card → 404\n   - Unauthenticated → 401\n\n2. Use the established mock patterns:\n   - `vi.hoisted()` for Stripe mock class with `customers.create`, `paymentIntents.create`, `paymentMethods.retrieve`, `paymentMethods.detach`\n   - `vi.mock('@/lib/supabase/server')` for `createClient` returning mock auth\n   - `vi.mock('@/lib/supabase/service')` for `supabaseAdmin` with chainable `.from().select().eq().maybeSingle()` etc.\n   - Use `vi.mock('@/lib/utils/booking')` and `vi.mock('@/lib/email')` to stub non-Stripe dependencies in route tests\n\n3. Run the full test suite to verify no regressions.\n\n## Must-Haves\n\n- [ ] 15+ tests covering all test groups above\n- [ ] All tests pass: `npx vitest run src/__tests__/saved-payment-methods.test.ts`\n- [ ] Full suite passes: `npx vitest run` with zero regressions\n- [ ] Tests use established vi.hoisted + vi.mock patterns (no novel mock approaches)\n\n## Verification\n\n- `npx vitest run src/__tests__/saved-payment-methods.test.ts` — all tests pass\n- `npx vitest run` — full suite passes with zero regressions\n- `grep -c 'it(' src/__tests__/saved-payment-methods.test.ts` returns >= 15",
       "estimate": "1h30m",
       "files": [
@@ -5944,6 +5949,116 @@
       "verdict": "✅ pass",
       "duration_ms": 11900,
       "created_at": "2026-04-01T13:45:06.227Z"
+    },
+    {
+      "id": 81,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/saved-payment-methods.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 850,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 82,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 11520,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 83,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 4000,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 84,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -c 'it(' src/__tests__/saved-payment-methods.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 85,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "test -f supabase/migrations/0018_parent_profiles.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 86,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 87,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 88,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 89,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 90,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:50:03.370Z"
     }
   ]
 }
