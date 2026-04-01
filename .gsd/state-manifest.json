@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T14:10:38.556Z",
+  "exported_at": "2026-04-01T14:13:04.535Z",
   "milestones": [
     {
       "id": "M001",
@@ -4791,19 +4791,27 @@
       "milestone_id": "M010",
       "slice_id": "S04",
       "id": "T03",
-      "title": "Build shared ChatWindow component and chat detail pages with Realtime",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built ChatWindow client component with Supabase Realtime subscription, optimistic send, and auto-scroll — wired into parent and teacher chat detail pages as thin server-component wrappers",
+      "status": "complete",
+      "one_liner": "Built ChatWindow client component with Supabase Realtime subscription, optimistic send, and auto-scroll — wired into parent and teacher chat detail pages as thin server-component wrappers",
+      "narrative": "Created src/components/messaging/ChatWindow.tsx as a 'use client' component that: receives initial messages and conversation metadata as props; sets up a Supabase Realtime postgres_changes subscription on the messages table filtered by conversation_id; appends incoming messages to local state with deduplication; handles message sending via POST /api/messages with optimistic local append and rollback on failure; scrolls to bottom on new messages; supports Enter-to-send and Shift+Enter for newlines; cleans up the Realtime channel on unmount. Built two thin server-component wrapper pages at /parent/messages/[conversationId] and /dashboard/messages/[conversationId] that verify participant access, fetch initial messages, resolve participant names, and render ChatWindow.",
+      "verification_result": "Ran npx tsc --noEmit (zero errors), confirmed all three output files exist via test -f with properly quoted paths. All 4 checks passed.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T14:13:04.492Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/messaging/ChatWindow.tsx",
+        "src/app/(parent)/parent/messages/[conversationId]/page.tsx",
+        "src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx"
+      ],
+      "key_decisions": [
+        "ChatWindow receives initialMessages as props from server component — no client-side fetch on mount, just Realtime subscription for live updates",
+        "Optimistic send with rollback on failure — message appears immediately in UI, removed if POST /api/messages fails",
+        "Realtime deduplication: incoming INSERT events check for existing message ID and replace optimistic version if found"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M010\nkey_files:\n  - src/components/messaging/ChatWindow.tsx\n  - src/app/(parent)/parent/messages/[conversationId]/page.tsx\n  - src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx\nkey_decisions:\n  - ChatWindow receives initialMessages as props from server component — no client-side fetch on mount, just Realtime subscription for live updates\n  - Optimistic send with rollback on failure — message appears immediately in UI, removed if POST /api/messages fails\n  - Realtime deduplication: incoming INSERT events check for existing message ID and replace optimistic version if found\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T14:13:04.492Z\nblocker_discovered: false\n---\n\n# T03: Built ChatWindow client component with Supabase Realtime subscription, optimistic send, and auto-scroll — wired into parent and teacher chat detail pages as thin server-component wrappers\n\n**Built ChatWindow client component with Supabase Realtime subscription, optimistic send, and auto-scroll — wired into parent and teacher chat detail pages as thin server-component wrappers**\n\n## What Happened\n\nCreated src/components/messaging/ChatWindow.tsx as a 'use client' component that: receives initial messages and conversation metadata as props; sets up a Supabase Realtime postgres_changes subscription on the messages table filtered by conversation_id; appends incoming messages to local state with deduplication; handles message sending via POST /api/messages with optimistic local append and rollback on failure; scrolls to bottom on new messages; supports Enter-to-send and Shift+Enter for newlines; cleans up the Realtime channel on unmount. Built two thin server-component wrapper pages at /parent/messages/[conversationId] and /dashboard/messages/[conversationId] that verify participant access, fetch initial messages, resolve participant names, and render ChatWindow.\n\n## Verification\n\nRan npx tsc --noEmit (zero errors), confirmed all three output files exist via test -f with properly quoted paths. All 4 checks passed.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3200ms |\n| 2 | `test -f src/components/messaging/ChatWindow.tsx` | 0 | ✅ pass | 10ms |\n| 3 | `test -f 'src/app/(parent)/parent/messages/[conversationId]/page.tsx'` | 0 | ✅ pass | 10ms |\n| 4 | `test -f 'src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx'` | 0 | ✅ pass | 10ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/messaging/ChatWindow.tsx`\n- `src/app/(parent)/parent/messages/[conversationId]/page.tsx`\n- `src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx`\n",
       "description": "Create the shared ChatWindow client component that handles message display, Realtime subscription for live updates, and message sending. Then wire it into conversation detail pages for both parent and teacher.\n\nChatWindow is a 'use client' component that:\n1. Receives initial messages and conversation metadata as props\n2. Sets up a Supabase Realtime `postgres_changes` subscription on the `messages` table filtered by `conversation_id`\n3. Appends new messages from the subscription to local state\n4. Handles message sending via POST /api/messages with optimistic local append\n5. Cleans up subscription on unmount via `supabase.removeChannel(channel)`\n6. Uses the browser Supabase client (`src/lib/supabase/client.ts`) for the Realtime subscription\n\nThe parent chat page at `/parent/messages/[conversationId]/page.tsx` and teacher chat page at `/dashboard/messages/[conversationId]/page.tsx` are thin wrappers: server component that fetches initial messages from GET /api/messages, resolves participant names, then renders ChatWindow.\n\nKey implementation details from research:\n- `postgres_changes` respects RLS automatically — no extra auth config needed\n- Filter param: `conversation_id=eq.${conversationId}` narrows WAL broadcast\n- Cleanup: `supabase.removeChannel(channel)` in useEffect return\n- Supabase client auto-reconnects on network drops — no manual reconnect logic\n- Optimistic append: add message to local state immediately on send, before API confirms",
       "estimate": "1.5h",
       "files": [
@@ -6387,6 +6395,50 @@
       "verdict": "✅ pass",
       "duration_ms": 10,
       "created_at": "2026-04-01T14:10:38.497Z"
+    },
+    {
+      "id": 102,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3200,
+      "created_at": "2026-04-01T14:13:04.492Z"
+    },
+    {
+      "id": 103,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/components/messaging/ChatWindow.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:13:04.492Z"
+    },
+    {
+      "id": 104,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f 'src/app/(parent)/parent/messages/[conversationId]/page.tsx'",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:13:04.492Z"
+    },
+    {
+      "id": 105,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f 'src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx'",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:13:04.492Z"
     }
   ]
 }

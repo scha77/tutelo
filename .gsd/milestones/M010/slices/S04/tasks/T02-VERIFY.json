@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M010/S04/T02",
+  "timestamp": 1775052645699,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 2472,
+      "verdict": "pass"
+    },
+    {
+      "command": "grep -q 'Messages' src/lib/parent-nav.ts",
+      "exitCode": 0,
+      "durationMs": 9,
+      "verdict": "pass"
+    },
+    {
+      "command": "grep -q 'Messages' src/lib/nav.ts",
+      "exitCode": 0,
+      "durationMs": 4,
+      "verdict": "pass"
+    },
+    {
+      "command": "test -f src/app/(parent)/parent/messages/page.tsx",
+      "exitCode": 2,
+      "durationMs": 3,
+      "verdict": "fail"
+    },
+    {
+      "command": "test -f src/app/(dashboard)/dashboard/messages/page.tsx",
+      "exitCode": 2,
+      "durationMs": 3,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

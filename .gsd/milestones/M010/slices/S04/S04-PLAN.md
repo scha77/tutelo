@@ -36,7 +36,7 @@ Both conversation list pages are server components that fetch from GET /api/conv
   - Estimate: 1h
   - Files: src/lib/parent-nav.ts, src/lib/nav.ts, src/app/(parent)/parent/messages/page.tsx, src/app/(dashboard)/dashboard/messages/page.tsx
   - Verify: npx tsc --noEmit && grep -q 'Messages' src/lib/parent-nav.ts && grep -q 'Messages' src/lib/nav.ts && test -f src/app/(parent)/parent/messages/page.tsx && test -f src/app/(dashboard)/dashboard/messages/page.tsx
-- [ ] **T03: Build shared ChatWindow component and chat detail pages with Realtime** — Create the shared ChatWindow client component that handles message display, Realtime subscription for live updates, and message sending. Then wire it into conversation detail pages for both parent and teacher.
+- [x] **T03: Built ChatWindow client component with Supabase Realtime subscription, optimistic send, and auto-scroll — wired into parent and teacher chat detail pages as thin server-component wrappers** — Create the shared ChatWindow client component that handles message display, Realtime subscription for live updates, and message sending. Then wire it into conversation detail pages for both parent and teacher.
 
 ChatWindow is a 'use client' component that:
 1. Receives initial messages and conversation metadata as props
