@@ -57,7 +57,7 @@ Key implementation details from research:
   - Estimate: 1.5h
   - Files: src/components/messaging/ChatWindow.tsx, src/app/(parent)/parent/messages/[conversationId]/page.tsx, src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx
   - Verify: npx tsc --noEmit && test -f src/components/messaging/ChatWindow.tsx && test -f 'src/app/(parent)/parent/messages/[conversationId]/page.tsx' && test -f 'src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx'
-- [ ] **T04: Add messaging test coverage for API routes and email rate-limiting** — Write comprehensive unit tests for the messaging API routes covering auth guards, participant validation, message creation, conversation auto-creation, email rate-limit logic, and conversation listing.
+- [x] **T04: Added 21 messaging tests covering API auth guards, participant validation, conversation auto-creation, email rate-limiting, and conversation listing** — Write comprehensive unit tests for the messaging API routes covering auth guards, participant validation, message creation, conversation auto-creation, email rate-limit logic, and conversation listing.
 
 Follow the established test pattern from `src/__tests__/parent-children.test.ts`: vi.mock supabase server/service modules, mock getUser for auth, mock supabaseAdmin.from() chains for DB operations, test each route handler directly.
 

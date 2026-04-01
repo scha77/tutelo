@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T14:13:04.535Z",
+  "exported_at": "2026-04-01T14:18:46.824Z",
   "milestones": [
     {
       "id": "M001",
@@ -4841,19 +4841,24 @@
       "milestone_id": "M010",
       "slice_id": "S04",
       "id": "T04",
-      "title": "Add messaging test coverage for API routes and email rate-limiting",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 21 messaging tests covering API auth guards, participant validation, conversation auto-creation, email rate-limiting, and conversation listing",
+      "status": "complete",
+      "one_liner": "Added 21 messaging tests covering API auth guards, participant validation, conversation auto-creation, email rate-limiting, and conversation listing",
+      "narrative": "Created src/__tests__/messaging.test.ts with 21 tests across four describe blocks following the established project test pattern. Tests cover POST /api/messages (auth, validation, participant checks, message creation, conversation auto-creation, teacher restriction), email rate-limiting (null/stale/recent last_notified_at, email failure resilience), GET /api/messages (auth, validation, participant check, ordered results), and GET /api/conversations (auth, teacher role listing, parent role listing, body truncation). Key implementation detail: Resend mock uses function() instead of arrow function because the route does `new Resend()` at module scope.",
+      "verification_result": "Ran npx vitest run src/__tests__/messaging.test.ts — 21/21 tests pass. Ran npx vitest run — full suite 465 tests pass across 48 files with 0 failures and no regressions.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T14:18:46.755Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Fixed teacherId in 'teacher tries to start conversation' test to use valid UUID format — route's Zod schema validates teacherId as UUID.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/messaging.test.ts"
+      ],
+      "key_decisions": [
+        "Mock Resend constructor using function() instead of arrow function — vi.mock arrow functions fail as constructors",
+        "Shared mutable emailSendMock variable for per-test control of the Resend send mock"
+      ],
+      "full_summary_md": "---\nid: T04\nparent: S04\nmilestone: M010\nkey_files:\n  - src/__tests__/messaging.test.ts\nkey_decisions:\n  - Mock Resend constructor using function() instead of arrow function — vi.mock arrow functions fail as constructors\n  - Shared mutable emailSendMock variable for per-test control of the Resend send mock\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T14:18:46.755Z\nblocker_discovered: false\n---\n\n# T04: Added 21 messaging tests covering API auth guards, participant validation, conversation auto-creation, email rate-limiting, and conversation listing\n\n**Added 21 messaging tests covering API auth guards, participant validation, conversation auto-creation, email rate-limiting, and conversation listing**\n\n## What Happened\n\nCreated src/__tests__/messaging.test.ts with 21 tests across four describe blocks following the established project test pattern. Tests cover POST /api/messages (auth, validation, participant checks, message creation, conversation auto-creation, teacher restriction), email rate-limiting (null/stale/recent last_notified_at, email failure resilience), GET /api/messages (auth, validation, participant check, ordered results), and GET /api/conversations (auth, teacher role listing, parent role listing, body truncation). Key implementation detail: Resend mock uses function() instead of arrow function because the route does `new Resend()` at module scope.\n\n## Verification\n\nRan npx vitest run src/__tests__/messaging.test.ts — 21/21 tests pass. Ran npx vitest run — full suite 465 tests pass across 48 files with 0 failures and no regressions.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/messaging.test.ts` | 0 | ✅ pass | 3000ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 11500ms |\n\n\n## Deviations\n\nFixed teacherId in 'teacher tries to start conversation' test to use valid UUID format — route's Zod schema validates teacherId as UUID.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/messaging.test.ts`\n",
       "description": "Write comprehensive unit tests for the messaging API routes covering auth guards, participant validation, message creation, conversation auto-creation, email rate-limit logic, and conversation listing.\n\nFollow the established test pattern from `src/__tests__/parent-children.test.ts`: vi.mock supabase server/service modules, mock getUser for auth, mock supabaseAdmin.from() chains for DB operations, test each route handler directly.\n\nTest areas:\n- POST /api/messages: unauthenticated → 401, non-participant → 403, valid message creation, conversation auto-creation when teacher_id provided without conversation_id, empty body → 400, body > 2000 chars → 400\n- POST /api/messages email: email sent when last_notified_at is null, email sent when last_notified_at > 5 min ago, email skipped when last_notified_at < 5 min ago, email failure doesn't fail message insert\n- GET /api/messages: unauthenticated → 401, returns messages ordered by created_at, non-participant → 403\n- GET /api/conversations: unauthenticated → 401, returns conversations for teacher role, returns conversations for parent role, includes last message preview",
       "estimate": "1.5h",
       "files": [
@@ -6439,6 +6444,28 @@
       "verdict": "✅ pass",
       "duration_ms": 10,
       "created_at": "2026-04-01T14:13:04.492Z"
+    },
+    {
+      "id": 106,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "npx vitest run src/__tests__/messaging.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-04-01T14:18:46.755Z"
+    },
+    {
+      "id": 107,
+      "task_id": "T04",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 11500,
+      "created_at": "2026-04-01T14:18:46.755Z"
     }
   ]
 }
