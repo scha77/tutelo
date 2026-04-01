@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T01:46:39.394Z",
+  "exported_at": "2026-04-01T01:52:56.084Z",
   "milestones": [
     {
       "id": "M001",
@@ -4290,19 +4290,32 @@
       "milestone_id": "M010",
       "slice_id": "S01",
       "id": "T02",
-      "title": "Build parent dashboard layout, sidebar, mobile nav, and all three pages",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Built complete parent dashboard with auth-guarded layout, sidebar, mobile nav, overview stats, children CRUD management, and booking history pages",
+      "status": "complete",
+      "one_liner": "Built complete parent dashboard with auth-guarded layout, sidebar, mobile nav, overview stats, children CRUD management, and booking history pages",
+      "narrative": "Created 7 new files for the parent dashboard: parent-nav.ts with 3 nav items, ParentSidebar with dual-role cross-link and children count badge, ParentMobileNav with icon-only tabs, auth-guarded layout using getUser(), overview page with parallel-queried stats cards, children page with full inline add/edit/delete CRUD using client-side Supabase (RLS enforces ownership), and bookings page with teacher/child joins split into upcoming/past sections. Installed shadcn Dialog for delete confirmation. Fixed Supabase join types (arrays not objects).",
+      "verification_result": "npx tsc --noEmit passes clean. npx next build succeeds with all 3 parent routes compiled (/parent, /parent/bookings, /parent/children). All 7 expected files exist and are non-empty. grep confirms parent redirect in auth.ts.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T01:52:56.050Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Fixed BookingRow type to use arrays for Supabase relation joins. Used client-side Supabase for children CRUD instead of API route since RLS handles authorization.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/lib/parent-nav.ts",
+        "src/components/parent/ParentSidebar.tsx",
+        "src/components/parent/ParentMobileNav.tsx",
+        "src/app/(parent)/layout.tsx",
+        "src/app/(parent)/parent/page.tsx",
+        "src/app/(parent)/parent/children/page.tsx",
+        "src/app/(parent)/parent/bookings/page.tsx",
+        "src/components/ui/dialog.tsx"
+      ],
+      "key_decisions": [
+        "Used client-side Supabase for children CRUD — RLS enforces parent_id ownership, no API route needed",
+        "Supabase joins return arrays — BookingRow types use arrays for children/teachers relations",
+        "Installed shadcn Dialog component for delete confirmation"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M010\nkey_files:\n  - src/lib/parent-nav.ts\n  - src/components/parent/ParentSidebar.tsx\n  - src/components/parent/ParentMobileNav.tsx\n  - src/app/(parent)/layout.tsx\n  - src/app/(parent)/parent/page.tsx\n  - src/app/(parent)/parent/children/page.tsx\n  - src/app/(parent)/parent/bookings/page.tsx\n  - src/components/ui/dialog.tsx\nkey_decisions:\n  - Used client-side Supabase for children CRUD — RLS enforces parent_id ownership, no API route needed\n  - Supabase joins return arrays — BookingRow types use arrays for children/teachers relations\n  - Installed shadcn Dialog component for delete confirmation\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T01:52:56.051Z\nblocker_discovered: false\n---\n\n# T02: Built complete parent dashboard with auth-guarded layout, sidebar, mobile nav, overview stats, children CRUD management, and booking history pages\n\n**Built complete parent dashboard with auth-guarded layout, sidebar, mobile nav, overview stats, children CRUD management, and booking history pages**\n\n## What Happened\n\nCreated 7 new files for the parent dashboard: parent-nav.ts with 3 nav items, ParentSidebar with dual-role cross-link and children count badge, ParentMobileNav with icon-only tabs, auth-guarded layout using getUser(), overview page with parallel-queried stats cards, children page with full inline add/edit/delete CRUD using client-side Supabase (RLS enforces ownership), and bookings page with teacher/child joins split into upcoming/past sections. Installed shadcn Dialog for delete confirmation. Fixed Supabase join types (arrays not objects).\n\n## Verification\n\nnpx tsc --noEmit passes clean. npx next build succeeds with all 3 parent routes compiled (/parent, /parent/bookings, /parent/children). All 7 expected files exist and are non-empty. grep confirms parent redirect in auth.ts.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 7500ms |\n| 2 | `npx next build` | 0 | ✅ pass | 18200ms |\n| 3 | `7 files existence check` | 0 | ✅ pass | 100ms |\n| 4 | `grep -c 'redirect.*parent' src/actions/auth.ts` | 0 | ✅ pass | 100ms |\n\n\n## Deviations\n\nFixed BookingRow type to use arrays for Supabase relation joins. Used client-side Supabase for children CRUD instead of API route since RLS handles authorization.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/parent-nav.ts`\n- `src/components/parent/ParentSidebar.tsx`\n- `src/components/parent/ParentMobileNav.tsx`\n- `src/app/(parent)/layout.tsx`\n- `src/app/(parent)/parent/page.tsx`\n- `src/app/(parent)/parent/children/page.tsx`\n- `src/app/(parent)/parent/bookings/page.tsx`\n- `src/components/ui/dialog.tsx`\n",
       "description": "Create the `(parent)` route group with auth-guarded layout, ParentSidebar, ParentMobileNav, and three pages: overview, children management, and booking history. This is the full parent dashboard UI.\n\n## Steps\n\n1. Create `src/lib/parent-nav.ts` — parent navigation items:\n   - Overview → `/parent` (LayoutDashboard icon)\n   - My Children → `/parent/children` (Users icon)\n   - My Bookings → `/parent/bookings` (CalendarCheck icon)\n   - Export `parentNavItems` array and reuse `isActivePath` from `src/lib/nav.ts`\n\n2. Create `src/components/parent/ParentSidebar.tsx` — desktop sidebar:\n   - Mirrors `src/components/dashboard/Sidebar.tsx` structure\n   - Props: `userName: string`, `childrenCount: number`, `hasTeacherRole: boolean`\n   - Shows Tutelo logo, user name, nav items from `parentNavItems`\n   - If `hasTeacherRole`, show 'Go to Teacher Dashboard' link to `/dashboard`\n   - Badge on 'My Children' showing `childrenCount` if > 0\n   - Sign out button using `signOut` server action\n   - Mark as `'use client'` (uses `usePathname`)\n\n3. Create `src/components/parent/ParentMobileNav.tsx` — mobile bottom nav:\n   - Mirrors `src/components/dashboard/MobileBottomNav.tsx`\n   - Icon-only bottom tabs for the 3 parent nav items\n   - Mark as `'use client'`\n\n4. Create `src/app/(parent)/layout.tsx` — parent layout:\n   - Server component. Uses `getUser()` for auth (NOT `getClaims()`)\n   - If no user → `redirect('/login?redirect=/parent')`\n   - Query `teachers` table to check dual-role → pass `hasTeacherRole` boolean to sidebar\n   - Query `children` count for sidebar badge\n   - Render ParentSidebar + ParentMobileNav + `{children}` in same flex layout as teacher dashboard\n\n5. Create `src/app/(parent)/parent/page.tsx` — Overview page:\n   - Server component. Fetch user's children count and upcoming bookings count\n   - Display welcome message with user email/name\n   - Stats cards: number of children, upcoming sessions, past sessions\n   - Quick links to 'Add a Child' and 'Find a Tutor' (link to `/tutors`)\n\n6. Create `src/app/(parent)/parent/children/page.tsx` — Children management:\n   - Client component (`'use client'`) — needs interactivity for add/edit/delete\n   - Fetch children from `GET /api/parent/children` on mount\n   - Display children as cards (name, grade, created date)\n   - 'Add Child' button opens inline form (name input, optional grade input)\n   - Each child card has Edit and Delete buttons\n   - Edit shows inline form pre-filled with child data\n   - Delete shows confirmation dialog\n   - Uses shadcn/ui components: Card, Button, Input, Label, Dialog (for delete confirm)\n\n7. Create `src/app/(parent)/parent/bookings/page.tsx` — Booking history:\n   - Server component. Port logic from existing `src/app/account/page.tsx`\n   - Fetch bookings where `parent_id = user.id`, join teacher info\n   - Split into upcoming/past sections\n   - Show child name from `children` join when `child_id` is present, else `student_name`\n   - Include rebook link for past sessions\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Supabase getUser() | Redirect to /login | Redirect to /login | Redirect to /login |\n| Children API fetch | Show empty state + retry button | Show error toast | Show empty state |\n| Bookings query | Show 'No bookings yet' | Show loading skeleton | Show empty state |\n\n## Must-Haves\n\n- [ ] Parent layout with `getUser()` auth guard\n- [ ] ParentSidebar with nav items, dual-role cross-link, sign out\n- [ ] ParentMobileNav with icon-only bottom tabs\n- [ ] Overview page with stats cards\n- [ ] Children page with full add/edit/delete UI\n- [ ] Bookings page with upcoming/past split\n- [ ] All components use shadcn/ui consistently\n\n## Verification\n\n- `npx tsc --noEmit` passes\n- `npx next build` succeeds (all new pages compile)\n- All 7 new files exist and are non-empty",
       "estimate": "2h",
       "files": [
@@ -5234,6 +5247,50 @@
       "verdict": "✅ pass",
       "duration_ms": 50,
       "created_at": "2026-04-01T01:46:39.357Z"
+    },
+    {
+      "id": 49,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 7500,
+      "created_at": "2026-04-01T01:52:56.050Z"
+    },
+    {
+      "id": 50,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "npx next build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 18200,
+      "created_at": "2026-04-01T01:52:56.050Z"
+    },
+    {
+      "id": 51,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "7 files existence check",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-01T01:52:56.050Z"
+    },
+    {
+      "id": 52,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "grep -c 'redirect.*parent' src/actions/auth.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-01T01:52:56.050Z"
     }
   ]
 }

@@ -50,7 +50,7 @@
   - Estimate: 45m
   - Files: supabase/migrations/0017_children_and_parent_dashboard.sql, src/app/(auth)/callback/route.ts, src/actions/auth.ts, src/app/(auth)/login/page.tsx, src/app/account/page.tsx
   - Verify: npx tsc --noEmit && grep -c 'redirect.*parent' src/actions/auth.ts | grep -q '[1-9]'
-- [ ] **T02: Build parent dashboard layout, sidebar, mobile nav, and all three pages** — Create the `(parent)` route group with auth-guarded layout, ParentSidebar, ParentMobileNav, and three pages: overview, children management, and booking history. This is the full parent dashboard UI.
+- [x] **T02: Built complete parent dashboard with auth-guarded layout, sidebar, mobile nav, overview stats, children CRUD management, and booking history pages** — Create the `(parent)` route group with auth-guarded layout, ParentSidebar, ParentMobileNav, and three pages: overview, children management, and booking history. This is the full parent dashboard UI.
 
 ## Steps
 
