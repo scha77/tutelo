@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Megaphone,
   BarChart2,
+  MessageSquare,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -35,6 +36,7 @@ export const navItems: NavItem[] = [
   { href: '/dashboard/availability', label: 'Availability', icon: Calendar        },
   { href: '/dashboard/promote',      label: 'Promote',      icon: Megaphone       },
   { href: '/dashboard/analytics',    label: 'Analytics',    icon: BarChart2       },
+  { href: '/dashboard/messages',     label: 'Messages',     icon: MessageSquare   },
   { href: '/dashboard/settings',     label: 'Settings',     icon: Settings        },
 ]
 

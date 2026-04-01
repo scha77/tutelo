@@ -28,7 +28,7 @@
   - Estimate: 2h
   - Files: supabase/migrations/0019_messaging.sql, src/app/api/messages/route.ts, src/app/api/conversations/route.ts, src/emails/NewMessageEmail.tsx
   - Verify: npx tsc --noEmit && test -f supabase/migrations/0019_messaging.sql && grep -q 'supabase_realtime' supabase/migrations/0019_messaging.sql && test -f src/app/api/messages/route.ts && test -f src/app/api/conversations/route.ts && test -f src/emails/NewMessageEmail.tsx
-- [ ] **T02: Add Messages nav items and build conversation list pages** — Wire Messages into both parent and teacher navigation, then build the conversation list pages that show all threads for the logged-in user with last message preview.
+- [x] **T02: Added Messages nav items to parent and teacher sidebars and built conversation list pages with last-message preview and relative timestamps** — Wire Messages into both parent and teacher navigation, then build the conversation list pages that show all threads for the logged-in user with last message preview.
 
 The parent sidebar and mobile nav automatically pick up items from `parentNavItems` in `src/lib/parent-nav.ts`. The teacher sidebar picks up from `navItems` in `src/lib/nav.ts`, and MobileBottomNav also reads from `navItems`.
 

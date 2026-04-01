@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T14:08:15.957Z",
+  "exported_at": "2026-04-01T14:10:38.556Z",
   "milestones": [
     {
       "id": "M001",
@@ -4741,19 +4741,26 @@
       "milestone_id": "M010",
       "slice_id": "S04",
       "id": "T02",
-      "title": "Add Messages nav items and build conversation list pages",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added Messages nav items to parent and teacher sidebars and built conversation list pages with last-message preview and relative timestamps",
+      "status": "complete",
+      "one_liner": "Added Messages nav items to parent and teacher sidebars and built conversation list pages with last-message preview and relative timestamps",
+      "narrative": "Added MessageSquare icon and Messages nav items to both src/lib/nav.ts (teacher, /dashboard/messages) and src/lib/parent-nav.ts (parent, /parent/messages). Built two server-component conversation list pages: parent page queries conversations where parent_id matches the user and shows teacher names from the joined teachers table; teacher page resolves the teacher row first, queries their conversations, and resolves parent names via auth.admin.getUserById. Both pages render a linked card list with last-message preview (truncated to 100 chars), \"You:\" prefix for own messages, and relative timestamps via date-fns formatDistanceToNow. Empty states show guidance. Used direct supabaseAdmin queries in server components instead of internal API fetch, matching the project convention used by all other pages.",
+      "verification_result": "Ran npx tsc --noEmit (zero errors), confirmed Messages appears in both nav files via grep, confirmed both page files exist. All 5 checks passed.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-01T14:10:38.497Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Used direct Supabase queries in server components instead of internal fetch to /api/conversations — avoids fragile cookie-forwarding and matches project convention.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/lib/nav.ts",
+        "src/lib/parent-nav.ts",
+        "src/app/(parent)/parent/messages/page.tsx",
+        "src/app/(dashboard)/dashboard/messages/page.tsx"
+      ],
+      "key_decisions": [
+        "Server components query Supabase directly via supabaseAdmin instead of fetching internal API routes — matches project convention and avoids fragile cookie-forwarding"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M010\nkey_files:\n  - src/lib/nav.ts\n  - src/lib/parent-nav.ts\n  - src/app/(parent)/parent/messages/page.tsx\n  - src/app/(dashboard)/dashboard/messages/page.tsx\nkey_decisions:\n  - Server components query Supabase directly via supabaseAdmin instead of fetching internal API routes — matches project convention and avoids fragile cookie-forwarding\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T14:10:38.497Z\nblocker_discovered: false\n---\n\n# T02: Added Messages nav items to parent and teacher sidebars and built conversation list pages with last-message preview and relative timestamps\n\n**Added Messages nav items to parent and teacher sidebars and built conversation list pages with last-message preview and relative timestamps**\n\n## What Happened\n\nAdded MessageSquare icon and Messages nav items to both src/lib/nav.ts (teacher, /dashboard/messages) and src/lib/parent-nav.ts (parent, /parent/messages). Built two server-component conversation list pages: parent page queries conversations where parent_id matches the user and shows teacher names from the joined teachers table; teacher page resolves the teacher row first, queries their conversations, and resolves parent names via auth.admin.getUserById. Both pages render a linked card list with last-message preview (truncated to 100 chars), \"You:\" prefix for own messages, and relative timestamps via date-fns formatDistanceToNow. Empty states show guidance. Used direct supabaseAdmin queries in server components instead of internal API fetch, matching the project convention used by all other pages.\n\n## Verification\n\nRan npx tsc --noEmit (zero errors), confirmed Messages appears in both nav files via grep, confirmed both page files exist. All 5 checks passed.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 7600ms |\n| 2 | `grep -q 'Messages' src/lib/parent-nav.ts` | 0 | ✅ pass | 10ms |\n| 3 | `grep -q 'Messages' src/lib/nav.ts` | 0 | ✅ pass | 10ms |\n| 4 | `test -f src/app/(parent)/parent/messages/page.tsx` | 0 | ✅ pass | 10ms |\n| 5 | `test -f src/app/(dashboard)/dashboard/messages/page.tsx` | 0 | ✅ pass | 10ms |\n\n\n## Deviations\n\nUsed direct Supabase queries in server components instead of internal fetch to /api/conversations — avoids fragile cookie-forwarding and matches project convention.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/nav.ts`\n- `src/lib/parent-nav.ts`\n- `src/app/(parent)/parent/messages/page.tsx`\n- `src/app/(dashboard)/dashboard/messages/page.tsx`\n",
       "description": "Wire Messages into both parent and teacher navigation, then build the conversation list pages that show all threads for the logged-in user with last message preview.\n\nThe parent sidebar and mobile nav automatically pick up items from `parentNavItems` in `src/lib/parent-nav.ts`. The teacher sidebar picks up from `navItems` in `src/lib/nav.ts`, and MobileBottomNav also reads from `navItems`.\n\nBoth conversation list pages are server components that fetch from GET /api/conversations and render a linked list of conversations.",
       "estimate": "1h",
       "files": [
@@ -6325,6 +6332,61 @@
       "verdict": "✅ pass",
       "duration_ms": 10,
       "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 97,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 7600,
+      "created_at": "2026-04-01T14:10:38.497Z"
+    },
+    {
+      "id": 98,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "grep -q 'Messages' src/lib/parent-nav.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:10:38.497Z"
+    },
+    {
+      "id": 99,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "grep -q 'Messages' src/lib/nav.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:10:38.497Z"
+    },
+    {
+      "id": 100,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/app/(parent)/parent/messages/page.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:10:38.497Z"
+    },
+    {
+      "id": 101,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/app/(dashboard)/dashboard/messages/page.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:10:38.497Z"
     }
   ]
 }
