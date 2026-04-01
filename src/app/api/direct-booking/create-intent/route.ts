@@ -108,8 +108,37 @@ export async function POST(req: Request) {
 
   const bookingId = booking.id
 
-  // 6. Create PaymentIntent with manual capture (authorize only — captured on session completion)
+  // 6. Resolve or create a parent-level Stripe Customer (saved-payment-methods — S03)
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+  let customerId: string | undefined
+  try {
+    const { data: parentProfile } = await supabaseAdmin
+      .from('parent_profiles')
+      .select('stripe_customer_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (parentProfile?.stripe_customer_id) {
+      customerId = parentProfile.stripe_customer_id
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email!,
+        metadata: { tutelo_user_id: user.id },
+      })
+      customerId = customer.id
+      await supabaseAdmin
+        .from('parent_profiles')
+        .upsert({ user_id: user.id, stripe_customer_id: customer.id }, { onConflict: 'user_id' })
+      console.log(`[direct-booking/create-intent] Created Stripe Customer ${customer.id} for parent ${user.id}`)
+    }
+  } catch (err) {
+    console.error('[direct-booking/create-intent] Customer resolution failed:', err)
+    await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
+    return new Response('Payment setup failed', { status: 502 })
+  }
+
+  // 7. Create PaymentIntent with manual capture + saved-card setup
   const applicationFeeAmount = Math.round(amountInCents * 0.07)
 
   let paymentIntent
@@ -118,12 +147,15 @@ export async function POST(req: Request) {
       amount: amountInCents,
       currency: 'usd',
       capture_method: 'manual',
+      customer: customerId,
+      setup_future_usage: 'off_session',
       transfer_data: { destination: teacher.stripe_account_id },
       application_fee_amount: applicationFeeAmount,
       receipt_email: user.email,
       metadata: {
         booking_id: bookingId,
         teacher_id: teacher.id,
+        parent_id: user.id,
         ...(sessionTypeId ? { session_type_id: sessionTypeId } : {}),
       },
     })

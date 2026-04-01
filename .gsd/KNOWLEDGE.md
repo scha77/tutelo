@@ -491,3 +491,45 @@ For recurring booking first-session authorization, a single PaymentIntent can si
 
 No separate SetupIntent is needed. After the parent confirms payment, the PI's `payment_method` is attached to the Stripe Customer and available for subsequent auto-charges. Retrieve it from `payment_intent.payment_method` in the webhook and store on `recurring_schedules.stripe_payment_method_id`.
 
+---
+
+## Next.js Route Groups Strip Path Segments from OAuth `redirectTo` (M010/S02)
+
+Next.js route groups (directories wrapped in parentheses like `(auth)`) do **not** appear in the URL. A callback route at `src/app/(auth)/callback/route.ts` is reachable at `/callback`, not `/auth/callback`. If you set `redirectTo: \`${window.location.origin}/auth/callback\`` in a Supabase OAuth call, the redirect will 404. Always use the URL-accessible path, not the filesystem path.
+
+Fixed in `LoginForm.tsx` `handleGoogleSignIn`:
+```ts
+// ❌ Wrong — (auth) group segment appears in filesystem path but NOT in URL
+redirectTo: `${window.location.origin}/auth/callback`
+
+// ✅ Correct — matches the actual route URL
+redirectTo: `${window.location.origin}/callback`
+```
+
+---
+
+## Testing Next.js Route Handlers That Return Redirects (M010/S02)
+
+When unit-testing a route handler that returns `NextResponse.redirect()`:
+
+1. Call the handler with `new NextRequest('http://localhost/callback?code=test-code')`.
+2. The response is a `NextResponse` with status 307/308 and a `location` header — **not** a thrown redirect.
+3. Assert with: `expect(response.headers.get('location')).toContain('/dashboard')` (or check `response.status`).
+
+Use `vi.hoisted()` to define mock variables before `vi.mock()` runs, since `vi.mock()` is hoisted to the top of the module scope by Vitest. Without `vi.hoisted()`, mock variable references inside the factory are `undefined` at the time the factory executes.
+
+```ts
+const { mockExchangeCodeForSession, mockGetUser, mockFrom } = vi.hoisted(() => ({
+  mockExchangeCodeForSession: vi.fn(),
+  mockGetUser: vi.fn(),
+  mockFrom: vi.fn(),
+}))
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(() => ({
+    auth: { exchangeCodeForSession: mockExchangeCodeForSession, getUser: mockGetUser },
+    from: mockFrom,
+  })),
+}))
+```
+

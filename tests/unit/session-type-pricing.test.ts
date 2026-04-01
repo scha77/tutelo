@@ -21,6 +21,8 @@ const mockAdminInsertSelect = vi.fn(() => ({ single: mockAdminSingle }))
 const mockAdminInsert = vi.fn(() => ({ select: mockAdminInsertSelect }))
 const mockAdminDeleteEq = vi.fn()
 const mockAdminDelete = vi.fn(() => ({ eq: mockAdminDeleteEq }))
+const mockAdminUpsert = vi.fn(() => ({ data: null, error: null }))
+const mockAdminMaybeSingle = vi.fn(() => ({ data: null }))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockAdminFrom: any = vi.fn((table: string) => {
   if (table === 'bookings') {
@@ -28,6 +30,16 @@ const mockAdminFrom: any = vi.fn((table: string) => {
       select: mockAdminSelect,
       insert: mockAdminInsert,
       delete: mockAdminDelete,
+    }
+  }
+  if (table === 'parent_profiles') {
+    return {
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: mockAdminMaybeSingle,
+        })),
+      })),
+      upsert: mockAdminUpsert,
     }
   }
   // teachers, session_types
@@ -44,9 +56,11 @@ vi.mock('@/lib/supabase/service', () => ({
 // Mock setup: Stripe
 // ──────────────────────────────────────────────
 const mockPICreate = vi.fn()
+const mockCustomersCreate = vi.fn().mockResolvedValue({ id: 'cus_test' })
 
 vi.mock('stripe', () => {
   const StripeMock = vi.fn().mockImplementation(function (this: Record<string, unknown>) {
+    this.customers = { create: mockCustomersCreate }
     this.paymentIntents = { create: mockPICreate }
   })
   return { default: StripeMock }
@@ -97,6 +111,18 @@ function setupQueryChain(responses: Array<{ table: string; data: unknown; error?
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockAdminFrom.mockImplementation((table: string): any => {
+    // parent_profiles is called by the S03 saved-payment-methods flow — always return no existing profile
+    if (table === 'parent_profiles') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+          })),
+        })),
+        upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      }
+    }
+
     const entry = responses[callIndex]
     callIndex++
 
@@ -343,6 +369,17 @@ describe('create-intent pricing fork', () => {
     let fromCallIndex = 0
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockAdminFrom.mockImplementation((table: string): any => {
+      // parent_profiles is called by the S03 saved-payment-methods flow
+      if (table === 'parent_profiles') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+            })),
+          })),
+          upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }
+      }
       fromCallIndex++
       if (fromCallIndex === 1) {
         // teachers

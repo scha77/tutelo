@@ -193,6 +193,43 @@ export async function POST(req: Request) {
           console.log(`[stripe/webhook] Stored payment method on recurring_schedule ${recurringScheduleId}`)
         }
       }
+
+      // S03: Retrieve PM card details and upsert to parent_profiles for saved-card flow
+      const parentId = pi.metadata?.parent_id
+      if (parentId && pi.customer && pi.payment_method) {
+        try {
+          const pm = await stripe.paymentMethods.retrieve(pi.payment_method as string)
+          const cardBrand = pm.card?.brand ?? null
+          const cardLast4 = pm.card?.last4 ?? null
+          const cardExpMonth = pm.card?.exp_month ?? null
+          const cardExpYear = pm.card?.exp_year ?? null
+
+          const { error: profileError } = await supabaseAdmin
+            .from('parent_profiles')
+            .upsert(
+              {
+                user_id: parentId,
+                stripe_customer_id: pi.customer as string,
+                stripe_payment_method_id: pi.payment_method as string,
+                card_brand: cardBrand,
+                card_last4: cardLast4,
+                card_exp_month: cardExpMonth,
+                card_exp_year: cardExpYear,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id' }
+            )
+
+          if (profileError) {
+            console.error(`[stripe/webhook] Failed to upsert parent_profiles for parent ${parentId}:`, profileError)
+          } else {
+            console.log(`[stripe/webhook] Upserted parent_profiles PM for parent ${parentId} (${cardBrand} ****${cardLast4})`)
+          }
+        } catch (pmErr) {
+          // Non-critical — booking confirm already succeeded; PM storage is best-effort
+          console.error(`[stripe/webhook] Failed to retrieve PM ${pi.payment_method} for PI ${pi.id}:`, pmErr)
+        }
+      }
       break
     }
 

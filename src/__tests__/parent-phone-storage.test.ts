@@ -24,12 +24,14 @@ vi.mock('@/lib/email', () => ({
 }))
 
 // Stripe mock for create-intent route
-const { stripeCreateMock, MockStripeClass } = vi.hoisted(() => {
+const { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass } = vi.hoisted(() => {
   const stripeCreateMock = vi.fn()
+  const stripeCustomersCreateMock = vi.fn()
   class MockStripeClass {
+    customers = { create: stripeCustomersCreateMock }
     paymentIntents = { create: stripeCreateMock }
   }
-  return { stripeCreateMock, MockStripeClass }
+  return { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass }
 })
 
 vi.mock('stripe', () => ({
@@ -176,6 +178,7 @@ describe('create-intent route — phone fields', () => {
       id: 'pi_test',
       client_secret: 'pi_test_secret',
     })
+    stripeCustomersCreateMock.mockResolvedValue({ id: 'cus_test_new' })
   })
 
   async function setupDirectMocks() {
@@ -215,6 +218,19 @@ describe('create-intent route — phone fields', () => {
       }),
     })
     fromMock.mockReturnValueOnce({ insert: insertMock })
+
+    // Third call: parent_profiles SELECT (no existing profile)
+    fromMock.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+        }),
+      }),
+    })
+    // Fourth call: parent_profiles UPSERT
+    fromMock.mockReturnValueOnce({
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })
 
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T13:21:34.275Z",
+  "exported_at": "2026-04-01T13:42:07.325Z",
   "milestones": [
     {
       "id": "M001",
@@ -1163,14 +1163,14 @@
       "milestone_id": "M010",
       "id": "S02",
       "title": "Google SSO Verification",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "Teacher or parent clicks Continue with Google, completes OAuth flow, lands in the correct dashboard. Teacher can still verify school email post-Google-login",
       "created_at": "2026-04-01T01:35:50.349Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-01T13:24:17.029Z",
+      "full_summary_md": "---\nid: S02\nparent: M010\nmilestone: M010\nprovides:\n  - Verified Google SSO OAuth flow (redirectTo bug fixed)\n  - Full unit coverage of all 4 OAuth callback routing paths\n  - AUTH-04 proof that school email verification is provider-agnostic\n  - 426-test clean suite baseline for S03/S04/S05\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - src/components/auth/LoginForm.tsx\n  - src/__tests__/google-sso-login.test.tsx\n  - src/__tests__/google-sso-callback.test.ts\nkey_decisions:\n  - Used dynamic import pattern for LoginForm in tests consistent with existing parent-auth.test.tsx (T01)\n  - Used vi.hoisted() for mock factory so mockExchangeCodeForSession, mockGetUser, and mockFrom are available at module-scope before vi.mock runs (T02)\n  - New Google user (no teacher row) routes to /parent — no special onboarding branch added to callback route (D030)\npatterns_established:\n  - Route handler unit testing: call GET(new NextRequest(...)), assert response.headers.get('location') for redirect destination — no thrown-redirect to catch\n  - vi.hoisted() pattern for Supabase server mock in route handler tests — required because vi.mock() factories execute before variable declarations in the test file\n  - AUTH-04 smoke test pattern: fs.readFileSync source assertion to prove a function has no provider-specific logic — lightweight and resistant to implementation drift\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  - .gsd/milestones/M010/slices/S02/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M010/slices/S02/tasks/T02-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:24:17.029Z\nblocker_discovered: false\n---\n\n# S02: Google SSO Verification\n\n**Fixed the OAuth redirectTo bug blocking Google SSO and added 7 unit tests covering the complete OAuth callback routing matrix plus a provider-agnostic school email verification smoke test.**\n\n## What Happened\n\nS02 had a single runtime bug and a coverage gap, both fully addressed across two tasks.\n\n**T01 — OAuth redirectTo bug fix + component tests**\n\nThe root cause was a one-line mismatch in `LoginForm.tsx`: `handleGoogleSignIn` was passing `redirectTo: \\`${window.location.origin}/auth/callback\\`` to Supabase's `signInWithOAuth`. However, the callback route lives at `src/app/(auth)/callback/route.ts` — Next.js route groups strip the parenthesized directory segment from the URL, so the actual accessible path is `/callback`, not `/auth/callback`. The fix was surgical: change one string literal on line 68.\n\nTwo component tests were written in `src/__tests__/google-sso-login.test.tsx` using the dynamic import pattern established in `parent-auth.test.tsx`. Test 1 asserts the Google button renders and is enabled by default. Test 2 clicks the button and asserts `signInWithOAuth` was called with `{ provider: 'google', options: { redirectTo: expect.stringContaining('/callback') } }` and that the redirectTo does NOT contain `/auth/callback`. Both pass.\n\n**T02 — Callback route tests + AUTH-04 smoke test**\n\nThe OAuth callback route (`src/app/(auth)/callback/route.ts`) had no direct unit coverage. Five tests were written in `src/__tests__/google-sso-callback.test.ts` using `vi.hoisted()` to hoist the Supabase mock variables before `vi.mock()` runs (required because `vi.mock()` is hoisted to module scope by Vitest's transform).\n\nFour tests cover all execution paths of the GET handler:\n- Teacher user (teacher row found in DB) → redirects to `/dashboard`\n- Non-teacher user (no teacher row) → redirects to `/parent`\n- Missing `code` query param → redirects to `/login?error=auth`\n- `exchangeCodeForSession` returns error → redirects to `/login?error=auth`\n\nThe fifth test is the AUTH-04 smoke: it reads `src/actions/verification.ts` source with `fs.readFileSync` and asserts the file uses `supabase.auth.getUser()` and contains no provider-specific terms (`provider`, `google`, `getSession().provider`). This proves the school email verification flow is provider-agnostic — a teacher who signs in via Google can still trigger the verification OTP flow.\n\n**Final suite: 426 tests across 46 files, 0 failures** (up from 419 at M010 start).\n\n## Verification\n\nRan targeted vitest run for both test files: 7/7 tests pass (2 in google-sso-login.test.tsx, 5 in google-sso-callback.test.ts). Ran full suite: 426 passed, 0 failures, 45 todo across 46 test files. Confirmed LoginForm.tsx line 68 uses `/callback` not `/auth/callback`. Confirmed verification.ts contains no provider-specific references.\n\n## Requirements Advanced\n\n- AUTH-03 — Fixed OAuth redirectTo bug; component tests prove signInWithOAuth called with correct provider and URL\n- AUTH-04 — Smoke test proves verification.ts uses getUser() with no provider-specific logic — works post-Google-login\n\n## Requirements Validated\n\n- AUTH-03 — 2 component tests verify Google button present+enabled and signInWithOAuth called with provider:google and redirectTo containing /callback (not /auth/callback). 5 callback route tests verify teacher→/dashboard, non-teacher→/parent, missing-code→/login?error=auth, exchange-failure→/login?error=auth. All 426 tests pass.\n- AUTH-04 — fs.readFileSync smoke test on verification.ts confirms getUser() present and no provider/google/getSession().provider references. All 426 tests pass.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nNone. All must-haves from the slice plan were delivered as specified.\n\n## Known Limitations\n\nThis slice covers unit-level verification only. End-to-end OAuth flow (actual Google consent screen → Supabase token exchange → redirect) requires a live Supabase environment with Google OAuth configured. No E2E test was written — that's an operational concern, not a code coverage gap. New Google SSO users (no teacher row) land at /parent rather than an onboarding flow; this is accepted behavior (D030).\n\n## Follow-ups\n\nNone required for this slice. S03 (Saved Payment Methods) and S04 (Teacher-Parent Messaging) are independent of S02 — no SSO-specific concerns carry forward.\n\n## Files Created/Modified\n\n- `src/components/auth/LoginForm.tsx` — Fixed handleGoogleSignIn redirectTo from /auth/callback to /callback (line 68)\n- `src/__tests__/google-sso-login.test.tsx` — New: 2 component tests — Google button renders+enabled, signInWithOAuth called with correct provider+URL\n- `src/__tests__/google-sso-callback.test.ts` — New: 5 tests — all 4 OAuth callback routing paths + AUTH-04 provider-agnostic smoke test\n",
+      "full_uat_md": "# S02: Google SSO Verification — UAT\n\n**Milestone:** M010\n**Written:** 2026-04-01T13:24:17.030Z\n\n## UAT Script: S02 — Google SSO Verification\n\n### Preconditions\n- Supabase project configured with Google OAuth provider (client ID + secret set in Supabase Dashboard → Authentication → Providers → Google)\n- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` set in environment\n- Dev server running (`npm run dev`)\n- Test teacher account exists in `teachers` table\n- Test parent account exists (no row in `teachers` table)\n\n---\n\n### TC-01: Google SSO button initiates OAuth with correct redirect URL\n\n**What's being tested:** LoginForm sends the correct `redirectTo` to Supabase (the bug that was fixed).\n\n**Preconditions:** Open browser DevTools → Network tab. Navigate to `/login`.\n\n**Steps:**\n1. Open DevTools Network tab filtered to `XHR` / `Fetch`.\n2. Click \"Continue with Google\".\n3. Observe the outbound request to Supabase `/auth/v1/authorize`.\n\n**Expected:**\n- The `redirect_to` query parameter in the Supabase authorize URL contains `/callback` (e.g. `https://your-domain.com/callback`).\n- The URL does NOT contain `/auth/callback`.\n- Browser is redirected to Google's consent screen.\n\n**Edge cases:**\n- If the redirect URL contains `/auth/callback`, the bug has regressed — check LoginForm.tsx line 68.\n\n---\n\n### TC-02: Teacher completes Google OAuth → lands on /dashboard\n\n**What's being tested:** Callback route routes a teacher user to the correct dashboard.\n\n**Preconditions:** A user record exists with a matching row in the `teachers` table.\n\n**Steps:**\n1. Navigate to `/login`.\n2. Click \"Continue with Google\".\n3. Complete the Google consent flow (select teacher's Google account).\n4. Observe redirect after OAuth callback.\n\n**Expected:**\n- User lands at `/dashboard` (not `/parent`, not `/login`).\n- Teacher dashboard renders with their name and session data.\n- No 404 or error page.\n\n---\n\n### TC-03: Parent (non-teacher) completes Google OAuth → lands on /parent\n\n**What's being tested:** Callback route routes a non-teacher user to the parent dashboard.\n\n**Preconditions:** A user record exists with NO matching row in the `teachers` table.\n\n**Steps:**\n1. Navigate to `/login`.\n2. Click \"Continue with Google\".\n3. Complete the Google consent flow (select parent's Google account).\n4. Observe redirect after OAuth callback.\n\n**Expected:**\n- User lands at `/parent` (not `/dashboard`, not `/login`).\n- Parent dashboard renders (overview page with My Children / My Bookings).\n- No 404 or error page.\n\n---\n\n### TC-04: New Google user (first-ever login) → lands at /parent\n\n**What's being tested:** A brand-new Supabase user created via Google OAuth has no teacher row, so they route to /parent.\n\n**Preconditions:** Use a Google account that has never logged into this Supabase project.\n\n**Steps:**\n1. Navigate to `/login`.\n2. Click \"Continue with Google\".\n3. Complete Google consent (first-time authorization).\n4. Observe landing page.\n\n**Expected:**\n- New user record created in Supabase `auth.users`.\n- User lands at `/parent` (no teacher row exists for them).\n- Parent dashboard renders without errors.\n\n---\n\n### TC-05: OAuth callback — missing code parameter → redirect to /login?error=auth\n\n**What's being tested:** Callback route handles malformed/missing OAuth code gracefully.\n\n**Preconditions:** Can test unit-level (already passing) or via direct URL hit.\n\n**Steps (manual):**\n1. Navigate directly to `/callback` (no `code` query param).\n\n**Expected:**\n- Browser is redirected to `/login?error=auth`.\n- Login page displays an error state (or the error query param is present).\n- No 500 error, no unhandled exception.\n\n---\n\n### TC-06: Teacher can trigger school email verification after Google login\n\n**What's being tested:** AUTH-04 — the school email verification flow is provider-agnostic.\n\n**Preconditions:** Teacher is signed in via Google SSO (completed TC-02).\n\n**Steps:**\n1. Navigate to `/dashboard/settings` (or wherever school email verification is exposed).\n2. Enter a `.edu` email address.\n3. Submit the verification request.\n4. Retrieve the OTP from the school email inbox.\n5. Enter the OTP in the verification form.\n\n**Expected:**\n- OTP email is sent successfully (same flow as email+password login).\n- Entering the correct OTP stamps `verified_at` on the teacher record.\n- \"Verified\" badge appears on the teacher's public profile page.\n- No \"provider\" or \"Google\" check blocks or short-circuits the flow.\n\n---\n\n### TC-07 (Unit verification): All 7 S02 tests pass\n\n**What's being tested:** Unit-level regression check.\n\n**Command:**\n```bash\nnpx vitest run src/__tests__/google-sso-login.test.tsx src/__tests__/google-sso-callback.test.ts\n```\n\n**Expected output:**\n```\n✓ src/__tests__/google-sso-callback.test.ts (5 tests)\n✓ src/__tests__/google-sso-login.test.tsx (2 tests)\n\nTest Files  2 passed (2)\n      Tests  7 passed (7)\n```\n\n**Full regression:**\n```bash\nnpx vitest run 2>&1 | tail -5\n# Expected: 426 passed, 0 failures\n```\n",
       "goal": "Teacher or parent clicks Continue with Google, completes OAuth flow, lands in the correct dashboard. Teacher can still verify school email post-Google-login.",
       "success_criteria": "**Must-Haves**\n\n- LoginForm.tsx OAuth redirectTo uses `/callback` (not `/auth/callback`)\n- Unit test proves Google button calls `signInWithOAuth` with `provider: 'google'` and redirectTo ending in `/callback`\n- Unit tests cover callback route: teacher → /dashboard, parent → /parent, missing code → /login?error=auth, exchange failure → /login?error=auth\n- AUTH-04 smoke: `requestSchoolEmailVerification` uses `getUser()` with no provider-specific check, proving school email verification works regardless of auth provider\n- All new tests pass; baseline 419 tests unbroken\n\n**Verification**\n\n- `npx vitest run src/__tests__/google-sso-login.test.tsx` — all pass\n- `npx vitest run src/__tests__/google-sso-callback.test.ts` — all pass\n- `npx vitest run` — 419+ tests pass (no regressions)",
       "proof_level": "This slice proves: contract (OAuth callback routing + button wiring verified via unit tests). Real runtime required: no (Google OAuth requires live Supabase provider — operational verification is manual UAT checklist). Human/UAT required: yes (manual E2E with Google provider in production).",
@@ -1193,11 +1193,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Create parent-level Stripe Customer, auto-save card on first booking via SetupIntent, show saved card in parent dashboard, offer one-click checkout with saved card",
-      "success_criteria": "First booking creates Stripe Customer and saves card; parent dashboard shows saved card (last-4, brand); next booking offers saved card checkout; parent can remove saved card; existing recurring schedule Customers unaffected",
-      "proof_level": "integration — Stripe Customer creation, card save, and reuse in booking flow",
-      "integration_closure": "Parent-level Stripe Customer coexists with per-schedule Customers from M009; booking flow detects and offers saved card",
-      "observability_impact": "Stripe Customer ID logged on creation; card save failures logged with parent context",
+      "goal": "Parent books a session, card is auto-saved to their Stripe Customer. On next booking, parent sees \"Pay with saved card\" via Stripe's PaymentElement and completes checkout in one click. Parent can view and remove their saved card from /parent/payment.",
+      "success_criteria": "## Must-Haves\n\n- `parent_profiles` table exists with `user_id` PK, Stripe customer/PM fields, card display fields, RLS owner policy\n- `create-intent` route attaches a Stripe Customer (created or reused from `parent_profiles`) and sets `setup_future_usage: 'off_session'` + `parent_id` in PI metadata\n- `create-recurring` route reuses parent-level Customer from `parent_profiles` instead of creating a new one each time (still stores per-schedule customer on `recurring_schedules` for backward compatibility)\n- Webhook `payment_intent.amount_capturable_updated` handler retrieves PM details via `stripe.paymentMethods.retrieve()` and upserts card info to `parent_profiles`\n- `GET /api/parent/payment-method` returns saved card details (brand, last4, exp) for authenticated parent\n- `DELETE /api/parent/payment-method` detaches the PM via Stripe API and clears card fields on `parent_profiles`\n- `/parent/payment` page shows saved card info or empty state, with \"Remove card\" action\n- `parentNavItems` includes Payment nav entry with CreditCard icon\n- 15+ unit tests covering all new/modified routes, webhook PM logic, and payment-method API\n\n## Threat Surface\n\n- **Abuse**: DELETE /api/parent/payment-method — RLS + getUser() guard prevents cross-user PM detach. PI metadata `parent_id` is set server-side from `user.id`, not from request body — no spoofing vector.\n- **Data exposure**: GET /api/parent/payment-method returns only card_brand, card_last4, card_exp_month, card_exp_year — no Stripe IDs (customer_id, pm_id) are exposed to the client. /parent/payment server component queries via supabaseAdmin, not client-side.\n- **Input trust**: No user-supplied input reaches Stripe or DB beyond what already exists in create-intent/create-recurring. The only new user action is DELETE which takes no body params.\n\n## Requirement Impact\n\n- **Requirements touched**: PARENT-05 (primary — delivered by this slice), PARENT-09 (primary — delivered by this slice), PARENT-07 (supporting — Payment page added to dashboard nav)\n- **Re-verify**: Existing direct-booking and recurring-booking flows must still work (PI creation, webhook confirm). Full test suite regression check.\n- **Decisions revisited**: D023 (single saved card per parent) — implemented as designed, no change needed\n\n## Proof Level\n\n- This slice proves: integration (Stripe Customer ↔ PI ↔ webhook ↔ parent_profiles ↔ dashboard)\n- Real runtime required: yes (Stripe API calls in webhook and route handlers)\n- Human/UAT required: yes (end-to-end booking with card save requires real Stripe test mode)\n\n## Verification\n\n- `npx vitest run src/__tests__/saved-payment-methods.test.ts` — 15+ tests pass covering create-intent customer attach, create-recurring customer reuse, webhook PM upsert, GET/DELETE payment-method API, auth guards\n- `npx tsc --noEmit` — zero type errors\n- `npx vitest run` — full suite passes, zero regressions\n- `test -f supabase/migrations/0018_parent_profiles.sql` — migration file exists\n- `test -f src/app/(parent)/parent/payment/page.tsx` — payment page exists\n- `grep -q 'CreditCard' src/lib/parent-nav.ts` — nav item added\n\n## Observability / Diagnostics\n\n- Runtime signals: `console.log('[stripe/webhook] Stored payment method on parent_profiles for user ...')` on successful PM upsert; `console.error` on Stripe PM retrieve failure or DB upsert failure\n- Inspection surfaces: `parent_profiles` table — query by user_id to see Stripe customer state and saved card fields\n- Failure visibility: Webhook logs PM retrieval errors with PI ID context; create-intent logs customer creation failures; GET/DELETE routes return structured JSON errors (401/404/500)\n- Redaction constraints: `stripe_customer_id` and `stripe_payment_method_id` are never exposed to client — only card_brand/last4/exp fields are returned by GET API\n\n## Integration Closure\n\n- Upstream surfaces consumed: `src/app/api/direct-booking/create-intent/route.ts` (PI creation), `src/app/api/direct-booking/create-recurring/route.ts` (Customer + PI creation), `src/app/api/stripe/webhook/route.ts` (PI event handler), `src/lib/parent-nav.ts` (nav items), `src/app/(parent)/layout.tsx` (parent route group)\n- New wiring introduced in this slice: parent_profiles table ↔ Stripe Customer lifecycle (create on first booking, update PM on webhook, read/delete from dashboard API)\n- What remains before the milestone is truly usable end-to-end: S04 (messaging) and S05 (admin dashboard) are independent features; this slice is self-contained for saved payment functionality",
+      "proof_level": "integration",
+      "integration_closure": "Upstream: create-intent route, create-recurring route, webhook handler, parent-nav, parent layout. New wiring: parent_profiles ↔ Stripe Customer lifecycle. Remaining: S04/S05 are independent.",
+      "observability_impact": "Webhook logs PM upsert success/failure with user context. API routes return structured JSON errors. parent_profiles table queryable for Stripe state inspection.",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -4533,6 +4533,141 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Created parent_profiles table, wired Stripe Customer creation/reuse into both booking routes, and added PM card detail upsert to webhook handler",
+      "status": "complete",
+      "one_liner": "Created parent_profiles table, wired Stripe Customer creation/reuse into both booking routes, and added PM card detail upsert to webhook handler",
+      "narrative": "Created migration 0018 with the parent_profiles table (PK user_id, Stripe Customer/PM fields, card details, RLS owner-all policy). Modified create-intent to resolve or create a parent-level Stripe Customer before PI creation, attaching customer, setup_future_usage: 'off_session', and parent_id to the PI metadata. Modified create-recurring to check parent_profiles for an existing Customer before creating a new one (reuses via stripe.customers.retrieve), and upserts the new Customer to parent_profiles when creating. Modified the webhook's payment_intent.amount_capturable_updated handler to retrieve PM card details via stripe.paymentMethods.retrieve() and upsert them to parent_profiles when parent_id, customer, and payment_method are all present on the PI. Updated 5 existing test files to add parent_profiles mock handling — all 426 tests pass with no regressions.",
+      "verification_result": "All 8 verification checks pass: npx tsc --noEmit (exit 0), migration file exists, setup_future_usage in create-intent, parent_profiles in create-intent, parent_profiles in create-recurring, paymentMethods.retrieve in webhook, parent_profiles in webhook, npx vitest run (426 passed, 0 failed).",
+      "duration": "",
+      "completed_at": "2026-04-01T13:42:07.285Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0018_parent_profiles.sql",
+        "src/app/api/direct-booking/create-intent/route.ts",
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/__tests__/payment-intent.test.ts",
+        "src/__tests__/booking-routing.test.ts",
+        "src/__tests__/parent-phone-storage.test.ts",
+        "src/__tests__/create-recurring.test.ts",
+        "tests/unit/session-type-pricing.test.ts"
+      ],
+      "key_decisions": [
+        "parent_profiles uses user_id as PK (1:1 with auth.users)",
+        "Customer resolution error in create-intent returns 502 with booking cleanup (same pattern as PI failure)",
+        "PM upsert in webhook is non-critical — wrapped in try/catch so booking confirmation still succeeds"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M010\nkey_files:\n  - supabase/migrations/0018_parent_profiles.sql\n  - src/app/api/direct-booking/create-intent/route.ts\n  - src/app/api/direct-booking/create-recurring/route.ts\n  - src/app/api/stripe/webhook/route.ts\n  - src/__tests__/payment-intent.test.ts\n  - src/__tests__/booking-routing.test.ts\n  - src/__tests__/parent-phone-storage.test.ts\n  - src/__tests__/create-recurring.test.ts\n  - tests/unit/session-type-pricing.test.ts\nkey_decisions:\n  - parent_profiles uses user_id as PK (1:1 with auth.users)\n  - Customer resolution error in create-intent returns 502 with booking cleanup (same pattern as PI failure)\n  - PM upsert in webhook is non-critical — wrapped in try/catch so booking confirmation still succeeds\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:42:07.285Z\nblocker_discovered: false\n---\n\n# T01: Created parent_profiles table, wired Stripe Customer creation/reuse into both booking routes, and added PM card detail upsert to webhook handler\n\n**Created parent_profiles table, wired Stripe Customer creation/reuse into both booking routes, and added PM card detail upsert to webhook handler**\n\n## What Happened\n\nCreated migration 0018 with the parent_profiles table (PK user_id, Stripe Customer/PM fields, card details, RLS owner-all policy). Modified create-intent to resolve or create a parent-level Stripe Customer before PI creation, attaching customer, setup_future_usage: 'off_session', and parent_id to the PI metadata. Modified create-recurring to check parent_profiles for an existing Customer before creating a new one (reuses via stripe.customers.retrieve), and upserts the new Customer to parent_profiles when creating. Modified the webhook's payment_intent.amount_capturable_updated handler to retrieve PM card details via stripe.paymentMethods.retrieve() and upsert them to parent_profiles when parent_id, customer, and payment_method are all present on the PI. Updated 5 existing test files to add parent_profiles mock handling — all 426 tests pass with no regressions.\n\n## Verification\n\nAll 8 verification checks pass: npx tsc --noEmit (exit 0), migration file exists, setup_future_usage in create-intent, parent_profiles in create-intent, parent_profiles in create-recurring, paymentMethods.retrieve in webhook, parent_profiles in webhook, npx vitest run (426 passed, 0 failed).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 4200ms |\n| 2 | `test -f supabase/migrations/0018_parent_profiles.sql` | 0 | ✅ pass | 50ms |\n| 3 | `grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts` | 0 | ✅ pass | 50ms |\n| 4 | `grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts` | 0 | ✅ pass | 50ms |\n| 5 | `grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts` | 0 | ✅ pass | 50ms |\n| 6 | `grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts` | 0 | ✅ pass | 50ms |\n| 7 | `grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts` | 0 | ✅ pass | 50ms |\n| 8 | `npx vitest run` | 0 | ✅ pass | 10500ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0018_parent_profiles.sql`\n- `src/app/api/direct-booking/create-intent/route.ts`\n- `src/app/api/direct-booking/create-recurring/route.ts`\n- `src/app/api/stripe/webhook/route.ts`\n- `src/__tests__/payment-intent.test.ts`\n- `src/__tests__/booking-routing.test.ts`\n- `src/__tests__/parent-phone-storage.test.ts`\n- `src/__tests__/create-recurring.test.ts`\n- `tests/unit/session-type-pricing.test.ts`\n",
+      "description": "## Description\n\nThis task creates the `parent_profiles` table (migration 0018) and modifies both direct-booking routes (`create-intent` and `create-recurring`) to create/reuse a parent-level Stripe Customer stored in `parent_profiles`. It also updates the webhook to retrieve PM card details and upsert them to `parent_profiles` after successful payment authorization.\n\nThis is the core integration work — the migration and all three route modifications are tightly coupled (webhook reads what routes write, both routes share the same parent_profiles lookup pattern) so they ship together.\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|---|---|---|---|\n| `stripe.customers.create()` | Return 502, clean up booking row (existing pattern) | Same as error — Stripe SDK has built-in timeout | N/A — Stripe SDK types enforce shape |\n| `stripe.paymentMethods.retrieve()` | Log error, skip PM upsert — booking confirm still succeeds | Same — log + skip | Log warning, skip upsert |\n| `supabaseAdmin.upsert()` on parent_profiles | Log error — non-fatal for booking flow | Same | N/A — typed client |\n\n## Negative Tests\n\n- Webhook receives PI with no `parent_id` in metadata (pre-S03 bookings) → skip PM upsert gracefully\n- Webhook receives PI with no `payment_method` → skip PM upsert\n- `create-intent` with user who has no `parent_profiles` row yet → creates Customer + inserts row\n- `create-recurring` with user who already has a Customer → reuses it, does not create duplicate\n\n## Steps\n\n1. Create `supabase/migrations/0018_parent_profiles.sql` with the parent_profiles table: `user_id UUID PK REFERENCES auth.users(id) ON DELETE CASCADE`, `stripe_customer_id TEXT`, `stripe_payment_method_id TEXT`, `card_brand TEXT`, `card_last4 TEXT`, `card_exp_month SMALLINT`, `card_exp_year SMALLINT`, `updated_at TIMESTAMPTZ DEFAULT NOW()`. Enable RLS with owner-all policy (`user_id = auth.uid()`).\n\n2. Modify `src/app/api/direct-booking/create-intent/route.ts`:\n   - After teacher fetch and before PI creation, query `parent_profiles` for `user.id` to get existing `stripe_customer_id`\n   - If no customer: `stripe.customers.create({ email: user.email, metadata: { tutelo_user_id: user.id } })` then `supabaseAdmin.from('parent_profiles').upsert({ user_id: user.id, stripe_customer_id: customer.id }, { onConflict: 'user_id' })`\n   - Add `customer: customerId` and `setup_future_usage: 'off_session'` to `stripe.paymentIntents.create()` params\n   - Add `parent_id: user.id` to PI metadata object\n\n3. Modify `src/app/api/direct-booking/create-recurring/route.ts`:\n   - Before the existing `stripe.customers.create()` call, query `parent_profiles` for `user.id`\n   - If `parent_profiles.stripe_customer_id` exists, reuse it instead of creating new Customer\n   - If no row/no customer, create Customer as before, then upsert to `parent_profiles`\n   - Keep storing `customer.id` on `recurring_schedules.stripe_customer_id` for backward compatibility with cron\n   - Add `parent_id: user.id` to PI metadata\n\n4. Modify `src/app/api/stripe/webhook/route.ts` in the `payment_intent.amount_capturable_updated` handler:\n   - After existing booking confirm logic, check if `pi.customer` and `pi.payment_method` and `pi.metadata?.parent_id` are all present\n   - If yes: `const pm = await stripe.paymentMethods.retrieve(pi.payment_method as string)` \n   - Extract `pm.card?.brand`, `pm.card?.last4`, `pm.card?.exp_month`, `pm.card?.exp_year`\n   - `supabaseAdmin.from('parent_profiles').upsert({ user_id: parentId, stripe_customer_id: pi.customer as string, stripe_payment_method_id: pi.payment_method as string, card_brand, card_last4, card_exp_month, card_exp_year, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })`\n   - Wrap in try/catch — log errors but don't fail the webhook response (PM storage is non-critical)\n\n## Must-Haves\n\n- [ ] Migration 0018 creates parent_profiles with correct schema and RLS\n- [ ] create-intent attaches Customer + setup_future_usage + parent_id metadata\n- [ ] create-recurring reuses parent-level Customer from parent_profiles\n- [ ] Webhook retrieves PM details and upserts to parent_profiles\n- [ ] All changes are backward-compatible (pre-S03 bookings without parent_id in metadata are handled gracefully)\n- [ ] `npx tsc --noEmit` passes\n\n## Verification\n\n- `npx tsc --noEmit` exits 0\n- `test -f supabase/migrations/0018_parent_profiles.sql`\n- `grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts`\n- `grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts`\n- `grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts`\n- `grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts`\n- `grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts`\n- `npx vitest run` — full suite passes (no regressions in existing 426 tests)\n\n## Observability Impact\n\n- Signals added: `console.log` on successful parent_profiles Customer creation and PM upsert in webhook; `console.error` on Stripe PM retrieve failure\n- How a future agent inspects: query `parent_profiles` table by user_id; check webhook logs for PM storage messages\n- Failure state exposed: webhook logs include PI ID and parent_id on PM upsert failure",
+      "estimate": "1h30m",
+      "files": [
+        "supabase/migrations/0018_parent_profiles.sql",
+        "src/app/api/direct-booking/create-intent/route.ts",
+        "src/app/api/direct-booking/create-recurring/route.ts",
+        "src/app/api/stripe/webhook/route.ts"
+      ],
+      "verify": "npx tsc --noEmit && test -f supabase/migrations/0018_parent_profiles.sql && grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts && grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts && grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts && grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts && npx vitest run",
+      "inputs": [
+        "`src/app/api/direct-booking/create-intent/route.ts` — existing direct booking PI creation (no customer, no setup_future_usage)",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — existing recurring booking with per-schedule Customer creation",
+        "`src/app/api/stripe/webhook/route.ts` — existing webhook handler for payment_intent.amount_capturable_updated",
+        "`src/lib/supabase/service.ts` — supabaseAdmin service role client"
+      ],
+      "expected_output": [
+        "`supabase/migrations/0018_parent_profiles.sql` — new migration creating parent_profiles table with RLS",
+        "`src/app/api/direct-booking/create-intent/route.ts` — modified to attach Customer + setup_future_usage + parent_id metadata",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — modified to reuse parent-level Customer from parent_profiles",
+        "`src/app/api/stripe/webhook/route.ts` — modified to retrieve PM details and upsert to parent_profiles"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Build payment-method API routes and /parent/payment dashboard page",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "## Description\n\nCreates the parent-facing surfaces for viewing and removing saved payment methods: a GET/DELETE API route at `/api/parent/payment-method` and a `/parent/payment` dashboard page. Also adds the Payment nav item to `parentNavItems` so both sidebar and mobile nav show it.\n\nThe GET route returns only safe display fields (brand, last4, exp). The DELETE route detaches the PM from Stripe and clears the card fields on parent_profiles. The page is a server component that queries parent_profiles via supabaseAdmin.\n\n## Steps\n\n1. Create `src/app/api/parent/payment-method/route.ts`:\n   - `GET`: `getUser()` auth guard → query `parent_profiles` via `supabaseAdmin` for `user.id` → return `{ card_brand, card_last4, card_exp_month, card_exp_year }` or `{ card: null }` if no row/no PM\n   - `DELETE`: `getUser()` auth guard → fetch `parent_profiles` for `user.id` → if no `stripe_payment_method_id` return 404 → `stripe.paymentMethods.detach(stripe_payment_method_id)` → update `parent_profiles` to null out `stripe_payment_method_id`, `card_brand`, `card_last4`, `card_exp_month`, `card_exp_year` → return 200\n   - Import Stripe only in DELETE handler (GET doesn't need it)\n\n2. Create `src/app/(parent)/parent/payment/page.tsx`:\n   - Server component with `getUser()` auth guard (redirect to `/login?redirect=/parent/payment` if no session)\n   - Query `parent_profiles` via supabaseAdmin for card fields\n   - If card exists: show Card component with brand icon/name, `•••• {last4}`, `Expires {month}/{year}`, and a \"Remove Card\" button\n   - If no card: show empty state explaining that cards are auto-saved on first booking with a link to find a tutor\n   - \"Remove Card\" button triggers fetch DELETE to `/api/parent/payment-method` then router.refresh()\n   - Use `'use client'` wrapper for the remove-card interaction (small client component inside server page, or make the whole page client)\n\n3. Update `src/lib/parent-nav.ts`:\n   - Import `CreditCard` from lucide-react\n   - Add `{ href: '/parent/payment', label: 'Payment', icon: CreditCard }` to `parentNavItems` array (after My Bookings)\n\n## Must-Haves\n\n- [ ] GET /api/parent/payment-method returns card display fields for authenticated parent\n- [ ] GET returns 401 for unauthenticated requests\n- [ ] GET returns `{ card: null }` when no saved card\n- [ ] DELETE /api/parent/payment-method detaches PM via Stripe and clears parent_profiles\n- [ ] DELETE returns 401 for unauthenticated, 404 when no saved card\n- [ ] /parent/payment page renders saved card or empty state\n- [ ] Payment nav item appears in parentNavItems with CreditCard icon\n- [ ] `npx tsc --noEmit` passes\n\n## Verification\n\n- `npx tsc --noEmit` exits 0\n- `test -f src/app/api/parent/payment-method/route.ts`\n- `test -f src/app/(parent)/parent/payment/page.tsx`\n- `grep -q 'CreditCard' src/lib/parent-nav.ts`\n- `grep -q 'payment' src/lib/parent-nav.ts`\n- `npx vitest run` — full suite passes (no regressions)",
+      "estimate": "1h",
+      "files": [
+        "src/app/api/parent/payment-method/route.ts",
+        "src/app/(parent)/parent/payment/page.tsx",
+        "src/lib/parent-nav.ts"
+      ],
+      "verify": "npx tsc --noEmit && test -f src/app/api/parent/payment-method/route.ts && test -f src/app/(parent)/parent/payment/page.tsx && grep -q 'CreditCard' src/lib/parent-nav.ts && npx vitest run",
+      "inputs": [
+        "`src/lib/parent-nav.ts` — existing parent nav items array (Overview, My Children, My Bookings)",
+        "`src/app/(parent)/layout.tsx` — auth-guarded parent layout (establishes auth pattern)",
+        "`src/app/(parent)/parent/children/page.tsx` — reference for parent dashboard page patterns",
+        "`src/app/api/parent/children/route.ts` — reference for parent API route patterns (getUser + supabaseAdmin)",
+        "`supabase/migrations/0018_parent_profiles.sql` — schema for parent_profiles table (from T01)"
+      ],
+      "expected_output": [
+        "`src/app/api/parent/payment-method/route.ts` — new GET/DELETE API route for saved payment method",
+        "`src/app/(parent)/parent/payment/page.tsx` — new payment dashboard page with card display and remove action",
+        "`src/lib/parent-nav.ts` — modified to include Payment nav item with CreditCard icon"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Add comprehensive test coverage for saved payment method flows",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "## Description\n\nCreates `src/__tests__/saved-payment-methods.test.ts` with 15+ unit tests covering all new and modified code paths from T01 and T02. Tests follow the established mock patterns from `payment-intent.test.ts` and `parent-children.test.ts` — vi.hoisted for Stripe mocks, vi.mock for supabase server/service.\n\nThis is the verification task that proves the slice works correctly at the unit level.\n\n## Negative Tests\n\n- Unauthenticated requests to GET/DELETE payment-method → 401\n- DELETE when no saved card exists → 404\n- Webhook PI with no parent_id metadata → skips PM upsert without error\n- Webhook PI with no payment_method → skips PM upsert without error\n- create-intent with existing parent_profiles Customer → reuses, doesn't create new\n\n## Steps\n\n1. Create `src/__tests__/saved-payment-methods.test.ts` with the following test groups:\n\n   **create-intent Customer attachment (4-5 tests):**\n   - When parent has no parent_profiles row → creates Stripe Customer, upserts to parent_profiles, PI includes `customer` + `setup_future_usage: 'off_session'`\n   - When parent has existing stripe_customer_id in parent_profiles → reuses Customer, no `stripe.customers.create()` call\n   - PI metadata includes `parent_id: user.id`\n   - Backward compat: existing PI creation params (capture_method, transfer_data, etc.) still present\n\n   **create-recurring Customer reuse (3-4 tests):**\n   - When parent has existing parent_profiles Customer → reuses it, no new Customer created\n   - When parent has no parent_profiles row → creates Customer, upserts to parent_profiles AND recurring_schedules\n   - Still stores customer on recurring_schedules for cron backward compat\n\n   **Webhook PM upsert (3-4 tests):**\n   - PI with customer + payment_method + parent_id metadata → calls paymentMethods.retrieve, upserts card details to parent_profiles\n   - PI with no parent_id in metadata (pre-S03 booking) → skips PM upsert, no error\n   - PI with no payment_method → skips PM upsert\n   - Idempotent: second webhook delivery with same PM data → upsert succeeds without error\n\n   **GET /api/parent/payment-method (3 tests):**\n   - Authenticated parent with saved card → returns card_brand, card_last4, card_exp_month, card_exp_year\n   - Authenticated parent with no parent_profiles row → returns { card: null }\n   - Unauthenticated → 401\n\n   **DELETE /api/parent/payment-method (3 tests):**\n   - Authenticated with saved card → calls stripe.paymentMethods.detach, clears card fields on parent_profiles, returns 200\n   - Authenticated with no saved card → 404\n   - Unauthenticated → 401\n\n2. Use the established mock patterns:\n   - `vi.hoisted()` for Stripe mock class with `customers.create`, `paymentIntents.create`, `paymentMethods.retrieve`, `paymentMethods.detach`\n   - `vi.mock('@/lib/supabase/server')` for `createClient` returning mock auth\n   - `vi.mock('@/lib/supabase/service')` for `supabaseAdmin` with chainable `.from().select().eq().maybeSingle()` etc.\n   - Use `vi.mock('@/lib/utils/booking')` and `vi.mock('@/lib/email')` to stub non-Stripe dependencies in route tests\n\n3. Run the full test suite to verify no regressions.\n\n## Must-Haves\n\n- [ ] 15+ tests covering all test groups above\n- [ ] All tests pass: `npx vitest run src/__tests__/saved-payment-methods.test.ts`\n- [ ] Full suite passes: `npx vitest run` with zero regressions\n- [ ] Tests use established vi.hoisted + vi.mock patterns (no novel mock approaches)\n\n## Verification\n\n- `npx vitest run src/__tests__/saved-payment-methods.test.ts` — all tests pass\n- `npx vitest run` — full suite passes with zero regressions\n- `grep -c 'it(' src/__tests__/saved-payment-methods.test.ts` returns >= 15",
+      "estimate": "1h30m",
+      "files": [
+        "src/__tests__/saved-payment-methods.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/saved-payment-methods.test.ts && npx vitest run",
+      "inputs": [
+        "`src/app/api/direct-booking/create-intent/route.ts` — modified route with Customer attach (from T01)",
+        "`src/app/api/direct-booking/create-recurring/route.ts` — modified route with Customer reuse (from T01)",
+        "`src/app/api/stripe/webhook/route.ts` — modified webhook with PM upsert (from T01)",
+        "`src/app/api/parent/payment-method/route.ts` — new GET/DELETE API route (from T02)",
+        "`src/__tests__/payment-intent.test.ts` — reference for Stripe mock patterns",
+        "`src/__tests__/parent-children.test.ts` — reference for parent API route test patterns"
+      ],
+      "expected_output": [
+        "`src/__tests__/saved-payment-methods.test.ts` — 15+ unit tests covering create-intent Customer, create-recurring reuse, webhook PM upsert, GET/DELETE payment-method API"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -4892,6 +5027,30 @@
       "decision": "New Google user (no teacher row) routes to /parent, not a special onboarding flow",
       "choice": "Accept that new-user-via-Google lands at /parent dashboard; teacher signup remains email+password → /onboarding",
       "rationale": "Adding a new-user detection branch to the callback route would complicate OAuth flow for a rare edge case. New teachers are driven through the \"Start your page\" CTA (email+password signup → onboarding wizard). Google SSO is primarily for returning logins. A new Google user who happens to want to teach can still sign up via the standard flow.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 42,
+      "id": "D031",
+      "when_context": "",
+      "scope": "requirement",
+      "decision": "AUTH-04 status transition",
+      "choice": "validated",
+      "rationale": "M010/S02 delivered: Provider-agnostic smoke test reads src/actions/verification.ts source and asserts it uses getUser() with no provider-specific logic — no 'provider', 'google', or 'getSession().provider' references. Verification flow works regardless of auth provider (Google SSO or email+password). Test passes in full 426-test suite.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 43,
+      "id": "D032",
+      "when_context": "M010/S03 planning",
+      "scope": "architecture",
+      "decision": "S03 task grouping: migration + route changes together in T01",
+      "choice": "Bundle migration, create-intent changes, create-recurring changes, and webhook changes into a single task (T01) rather than separate tasks",
+      "rationale": "The migration (parent_profiles table), both booking routes (create-intent/create-recurring), and the webhook handler are tightly coupled — the webhook reads what the routes write, both routes share the same parent_profiles lookup pattern, and all require the migration. Splitting them would create tasks that can't be independently verified. The combined task is still only 4 files and 4 steps — well within context limits.",
       "revisable": "Yes",
       "made_by": "agent",
       "superseded_by": null
@@ -5623,6 +5782,94 @@
       "verdict": "✅ pass",
       "duration_ms": 9890,
       "created_at": "2026-04-01T13:21:34.250Z"
+    },
+    {
+      "id": 67,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 4200,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 68,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "test -f supabase/migrations/0018_parent_profiles.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 69,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 70,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 71,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 72,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 73,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-01T13:42:07.285Z"
+    },
+    {
+      "id": 74,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M010",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10500,
+      "created_at": "2026-04-01T13:42:07.285Z"
     }
   ]
 }

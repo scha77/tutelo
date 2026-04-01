@@ -24,14 +24,15 @@ vi.mock('@/lib/email', () => ({
 }))
 
 // Stripe mock (vi.hoisted pattern from payment-intent.test.ts)
-const { stripeCustomersCreateMock, stripePaymentIntentsCreateMock, MockStripeClass } = vi.hoisted(() => {
+const { stripeCustomersCreateMock, stripeCustomersRetrieveMock, stripePaymentIntentsCreateMock, MockStripeClass } = vi.hoisted(() => {
   const stripeCustomersCreateMock = vi.fn()
+  const stripeCustomersRetrieveMock = vi.fn()
   const stripePaymentIntentsCreateMock = vi.fn()
   class MockStripeClass {
-    customers = { create: stripeCustomersCreateMock }
+    customers = { create: stripeCustomersCreateMock, retrieve: stripeCustomersRetrieveMock }
     paymentIntents = { create: stripePaymentIntentsCreateMock }
   }
-  return { stripeCustomersCreateMock, stripePaymentIntentsCreateMock, MockStripeClass }
+  return { stripeCustomersCreateMock, stripeCustomersRetrieveMock, stripePaymentIntentsCreateMock, MockStripeClass }
 })
 
 vi.mock('stripe', () => ({
@@ -77,6 +78,7 @@ describe('POST /api/direct-booking/create-recurring', () => {
 
     // Default Stripe mocks
     stripeCustomersCreateMock.mockResolvedValue({ id: 'cus_test123' })
+    stripeCustomersRetrieveMock.mockResolvedValue({ id: 'cus_test123' })
     stripePaymentIntentsCreateMock.mockResolvedValue({
       id: 'pi_recurring_test',
       client_secret: 'pi_recurring_test_secret',
@@ -194,6 +196,17 @@ describe('POST /api/direct-booking/create-recurring', () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockResolvedValue({ data: null, error: null }),
           }),
+        }
+      }
+
+      if (table === 'parent_profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+            }),
+          }),
+          upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }
       }
 

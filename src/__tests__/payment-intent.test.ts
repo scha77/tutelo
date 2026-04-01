@@ -16,12 +16,14 @@ vi.mock('@/lib/supabase/service', () => ({
 }))
 
 // Stripe mock
-const { stripeCreateMock, MockStripeClass } = vi.hoisted(() => {
+const { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass } = vi.hoisted(() => {
   const stripeCreateMock = vi.fn()
+  const stripeCustomersCreateMock = vi.fn()
   class MockStripeClass {
+    customers = { create: stripeCustomersCreateMock }
     paymentIntents = { create: stripeCreateMock }
   }
-  return { stripeCreateMock, MockStripeClass }
+  return { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass }
 })
 
 vi.mock('stripe', () => ({
@@ -42,7 +44,26 @@ describe('PaymentIntent creation (create-intent API route)', () => {
       id: 'pi_test123',
       client_secret: 'pi_test123_secret',
     })
+    stripeCustomersCreateMock.mockResolvedValue({ id: 'cus_test_new' })
   })
+
+  /** Add parent_profiles SELECT mock (returns no existing profile → triggers Customer create) */
+  function addParentProfileMock(fromMock: ReturnType<typeof vi.fn>) {
+    fromMock.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+        }),
+      }),
+    })
+  }
+
+  /** Add parent_profiles UPSERT mock (after Customer creation) */
+  function addParentProfileUpsertMock(fromMock: ReturnType<typeof vi.fn>) {
+    fromMock.mockReturnValueOnce({
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })
+  }
 
   it('creates PaymentIntent with capture_method manual', async () => {
     const { createClient } = await import('@/lib/supabase/server')
@@ -68,6 +89,8 @@ describe('PaymentIntent creation (create-intent API route)', () => {
         }),
       }),
     })
+    addParentProfileMock(fromMock)
+    addParentProfileUpsertMock(fromMock)
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { NextRequest } = await import('next/server')
@@ -116,6 +139,8 @@ describe('PaymentIntent creation (create-intent API route)', () => {
         }),
       }),
     })
+    addParentProfileMock(fromMock)
+    addParentProfileUpsertMock(fromMock)
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { NextRequest } = await import('next/server')
@@ -169,6 +194,8 @@ describe('PaymentIntent creation (create-intent API route)', () => {
         }),
       }),
     })
+    addParentProfileMock(fromMock)
+    addParentProfileUpsertMock(fromMock)
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { NextRequest } = await import('next/server')
@@ -218,6 +245,8 @@ describe('PaymentIntent creation (create-intent API route)', () => {
         }),
       }),
     })
+    addParentProfileMock(fromMock)
+    addParentProfileUpsertMock(fromMock)
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { NextRequest } = await import('next/server')
@@ -273,6 +302,8 @@ describe('PaymentIntent creation (create-intent API route)', () => {
         }),
       }),
     })
+    addParentProfileMock(fromMock)
+    addParentProfileUpsertMock(fromMock)
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { NextRequest } = await import('next/server')

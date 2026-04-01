@@ -208,7 +208,7 @@ export async function POST(req: Request) {
 
   const firstBookingId = insertedBookingIds[0]
 
-  // 9. Create Stripe Customer + PaymentIntent for the first session
+  // 9. Resolve or reuse parent-level Stripe Customer (saved-payment-methods — S03)
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const applicationFeeAmount = Math.round(amountInCents * 0.07)
 
@@ -216,10 +216,27 @@ export async function POST(req: Request) {
   let paymentIntent: Stripe.PaymentIntent
 
   try {
-    customer = await stripe.customers.create({
-      email: user.email!,
-      metadata: { tutelo_user_id: user.id },
-    })
+    // Check parent_profiles for existing Stripe Customer
+    const { data: parentProfile } = await supabaseAdmin
+      .from('parent_profiles')
+      .select('stripe_customer_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (parentProfile?.stripe_customer_id) {
+      // Reuse existing Customer — retrieve to get full object
+      customer = await stripe.customers.retrieve(parentProfile.stripe_customer_id) as Stripe.Customer
+      console.log(`[create-recurring] Reusing Stripe Customer ${customer.id} for parent ${user.id}`)
+    } else {
+      customer = await stripe.customers.create({
+        email: user.email!,
+        metadata: { tutelo_user_id: user.id },
+      })
+      await supabaseAdmin
+        .from('parent_profiles')
+        .upsert({ user_id: user.id, stripe_customer_id: customer.id }, { onConflict: 'user_id' })
+      console.log(`[create-recurring] Created Stripe Customer ${customer.id} for parent ${user.id}`)
+    }
 
     paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
@@ -233,6 +250,7 @@ export async function POST(req: Request) {
       metadata: {
         booking_id: firstBookingId,
         teacher_id: teacher.id,
+        parent_id: user.id,
         recurring_schedule_id: recurringScheduleId,
       },
     })

@@ -14,12 +14,14 @@ vi.mock('@/lib/supabase/service', () => ({
 }))
 
 // Stripe mock — must use vi.hoisted() class pattern for ESM constructor mocking
-const { stripeCreateMock, MockStripeClass } = vi.hoisted(() => {
+const { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass } = vi.hoisted(() => {
   const stripeCreateMock = vi.fn()
+  const stripeCustomersCreateMock = vi.fn()
   class MockStripeClass {
+    customers = { create: stripeCustomersCreateMock }
     paymentIntents = { create: stripeCreateMock }
   }
-  return { stripeCreateMock, MockStripeClass }
+  return { stripeCreateMock, stripeCustomersCreateMock, MockStripeClass }
 })
 
 vi.mock('stripe', () => ({
@@ -75,6 +77,18 @@ function addBookingInsertMock(fromMock: ReturnType<typeof vi.fn>, bookingId = 'b
       }),
     }),
   })
+  // parent_profiles SELECT (no existing profile)
+  fromMock.mockReturnValueOnce({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+      }),
+    }),
+  })
+  // parent_profiles UPSERT (after Customer creation)
+  fromMock.mockReturnValueOnce({
+    upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+  })
 }
 
 describe('direct booking routing', () => {
@@ -88,6 +102,7 @@ describe('direct booking routing', () => {
     vi.mock('stripe', () => ({ default: MockStripeClass }))
     // Default Stripe mock response
     stripeCreateMock.mockResolvedValue({ id: 'pi_test', client_secret: 'pi_test_secret' })
+    stripeCustomersCreateMock.mockResolvedValue({ id: 'cus_test_new' })
   })
 
   it('returns 401 when parent is not authenticated', async () => {
@@ -141,7 +156,8 @@ describe('direct booking routing', () => {
     const json = await res.json()
     expect(json.clientSecret).toBe('pi_test_secret')
     // Verify booking insert was called (second call to supabaseAdmin.from)
-    expect(fromMock).toHaveBeenCalledTimes(2)
+    // Now 4 calls: teachers, bookings, parent_profiles select, parent_profiles upsert
+    expect(fromMock).toHaveBeenCalledTimes(4)
   })
 
   it('includes 7% application_fee_amount in PaymentIntent', async () => {
@@ -203,6 +219,18 @@ describe('direct booking routing', () => {
     })
     const fromMock = makeTeacherFromMock()
     fromMock.mockReturnValueOnce({ insert: insertMock })
+    // parent_profiles SELECT (no existing profile)
+    fromMock.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+        }),
+      }),
+    })
+    // parent_profiles UPSERT
+    fromMock.mockReturnValueOnce({
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })
     vi.mocked(supabaseAdmin.from).mockImplementation(fromMock)
 
     const { POST } = await import('@/app/api/direct-booking/create-intent/route')
