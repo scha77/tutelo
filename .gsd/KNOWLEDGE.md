@@ -564,3 +564,45 @@ The `parent_profiles` table stores one Stripe Customer + saved card per parent a
 - PM card details are upserted in the webhook's `payment_intent.amount_capturable_updated` handler **after** booking confirmation succeeds — wrap the PM upsert in try/catch so a Stripe or DB error here never fails the webhook response (booking confirmation is already done)
 - PM upsert only runs when PI metadata has `parent_id`, `customer`, and `payment_method` — pre-S03 bookings (no `parent_id` in metadata) skip gracefully
 - GET `/api/parent/payment-method` returns only display fields (brand, last4, exp_month, exp_year) — never expose `stripe_payment_method_id` or `stripe_customer_id` to the client
+
+---
+
+## Supabase Realtime postgres_changes: RLS Is Enforced Automatically (M010/S04)
+
+`postgres_changes` subscriptions on tables with RLS enabled automatically filter events to only rows the authenticated user can SELECT. No custom filter beyond `conversation_id=eq.<id>` is needed — Supabase handles participant authorization at the DB level. This means the browser Supabase client (`createClient()`) can subscribe to messages without any extra auth config.
+
+Cleanup pattern that works reliably: store the channel reference from `.channel().on(...).subscribe()` in a `useRef` or closure, then call `supabase.removeChannel(channel)` in the `useEffect` return. Do not call `supabase.channel(...).unsubscribe()` — `removeChannel` is the correct API.
+
+---
+
+## Resend Constructor Must Be Mocked with function() Not Arrow Function (M010/S04)
+
+When an API route calls `new Resend(process.env.RESEND_API_KEY)` **at module scope** (outside any handler), the mock must support construction:
+
+```ts
+// ❌ Arrow function — not constructable, throws TypeError
+vi.mock('resend', () => ({ Resend: vi.fn() }))
+
+// ✅ function() — constructable, supports new Resend(...)
+vi.mock('resend', () => ({
+  Resend: function () { this.emails = { send: emailSendMock } },
+}))
+```
+
+Use a shared mutable `emailSendMock` variable declared before the mock factory so individual tests can reassign `.mockResolvedValue()` / `.mockRejectedValue()` per test. Note: this duplicates entry in KNOWLEDGE.md at line 80 for the same pattern from an earlier milestone — the canonical fix is `function()` not arrow function.
+
+---
+
+## Messaging API: Conversation Auto-Creation Race Condition Handling (M010/S04)
+
+`POST /api/messages` with a `teacherId` (first message) does a SELECT-then-INSERT for the conversation. Under race conditions, two simultaneous requests from the same parent can both skip the SELECT (null result) and both attempt INSERT, triggering a `23505` unique constraint violation on the second insert. The fix: catch `convError.code === '23505'` and re-SELECT to get the winning row:
+
+```ts
+if (convError.code === '23505' || convError.message?.includes('unique')) {
+  const { data: raceConv } = await supabaseAdmin.from('conversations')
+    .select('id').eq('teacher_id', teacherId).eq('parent_id', parentId).single()
+  resolvedConversationId = raceConv?.id
+}
+```
+
+This pattern avoids a transaction or advisory lock while still handling the race gracefully.
