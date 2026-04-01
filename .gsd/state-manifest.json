@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T13:50:03.410Z",
+  "exported_at": "2026-04-01T14:08:15.957Z",
   "milestones": [
     {
       "id": "M001",
@@ -1183,16 +1183,16 @@
       "milestone_id": "M010",
       "id": "S03",
       "title": "Saved Payment Methods",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [
         "S01"
       ],
       "demo": "Parent books a session, card is auto-saved to their Stripe Customer. On next booking, parent sees Pay with saved card and completes checkout in one click",
       "created_at": "2026-04-01T01:35:50.349Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-01T13:53:52.599Z",
+      "full_summary_md": "---\nid: S03\nparent: M010\nmilestone: M010\nprovides:\n  - parent_profiles table with Stripe Customer and saved card data — readable by S04 (messaging) or any future slice that needs parent payment state\n  - Payment nav item in parentNavItems — S04 can add its own nav item without conflict\n  - parent-level Stripe Customer ID pattern established — S04 can attach charges or metadata to the parent Customer without creating new ones\n  - 18 unit tests covering saved PM flows — S04 test patterns can reference saved-payment-methods.test.ts for webhook mock structure\nrequires:\n  - slice: S01\n    provides: Parent auth routing to /parent, (parent) route group, parent-nav.ts pattern, parentNavItems array\naffects:\n  - S04 — can add Messaging nav item to parentNavItems without conflict; parent_profiles Customer available if messaging ever needs Stripe charges\n  - S05 — admin dashboard may want to query parent_profiles for payment method adoption metrics\nkey_files:\n  - supabase/migrations/0018_parent_profiles.sql\n  - src/app/api/direct-booking/create-intent/route.ts\n  - src/app/api/direct-booking/create-recurring/route.ts\n  - src/app/api/stripe/webhook/route.ts\n  - src/app/api/parent/payment-method/route.ts\n  - src/app/(parent)/parent/payment/page.tsx\n  - src/lib/parent-nav.ts\n  - src/__tests__/saved-payment-methods.test.ts\nkey_decisions:\n  - parent_profiles uses user_id as PK (1:1 with auth.users) — upsert with onConflict: 'user_id'\n  - Customer resolution failure in create-intent returns 502 with booking cleanup (consistent with existing PI failure pattern)\n  - PM upsert in webhook is non-critical — wrapped in try/catch so booking confirmation still succeeds even if Stripe PM retrieve or DB upsert fails\n  - Stripe is lazy-imported only in DELETE handler — GET /api/parent/payment-method doesn't need Stripe SDK at all\n  - Payment page is fully client-side (fetches from API route) — matches children page pattern; no server component needed\n  - brandDisplayName utility maps Stripe card brand strings (visa, mastercard, amex, etc.) to user-friendly display names\npatterns_established:\n  - parent_profiles as central hub for parent-level Stripe data — future slices that need parent payment state should read from here, not from recurring_schedules or booking-level metadata\n  - Non-critical webhook side-effect pattern: try/catch around any post-confirmation enrichment (PM upsert, analytics, etc.) so booking success is never blocked\n  - Lazy Stripe import pattern: only import Stripe in the handler that needs it (DELETE), not at module level — keeps GET routes lightweight\n  - vi.mock'd Stripe + any-typed mock objects pattern for webhook tests (see KNOWLEDGE.md for TS2702 avoidance)\nobservability_surfaces:\n  - console.log on successful parent_profiles Customer creation in create-intent and create-recurring\n  - console.log on successful PM upsert in webhook: '[stripe/webhook] Upserted parent_profiles PM for parent {userId} ({brand} ****{last4})'\n  - console.error on paymentMethods.retrieve or parent_profiles upsert failure in webhook (includes PI ID and parent_id)\n  - GET /api/parent/payment-method returns {card: null} as a clean signal that no card is saved yet (distinguishable from 401/500)\ndrill_down_paths:\n  - .gsd/milestones/M010/slices/S03/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M010/slices/S03/tasks/T02-SUMMARY.md\n  - .gsd/milestones/M010/slices/S03/tasks/T03-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T13:53:52.600Z\nblocker_discovered: false\n---\n\n# S03: Saved Payment Methods\n\n**Parent books a session, card is auto-saved to their Stripe Customer; subsequent bookings reuse the saved card; parent can view and remove their saved card from /parent/payment.**\n\n## What Happened\n\nS03 delivered the full saved payment method loop across three tasks with no blockers, no regressions, and all 18 new tests passing.\n\n**T01 — Backend integration (migration + booking routes + webhook):** Created migration 0018 adding the `parent_profiles` table (`user_id PK`, `stripe_customer_id`, `stripe_payment_method_id`, `card_brand`, `card_last4`, `card_exp_month`, `card_exp_year`, `updated_at`, RLS owner-all policy). Modified `create-intent` to resolve or create a parent-level Stripe Customer before PI creation, attaching `customer`, `setup_future_usage: 'off_session'`, and `parent_id` to the PI. Customer resolution failure returns 502 with booking cleanup (same pattern as existing PI failure path). Modified `create-recurring` to check `parent_profiles` first and reuse the existing Customer via `stripe.customers.retrieve()` rather than creating a new one — the per-schedule `stripe_customer_id` on `recurring_schedules` is preserved for backward compat with the cron auto-charge path. Added PM upsert logic to the webhook's `payment_intent.amount_capturable_updated` handler: when `parent_id`, `customer`, and `payment_method` are all present in the PI, calls `stripe.paymentMethods.retrieve()` to get card details and upserts to `parent_profiles`. The upsert is wrapped in try/catch — PM storage failure logs an error but never blocks the booking confirmation response. Pre-S03 bookings (no `parent_id` in metadata) are handled gracefully by skipping the upsert entirely. Updated 5 existing test files to add `parent_profiles` mock handling, preserving all 426 pre-existing tests.\n\n**T02 — Parent-facing UI (API routes + dashboard page + nav):** Created `GET /api/parent/payment-method` returning safe display fields (`card_brand`, `card_last4`, `card_exp_month`, `card_exp_year`) or `{ card: null }`. Created `DELETE /api/parent/payment-method` that detaches the PM from Stripe via `stripe.paymentMethods.detach()` and nulls out card fields on `parent_profiles`. Stripe is lazy-imported only in the DELETE handler to keep GET lightweight. Created `/parent/payment` as a fully client-side page (matching the children page pattern) with card display (brand name mapping, masked PAN, expiry), a remove confirmation dialog, empty state with find-a-tutor link, and error handling. Updated `parent-nav.ts` to add a Payment nav item with `CreditCard` icon after My Bookings — visible in both sidebar and mobile nav.\n\n**T03 — Test coverage (18 tests across 5 groups):** Created `saved-payment-methods.test.ts` using established `vi.hoisted` + `vi.mock` patterns. Groups: create-intent Customer attachment (5 tests: new Customer creation, `setup_future_usage`/`customer` on PI, Customer reuse, `parent_id` metadata, backward-compat params), create-recurring Customer reuse (3 tests: existing Customer reuse via retrieve, new Customer creation, `recurring_schedules` backward compat), webhook PM upsert (4 tests: retrieve + upsert, skip when no `parent_id`, skip when no `payment_method`, idempotent re-delivery), GET payment-method (3 tests: card details, null card, 401), DELETE payment-method (3 tests: detach + clear, 404, 401). One deviation: mock PI objects in webhook tests typed as `any` instead of `Stripe.PaymentIntent` to avoid TS2702 with vi.mock'd stripe module. Non-fatal stderr warnings from create-recurring tests about `sendRecurringBookingConfirmationEmail` (route wraps email in try/catch — all 18 tests still pass). Full suite grew from 426 → 444 tests, 0 failures.\n\n## Verification\n\nAll slice verification checks pass:\n- `npx tsc --noEmit` → exit 0\n- `test -f supabase/migrations/0018_parent_profiles.sql` → PASS\n- `grep -q 'setup_future_usage' src/app/api/direct-booking/create-intent/route.ts` → PASS\n- `grep -q 'parent_profiles' src/app/api/direct-booking/create-intent/route.ts` → PASS\n- `grep -q 'parent_profiles' src/app/api/direct-booking/create-recurring/route.ts` → PASS\n- `grep -q 'paymentMethods.retrieve' src/app/api/stripe/webhook/route.ts` → PASS\n- `grep -q 'parent_profiles' src/app/api/stripe/webhook/route.ts` → PASS\n- `test -f src/app/api/parent/payment-method/route.ts` → PASS\n- `test -f src/app/(parent)/parent/payment/page.tsx` → PASS\n- `grep -q 'CreditCard' src/lib/parent-nav.ts` → PASS\n- `grep -q 'payment' src/lib/parent-nav.ts` → PASS\n- `grep -c 'it(' src/__tests__/saved-payment-methods.test.ts` → 18 (≥15) PASS\n- `npx vitest run src/__tests__/saved-payment-methods.test.ts` → 18/18 pass\n- `npx vitest run` → 444/444 pass, 0 failures, 45 todo (up from 426)\n\n## Requirements Advanced\n\n- PARENT-05 — Delivered: parent_profiles table, auto-save on booking, /parent/payment UI, remove action, full test coverage\n- PARENT-09 — Delivered: parent-level Stripe Customer (not per-teacher or per-schedule), reuse in both booking routes, stored in parent_profiles for future use\n\n## Requirements Validated\n\n- PARENT-05 — 18 unit tests pass covering Customer creation, PM upsert in webhook, GET/DELETE routes. Full suite 444 passing.\n- PARENT-09 — create-intent and create-recurring both check parent_profiles first and reuse existing Customer — confirmed by Customer-reuse unit tests (no stripe.customers.create call when profile exists).\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nT03: Mock PaymentIntent objects in webhook tests typed as `any` instead of `Stripe.PaymentIntent` to avoid TS2702 error when the stripe module is replaced by vi.mock. Non-fatal stderr warnings appear in create-recurring tests for `sendRecurringBookingConfirmationEmail` (route wraps email in try/catch — all tests pass regardless).\n\n## Known Limitations\n\nSingle saved card per parent (by design — D023). The /parent/payment page does not offer a \"replace card\" flow; parent removes the current card, then the next booking auto-saves the new card. No Stripe PM display for recurring-schedule-level Customers (pre-S03 recurring bookings still have their own per-schedule Customers that are not surfaced on the payment page).\n\n## Follow-ups\n\nIf multi-card support is needed (D023 revisable), parent_profiles would need to become a parent_payment_methods join table with a default flag. The current single-row upsert design assumes one saved card — extending it would require schema change. The non-fatal email warning in create-recurring tests (sendRecurringBookingConfirmationEmail not exported from email mock) could be cleaned up in a future test hygiene pass.\n\n## Files Created/Modified\n\n- `supabase/migrations/0018_parent_profiles.sql` — New migration: parent_profiles table with user_id PK, Stripe Customer/PM fields, card display fields, RLS owner-all policy\n- `src/app/api/direct-booking/create-intent/route.ts` — Added parent_profiles Customer resolve-or-create logic, customer + setup_future_usage + parent_id on PI\n- `src/app/api/direct-booking/create-recurring/route.ts` — Added parent_profiles Customer reuse check before creating new Stripe Customer; upserts to parent_profiles; preserves recurring_schedules.stripe_customer_id for cron compat\n- `src/app/api/stripe/webhook/route.ts` — Added PM card detail retrieval and parent_profiles upsert in payment_intent.amount_capturable_updated handler (non-critical, try/catch wrapped)\n- `src/app/api/parent/payment-method/route.ts` — New GET/DELETE API routes for saved card display and removal\n- `src/app/(parent)/parent/payment/page.tsx` — New parent dashboard payment page: card display with brand/last4/expiry, remove confirmation dialog, empty state\n- `src/lib/parent-nav.ts` — Added Payment nav item with CreditCard icon after My Bookings\n- `src/__tests__/saved-payment-methods.test.ts` — New: 18 unit tests across 5 groups covering all S03 code paths\n- `src/__tests__/payment-intent.test.ts` — Updated: added parent_profiles mock handling for S03 create-intent changes\n- `src/__tests__/booking-routing.test.ts` — Updated: added parent_profiles mock handling\n- `src/__tests__/parent-phone-storage.test.ts` — Updated: added parent_profiles mock handling\n- `src/__tests__/create-recurring.test.ts` — Updated: added parent_profiles mock handling for create-recurring Customer reuse\n- `tests/unit/session-type-pricing.test.ts` — Updated: added parent_profiles mock handling\n",
+      "full_uat_md": "# S03: Saved Payment Methods — UAT\n\n**Milestone:** M010\n**Written:** 2026-04-01T13:53:52.601Z\n\n# S03 UAT: Saved Payment Methods\n\n## Preconditions\n\n- Supabase local dev running with migration 0018 applied (`supabase/migrations/0018_parent_profiles.sql`)\n- Stripe test mode keys configured; Stripe webhook forwarding active (`stripe listen --forward-to localhost:3000/api/stripe/webhook`)\n- Test parent account created and logged in at `/parent`\n- At least one published teacher with Stripe Connect configured\n- `parent_profiles` table empty for the test parent user\n\n---\n\n## Test Cases\n\n### TC-01: First booking auto-saves card to parent_profiles\n\n**Preconditions:** Parent has no existing `parent_profiles` row. Parent is logged in.\n\n**Steps:**\n1. Navigate to a published teacher's `/[slug]` page\n2. Click \"Book a Session\", complete the booking form (select date/time, fill student name)\n3. In Stripe PaymentElement, enter test card `4242 4242 4242 4242`, expiry `12/30`, CVC `123`\n4. Click \"Confirm Booking\"\n5. Stripe webhook fires `payment_intent.amount_capturable_updated`\n\n**Expected outcomes:**\n- Booking confirmation appears; session is created in `bookings` table\n- `parent_profiles` row exists for the parent's `user_id` with `stripe_customer_id` populated\n- `card_brand = 'visa'`, `card_last4 = '4242'`, `card_exp_month = 12`, `card_exp_year = 2030` in `parent_profiles`\n- No duplicate Stripe Customer is created (verified: `stripe.customers.list` shows one Customer for the parent email)\n\n---\n\n### TC-02: /parent/payment page shows saved card\n\n**Preconditions:** TC-01 completed; parent has a saved card in `parent_profiles`.\n\n**Steps:**\n1. Navigate to `/parent/payment`\n2. Observe the card display section\n\n**Expected outcomes:**\n- Page shows card brand (e.g., \"Visa\"), `•••• 4242`, `Expires 12/2030`\n- \"Remove Card\" button is visible\n- No error state; no \"no card saved\" empty state\n\n---\n\n### TC-03: Second booking reuses Stripe Customer (no duplicate Customer created)\n\n**Preconditions:** TC-01 completed; parent has `stripe_customer_id` in `parent_profiles`.\n\n**Steps:**\n1. Navigate to a different (or same) teacher's `/[slug]` page\n2. Book another session (complete booking form, confirm payment with any test card)\n3. In Stripe dashboard (test mode), check Customer list for the parent's email\n\n**Expected outcomes:**\n- Only one Stripe Customer exists for the parent email\n- The new booking's PaymentIntent has `customer` set to the same Customer ID as TC-01\n- `parent_profiles` row has `updated_at` refreshed after the second booking's webhook fires\n\n---\n\n### TC-04: Remove Card action clears saved card\n\n**Preconditions:** Parent has a saved card from TC-01.\n\n**Steps:**\n1. Navigate to `/parent/payment`\n2. Click \"Remove Card\"\n3. Confirm in the confirmation dialog\n\n**Expected outcomes:**\n- API call to `DELETE /api/parent/payment-method` returns 200\n- Page refreshes to show the empty state: \"No card saved. Cards are auto-saved when you complete your first booking.\"\n- `parent_profiles` row still exists but `stripe_payment_method_id`, `card_brand`, `card_last4`, `card_exp_month`, `card_exp_year` are all `null`\n- Stripe API: `stripe.paymentMethods.detach()` was called (PM is detached from the Customer)\n\n---\n\n### TC-05: Payment nav item appears in sidebar and mobile nav\n\n**Preconditions:** Parent is logged in.\n\n**Steps:**\n1. Open the parent dashboard at `/parent` on desktop (sidebar visible)\n2. Observe the sidebar navigation links\n3. Resize to mobile viewport (≤768px)\n4. Observe the mobile bottom nav\n\n**Expected outcomes:**\n- \"Payment\" link with CreditCard icon appears in the sidebar after \"My Bookings\"\n- \"Payment\" link appears in the mobile bottom nav\n- Clicking \"Payment\" navigates to `/parent/payment`\n\n---\n\n### TC-06: GET /api/parent/payment-method returns 401 for unauthenticated requests\n\n**Preconditions:** No active session.\n\n**Steps:**\n1. Make a `GET /api/parent/payment-method` request with no auth cookie (e.g., `curl -X GET http://localhost:3000/api/parent/payment-method`)\n\n**Expected outcomes:**\n- Response status 401\n- Response body: `{ \"error\": \"Unauthorized\" }` or similar\n\n---\n\n### TC-07: GET /api/parent/payment-method returns { card: null } when no card saved\n\n**Preconditions:** Parent is logged in but has no `parent_profiles` row (or row with null card fields).\n\n**Steps:**\n1. Make an authenticated `GET /api/parent/payment-method` request (or navigate to `/parent/payment` with no saved card)\n\n**Expected outcomes:**\n- Response: `{ \"card\": null }` (not a 404 or error)\n- `/parent/payment` page shows empty state\n\n---\n\n### TC-08: DELETE /api/parent/payment-method returns 404 when no card saved\n\n**Preconditions:** Parent is logged in, no saved card in `parent_profiles`.\n\n**Steps:**\n1. Make an authenticated `DELETE /api/parent/payment-method` request\n\n**Expected outcomes:**\n- Response status 404\n- No Stripe API call made (no `stripe.paymentMethods.detach()` invocation)\n\n---\n\n### TC-09: Pre-S03 bookings (no parent_id in PI metadata) don't cause webhook errors\n\n**Preconditions:** A booking exists that was created before S03 (PI metadata has no `parent_id`).\n\n**Steps:**\n1. Simulate a `payment_intent.amount_capturable_updated` webhook event for a pre-S03 PI (metadata: `{ teacher_id, booking_id, session_type }` — no `parent_id`)\n2. Observe webhook logs\n\n**Expected outcomes:**\n- Webhook handler completes successfully (2xx response)\n- Booking confirmation proceeds normally\n- No PM upsert attempted; no error logged\n- `parent_profiles` table unaffected\n\n---\n\n### TC-10: Recurring booking reuses parent-level Customer from parent_profiles\n\n**Preconditions:** Parent has a `stripe_customer_id` in `parent_profiles` from a previous booking.\n\n**Steps:**\n1. Book a recurring session with a teacher\n2. Complete the booking flow including first-session payment\n3. Check Stripe test dashboard for Customers\n\n**Expected outcomes:**\n- `create-recurring` reuses the existing `parent_profiles.stripe_customer_id` (no new Customer created)\n- `recurring_schedules.stripe_customer_id` is also set (backward compat for cron auto-charges)\n- Only one Stripe Customer exists for the parent email\n\n---\n\n## Edge Cases\n\n| Scenario | Expected behavior |\n|---|---|\n| Stripe `paymentMethods.retrieve()` fails in webhook | Error logged; webhook still returns 200; booking confirmed; `parent_profiles` PM fields remain as-is |\n| Parent's `stripe_customer_id` on `parent_profiles` was deleted from Stripe directly | `create-intent` calls `stripe.customers.retrieve()` → Stripe returns 404 → route creates a new Customer and upserts to `parent_profiles` |\n| Two simultaneous first bookings from the same parent | Second upsert overwrites first in `parent_profiles` (upsert with `onConflict: 'user_id'`); both bookings succeed; only one Customer row in Stripe (first to succeed creates it; second reuses it or creates a duplicate — acceptable at MVP) |\n| Parent removes card then books again | Card field null check in `/parent/payment` shows empty state; next booking auto-saves new card via webhook |\n\n",
       "goal": "Parent books a session, card is auto-saved to their Stripe Customer. On next booking, parent sees \"Pay with saved card\" via Stripe's PaymentElement and completes checkout in one click. Parent can view and remove their saved card from /parent/payment.",
       "success_criteria": "## Must-Haves\n\n- `parent_profiles` table exists with `user_id` PK, Stripe customer/PM fields, card display fields, RLS owner policy\n- `create-intent` route attaches a Stripe Customer (created or reused from `parent_profiles`) and sets `setup_future_usage: 'off_session'` + `parent_id` in PI metadata\n- `create-recurring` route reuses parent-level Customer from `parent_profiles` instead of creating a new one each time (still stores per-schedule customer on `recurring_schedules` for backward compatibility)\n- Webhook `payment_intent.amount_capturable_updated` handler retrieves PM details via `stripe.paymentMethods.retrieve()` and upserts card info to `parent_profiles`\n- `GET /api/parent/payment-method` returns saved card details (brand, last4, exp) for authenticated parent\n- `DELETE /api/parent/payment-method` detaches the PM via Stripe API and clears card fields on `parent_profiles`\n- `/parent/payment` page shows saved card info or empty state, with \"Remove card\" action\n- `parentNavItems` includes Payment nav entry with CreditCard icon\n- 15+ unit tests covering all new/modified routes, webhook PM logic, and payment-method API\n\n## Threat Surface\n\n- **Abuse**: DELETE /api/parent/payment-method — RLS + getUser() guard prevents cross-user PM detach. PI metadata `parent_id` is set server-side from `user.id`, not from request body — no spoofing vector.\n- **Data exposure**: GET /api/parent/payment-method returns only card_brand, card_last4, card_exp_month, card_exp_year — no Stripe IDs (customer_id, pm_id) are exposed to the client. /parent/payment server component queries via supabaseAdmin, not client-side.\n- **Input trust**: No user-supplied input reaches Stripe or DB beyond what already exists in create-intent/create-recurring. The only new user action is DELETE which takes no body params.\n\n## Requirement Impact\n\n- **Requirements touched**: PARENT-05 (primary — delivered by this slice), PARENT-09 (primary — delivered by this slice), PARENT-07 (supporting — Payment page added to dashboard nav)\n- **Re-verify**: Existing direct-booking and recurring-booking flows must still work (PI creation, webhook confirm). Full test suite regression check.\n- **Decisions revisited**: D023 (single saved card per parent) — implemented as designed, no change needed\n\n## Proof Level\n\n- This slice proves: integration (Stripe Customer ↔ PI ↔ webhook ↔ parent_profiles ↔ dashboard)\n- Real runtime required: yes (Stripe API calls in webhook and route handlers)\n- Human/UAT required: yes (end-to-end booking with card save requires real Stripe test mode)\n\n## Verification\n\n- `npx vitest run src/__tests__/saved-payment-methods.test.ts` — 15+ tests pass covering create-intent customer attach, create-recurring customer reuse, webhook PM upsert, GET/DELETE payment-method API, auth guards\n- `npx tsc --noEmit` — zero type errors\n- `npx vitest run` — full suite passes, zero regressions\n- `test -f supabase/migrations/0018_parent_profiles.sql` — migration file exists\n- `test -f src/app/(parent)/parent/payment/page.tsx` — payment page exists\n- `grep -q 'CreditCard' src/lib/parent-nav.ts` — nav item added\n\n## Observability / Diagnostics\n\n- Runtime signals: `console.log('[stripe/webhook] Stored payment method on parent_profiles for user ...')` on successful PM upsert; `console.error` on Stripe PM retrieve failure or DB upsert failure\n- Inspection surfaces: `parent_profiles` table — query by user_id to see Stripe customer state and saved card fields\n- Failure visibility: Webhook logs PM retrieval errors with PI ID context; create-intent logs customer creation failures; GET/DELETE routes return structured JSON errors (401/404/500)\n- Redaction constraints: `stripe_customer_id` and `stripe_payment_method_id` are never exposed to client — only card_brand/last4/exp fields are returned by GET API\n\n## Integration Closure\n\n- Upstream surfaces consumed: `src/app/api/direct-booking/create-intent/route.ts` (PI creation), `src/app/api/direct-booking/create-recurring/route.ts` (Customer + PI creation), `src/app/api/stripe/webhook/route.ts` (PI event handler), `src/lib/parent-nav.ts` (nav items), `src/app/(parent)/layout.tsx` (parent route group)\n- New wiring introduced in this slice: parent_profiles table ↔ Stripe Customer lifecycle (create on first booking, update PM on webhook, read/delete from dashboard API)\n- What remains before the milestone is truly usable end-to-end: S04 (messaging) and S05 (admin dashboard) are independent features; this slice is self-contained for saved payment functionality",
       "proof_level": "integration",
@@ -1215,11 +1215,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Build text-only messaging: conversations table, messages table, chat UI for both parent and teacher dashboards, Supabase Realtime for live delivery, email notification on new message",
-      "success_criteria": "Teacher can initiate conversation with a parent from their dashboard; parent sees message in real-time without refresh; both can reply; email notification sent on new message; conversations persist across sessions",
-      "proof_level": "integration — real-time message delivery via Supabase Realtime postgres_changes",
-      "integration_closure": "Messages table has RLS policies for both teacher and parent; Realtime subscription filtered by conversation_id; email notification uses existing Resend infrastructure",
-      "observability_impact": "Message send failures logged with conversation context; Realtime subscription errors surfaced to UI",
+      "goal": "Teacher-parent messaging with real-time delivery and email notifications — one thread per relationship, text only, Supabase Realtime for live updates, rate-limited email notifications via existing Resend infrastructure.",
+      "success_criteria": "## Must-Haves\n\n- `conversations` and `messages` tables with RLS policies scoped to participants (MSG-01)\n- Auto-create conversation thread on first message; both teacher and parent can initiate (MSG-01)\n- `POST /api/messages` creates message (and conversation if needed), triggers rate-limited email notification (MSG-03)\n- `GET /api/conversations` lists conversations with last message preview for logged-in user\n- `GET /api/messages?conversation_id=xxx` returns messages for a conversation\n- Real-time message delivery via Supabase Realtime `postgres_changes` subscription (MSG-02)\n- Messages table added to `supabase_realtime` publication in migration (MSG-02)\n- Email notification to recipient on new message, rate-limited to 5-min window per conversation (MSG-03)\n- NewMessageEmail React Email template with sender name, message preview, and CTA link (MSG-03)\n- Messages nav item in both parent sidebar and teacher sidebar/nav\n- Parent messages list page at `/parent/messages`\n- Teacher messages list page at `/dashboard/messages`\n- Parent chat page at `/parent/messages/[conversationId]`\n- Teacher chat page at `/dashboard/messages/[conversationId]`\n- Shared `ChatWindow` component used by both teacher and parent chat pages\n- `npx tsc --noEmit` clean, full test suite passes with zero regressions\n\n## Threat Surface\n\n- **Abuse**: Parameter tampering on conversation_id/teacher_id in POST /api/messages — attacker could try to send messages to conversations they don't belong to. Mitigated by participant check before INSERT. Message body has CHECK constraint (1-2000 chars) preventing empty or oversized messages.\n- **Data exposure**: Messages contain user-generated text. Parent email is denormalized on conversations (needed for notifications). RLS policies ensure only conversation participants can read messages — no admin/global read surface exposed.\n- **Input trust**: Message body from user reaches DB (text only, length-constrained). teacher_id from request body is validated against existing teachers table. conversation_id is validated for participant membership before use.\n\n## Requirement Impact\n\n- **Requirements touched**: PARENT-06 (messaging feature), MSG-01 (schema), MSG-02 (Realtime), MSG-03 (email notification), PARENT-07 (parent dashboard — adding Messages nav tab)\n- **Re-verify**: Parent dashboard nav renders correctly with new Messages item. Full test suite passes (489 existing tests). Auth guards on new API routes enforce logged-in-only access.\n- **Decisions revisited**: None — this slice follows established patterns (getUser() auth, RLS, React Email, parent-nav.ts).\n\n## Proof Level\n\n- This slice proves: integration (Supabase Realtime + API + UI wired end-to-end)\n- Real runtime required: yes (Realtime subscription requires actual Supabase connection)\n- Human/UAT required: yes (Realtime delivery best verified with two browser sessions)\n\n## Verification\n\n- `npx tsc --noEmit` — zero type errors\n- `npx vitest run src/__tests__/messaging.test.ts` — all messaging tests pass (API auth guards, participant checks, message creation, email rate-limit logic, conversation listing)\n- `npx vitest run` — full suite passes (489+ tests, zero regressions)\n- `test -f supabase/migrations/0019_messaging.sql` — migration file exists\n- `grep -q 'supabase_realtime' supabase/migrations/0019_messaging.sql` — Realtime publication enabled\n- `test -f src/components/messaging/ChatWindow.tsx` — shared chat component exists\n- `test -f src/emails/NewMessageEmail.tsx` — email template exists\n- `grep -q 'Messages' src/lib/parent-nav.ts` — parent nav updated\n- `grep -q 'Messages' src/lib/nav.ts` — teacher nav updated\n\n## Observability / Diagnostics\n\n- Runtime signals: Console.error on API route failures (auth, DB errors, email send failures). Email send failures are caught and logged but don't fail message insertion. Supabase Realtime subscription status tracked in chat UI component state.\n- Inspection surfaces: `/api/conversations` GET returns conversation list with last message timestamps. Messages table queryable via Supabase dashboard. `conversations.last_notified_at` column shows last email send time per thread.\n- Failure visibility: API routes return structured JSON errors (401/400/500) with message field. Chat UI shows subscription status — if Realtime never reaches SUBSCRIBED state, the component can surface this. Email failures logged to console.error with conversation context.\n- Redaction constraints: Parent email stored on conversations table — no additional PII beyond what auth.users already holds. Message body is user content — no secrets.\n\n## Integration Closure\n\n- Upstream surfaces consumed: `src/lib/parent-nav.ts` (nav items array), `src/lib/nav.ts` (teacher nav items), `src/lib/supabase/server.ts` (server client), `src/lib/supabase/service.ts` (admin client), `src/lib/supabase/client.ts` (browser client for Realtime), `src/emails/*` (React Email patterns), existing Resend email infrastructure in `src/lib/email.ts`\n- New wiring introduced in this slice: Supabase Realtime subscription (first use in project) — `postgres_changes` on messages table. Two new API routes (`/api/messages`, `/api/conversations`). Four new pages (parent/teacher × list/detail). `ALTER PUBLICATION supabase_realtime ADD TABLE messages` in migration.\n- What remains before the milestone is truly usable end-to-end: S05 (Admin Dashboard) — independent of messaging. Messaging is fully self-contained after this slice.",
+      "proof_level": "integration",
+      "integration_closure": "Upstream: parent-nav.ts, nav.ts, supabase server/client/service modules, React Email patterns, Resend email infrastructure. New wiring: Supabase Realtime postgres_changes subscription (first use), 2 API routes, 4 pages, ALTER PUBLICATION in migration. After this slice: only S05 (Admin Dashboard) remains — independent of messaging.",
+      "observability_impact": "Console.error on API failures, email send failures caught/logged but non-blocking. Realtime subscription status tracked in UI. conversations.last_notified_at inspectable for email rate-limit debugging. Structured JSON error responses on all API routes.",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -4681,6 +4681,182 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Built conversations + messages DB schema with RLS/Realtime, three messaging API routes, NewMessageEmail template, and rate-limited email notifications",
+      "status": "complete",
+      "one_liner": "Built conversations + messages DB schema with RLS/Realtime, three messaging API routes, NewMessageEmail template, and rate-limited email notifications",
+      "narrative": "Created the full backend for teacher-parent messaging: migration 0019 with conversations (one per teacher+parent pair) and messages tables with RLS policies, CHECK constraints, indexes, and Realtime publication; POST /api/messages with Zod validation, conversation upsert, participant verification, and non-blocking rate-limited email notifications; GET /api/messages with participant validation; GET /api/conversations with role auto-detection, last message preview, and participant name resolution; NewMessageEmail React Email template matching existing project patterns.",
+      "verification_result": "Ran task verification: npx tsc --noEmit (zero errors), confirmed all four output files exist, confirmed supabase_realtime present in migration. All 6 checks passed.",
+      "duration": "",
+      "completed_at": "2026-04-01T14:08:15.885Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "supabase/migrations/0019_messaging.sql",
+        "src/app/api/messages/route.ts",
+        "src/app/api/conversations/route.ts",
+        "src/emails/NewMessageEmail.tsx"
+      ],
+      "key_decisions": [
+        "One conversation per teacher+parent pair enforced via UNIQUE constraint with race-condition-safe upsert",
+        "Only parents can initiate new conversations via teacherId; teachers reply via conversationId",
+        "Email rate-limit at 5-minute cooldown per conversation using last_notified_at column",
+        "Email send failures caught/logged but never fail message insert",
+        "Realtime publication on messages table only"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S04\nmilestone: M010\nkey_files:\n  - supabase/migrations/0019_messaging.sql\n  - src/app/api/messages/route.ts\n  - src/app/api/conversations/route.ts\n  - src/emails/NewMessageEmail.tsx\nkey_decisions:\n  - One conversation per teacher+parent pair enforced via UNIQUE constraint with race-condition-safe upsert\n  - Only parents can initiate new conversations via teacherId; teachers reply via conversationId\n  - Email rate-limit at 5-minute cooldown per conversation using last_notified_at column\n  - Email send failures caught/logged but never fail message insert\n  - Realtime publication on messages table only\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-01T14:08:15.886Z\nblocker_discovered: false\n---\n\n# T01: Built conversations + messages DB schema with RLS/Realtime, three messaging API routes, NewMessageEmail template, and rate-limited email notifications\n\n**Built conversations + messages DB schema with RLS/Realtime, three messaging API routes, NewMessageEmail template, and rate-limited email notifications**\n\n## What Happened\n\nCreated the full backend for teacher-parent messaging: migration 0019 with conversations (one per teacher+parent pair) and messages tables with RLS policies, CHECK constraints, indexes, and Realtime publication; POST /api/messages with Zod validation, conversation upsert, participant verification, and non-blocking rate-limited email notifications; GET /api/messages with participant validation; GET /api/conversations with role auto-detection, last message preview, and participant name resolution; NewMessageEmail React Email template matching existing project patterns.\n\n## Verification\n\nRan task verification: npx tsc --noEmit (zero errors), confirmed all four output files exist, confirmed supabase_realtime present in migration. All 6 checks passed.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3400ms |\n| 2 | `test -f supabase/migrations/0019_messaging.sql` | 0 | ✅ pass | 10ms |\n| 3 | `grep -q 'supabase_realtime' supabase/migrations/0019_messaging.sql` | 0 | ✅ pass | 10ms |\n| 4 | `test -f src/app/api/messages/route.ts` | 0 | ✅ pass | 10ms |\n| 5 | `test -f src/app/api/conversations/route.ts` | 0 | ✅ pass | 10ms |\n| 6 | `test -f src/emails/NewMessageEmail.tsx` | 0 | ✅ pass | 10ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `supabase/migrations/0019_messaging.sql`\n- `src/app/api/messages/route.ts`\n- `src/app/api/conversations/route.ts`\n- `src/emails/NewMessageEmail.tsx`\n",
+      "description": "Build the full backend for teacher-parent messaging: migration 0019 with conversations + messages tables, RLS policies, Realtime publication; three API endpoints (GET /api/conversations, GET /api/messages, POST /api/messages); NewMessageEmail React Email template; rate-limited email sending on new messages.\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Supabase DB (insert message) | Return 500 with error message | N/A (local DB) | Log and return 500 |\n| Resend email send | Catch error, log to console.error, do NOT fail the message insert | Catch, log, continue | Catch, log, continue |\n| Supabase auth (getUser) | Return 401 Unauthorized | Return 500 | Return 401 |\n\n## Negative Tests\n\n- **Malformed inputs**: Empty message body → rejected by CHECK constraint and Zod validation. Body > 2000 chars → rejected. Missing teacher_id when no conversation_id → 400. Invalid UUID for conversation_id → 400.\n- **Error paths**: Unauthenticated request → 401. User not participant in conversation → 403. Non-existent teacher_id → 400. Email send failure → message still saved (non-blocking).\n- **Boundary conditions**: First message creates conversation (upsert). Second message to same teacher reuses existing conversation. Rate-limit: message within 5 min of last notification skips email. Message at exactly 5 min boundary sends email.\n\n## Load Profile\n\n- **Shared resources**: DB connections via supabaseAdmin service client (singleton). Resend API (rate-limited externally).\n- **Per-operation cost**: POST /api/messages = 1-3 DB queries (participant check, message insert, optional conversation upsert) + 0-1 email send.\n- **10x breakpoint**: Resend free tier limits (100 emails/day) — acceptable for MVP. DB queries are indexed.",
+      "estimate": "2h",
+      "files": [
+        "supabase/migrations/0019_messaging.sql",
+        "src/app/api/messages/route.ts",
+        "src/app/api/conversations/route.ts",
+        "src/emails/NewMessageEmail.tsx"
+      ],
+      "verify": "npx tsc --noEmit && test -f supabase/migrations/0019_messaging.sql && grep -q 'supabase_realtime' supabase/migrations/0019_messaging.sql && test -f src/app/api/messages/route.ts && test -f src/app/api/conversations/route.ts && test -f src/emails/NewMessageEmail.tsx",
+      "inputs": [
+        "`src/lib/supabase/server.ts` — server Supabase client pattern (createClient + getUser auth)",
+        "`src/lib/supabase/service.ts` — admin client (supabaseAdmin) for DB writes bypassing RLS",
+        "`src/lib/email.ts` — Resend email send pattern and import conventions",
+        "`src/emails/BookingNotificationEmail.tsx` — React Email template pattern (props, structure, styling)",
+        "`supabase/migrations/0018_parent_profiles.sql` — latest migration (confirms 0019 is next)",
+        "`src/app/api/direct-booking/create-intent/route.ts` — API route pattern (auth, body parsing, error handling)"
+      ],
+      "expected_output": [
+        "`supabase/migrations/0019_messaging.sql` — conversations + messages tables, RLS policies, indexes, Realtime publication, last_notified_at column",
+        "`src/app/api/messages/route.ts` — GET (fetch messages by conversation_id) + POST (send message, upsert conversation, rate-limited email)",
+        "`src/app/api/conversations/route.ts` — GET (list conversations for logged-in user with last message preview and participant info)",
+        "`src/emails/NewMessageEmail.tsx` — React Email template with sender name, message preview, CTA button to conversation"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Add Messages nav items and build conversation list pages",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Wire Messages into both parent and teacher navigation, then build the conversation list pages that show all threads for the logged-in user with last message preview.\n\nThe parent sidebar and mobile nav automatically pick up items from `parentNavItems` in `src/lib/parent-nav.ts`. The teacher sidebar picks up from `navItems` in `src/lib/nav.ts`, and MobileBottomNav also reads from `navItems`.\n\nBoth conversation list pages are server components that fetch from GET /api/conversations and render a linked list of conversations.",
+      "estimate": "1h",
+      "files": [
+        "src/lib/parent-nav.ts",
+        "src/lib/nav.ts",
+        "src/app/(parent)/parent/messages/page.tsx",
+        "src/app/(dashboard)/dashboard/messages/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit && grep -q 'Messages' src/lib/parent-nav.ts && grep -q 'Messages' src/lib/nav.ts && test -f src/app/(parent)/parent/messages/page.tsx && test -f src/app/(dashboard)/dashboard/messages/page.tsx",
+      "inputs": [
+        "`src/lib/parent-nav.ts` — existing parent nav items array to add Messages item to",
+        "`src/lib/nav.ts` — existing teacher nav items array to add Messages item to",
+        "`src/app/api/conversations/route.ts` — API endpoint that returns conversation list (created in T01)",
+        "`src/app/(parent)/parent/bookings/page.tsx` — parent page pattern (server component, Supabase fetch, card layout)",
+        "`src/app/(dashboard)/dashboard/requests/page.tsx` — teacher page pattern (server component with data fetch)"
+      ],
+      "expected_output": [
+        "`src/lib/parent-nav.ts` — Messages nav item added (MessageSquare icon, /parent/messages href)",
+        "`src/lib/nav.ts` — Messages nav item added (MessageSquare icon, /dashboard/messages href)",
+        "`src/app/(parent)/parent/messages/page.tsx` — parent conversation list page (server component, fetches conversations, renders linked list)",
+        "`src/app/(dashboard)/dashboard/messages/page.tsx` — teacher conversation list page (server component, fetches conversations, renders linked list)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Build shared ChatWindow component and chat detail pages with Realtime",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create the shared ChatWindow client component that handles message display, Realtime subscription for live updates, and message sending. Then wire it into conversation detail pages for both parent and teacher.\n\nChatWindow is a 'use client' component that:\n1. Receives initial messages and conversation metadata as props\n2. Sets up a Supabase Realtime `postgres_changes` subscription on the `messages` table filtered by `conversation_id`\n3. Appends new messages from the subscription to local state\n4. Handles message sending via POST /api/messages with optimistic local append\n5. Cleans up subscription on unmount via `supabase.removeChannel(channel)`\n6. Uses the browser Supabase client (`src/lib/supabase/client.ts`) for the Realtime subscription\n\nThe parent chat page at `/parent/messages/[conversationId]/page.tsx` and teacher chat page at `/dashboard/messages/[conversationId]/page.tsx` are thin wrappers: server component that fetches initial messages from GET /api/messages, resolves participant names, then renders ChatWindow.\n\nKey implementation details from research:\n- `postgres_changes` respects RLS automatically — no extra auth config needed\n- Filter param: `conversation_id=eq.${conversationId}` narrows WAL broadcast\n- Cleanup: `supabase.removeChannel(channel)` in useEffect return\n- Supabase client auto-reconnects on network drops — no manual reconnect logic\n- Optimistic append: add message to local state immediately on send, before API confirms",
+      "estimate": "1.5h",
+      "files": [
+        "src/components/messaging/ChatWindow.tsx",
+        "src/app/(parent)/parent/messages/[conversationId]/page.tsx",
+        "src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit && test -f src/components/messaging/ChatWindow.tsx && test -f 'src/app/(parent)/parent/messages/[conversationId]/page.tsx' && test -f 'src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx'",
+      "inputs": [
+        "`src/app/api/messages/route.ts` — GET endpoint for fetching messages, POST endpoint for sending (created in T01)",
+        "`src/app/api/conversations/route.ts` — conversation data structure (created in T01)",
+        "`src/lib/supabase/client.ts` — browser Supabase client for Realtime subscription",
+        "`src/app/(parent)/parent/messages/page.tsx` — parent messages list page (created in T02, establishes the route pattern)",
+        "`src/app/(dashboard)/dashboard/messages/page.tsx` — teacher messages list page (created in T02, establishes the route pattern)",
+        "`src/components/ui/textarea.tsx` — existing textarea component for message input"
+      ],
+      "expected_output": [
+        "`src/components/messaging/ChatWindow.tsx` — shared client component with Realtime subscription, message list, message input, optimistic send, cleanup on unmount",
+        "`src/app/(parent)/parent/messages/[conversationId]/page.tsx` — parent chat detail page (server component wrapper → ChatWindow)",
+        "`src/app/(dashboard)/dashboard/messages/[conversationId]/page.tsx` — teacher chat detail page (server component wrapper → ChatWindow)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S04",
+      "id": "T04",
+      "title": "Add messaging test coverage for API routes and email rate-limiting",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write comprehensive unit tests for the messaging API routes covering auth guards, participant validation, message creation, conversation auto-creation, email rate-limit logic, and conversation listing.\n\nFollow the established test pattern from `src/__tests__/parent-children.test.ts`: vi.mock supabase server/service modules, mock getUser for auth, mock supabaseAdmin.from() chains for DB operations, test each route handler directly.\n\nTest areas:\n- POST /api/messages: unauthenticated → 401, non-participant → 403, valid message creation, conversation auto-creation when teacher_id provided without conversation_id, empty body → 400, body > 2000 chars → 400\n- POST /api/messages email: email sent when last_notified_at is null, email sent when last_notified_at > 5 min ago, email skipped when last_notified_at < 5 min ago, email failure doesn't fail message insert\n- GET /api/messages: unauthenticated → 401, returns messages ordered by created_at, non-participant → 403\n- GET /api/conversations: unauthenticated → 401, returns conversations for teacher role, returns conversations for parent role, includes last message preview",
+      "estimate": "1.5h",
+      "files": [
+        "src/__tests__/messaging.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/messaging.test.ts && npx vitest run",
+      "inputs": [
+        "`src/app/api/messages/route.ts` — message API route to test (created in T01)",
+        "`src/app/api/conversations/route.ts` — conversations API route to test (created in T01)",
+        "`src/__tests__/parent-children.test.ts` — established test pattern (vi.mock, auth setup, supabaseAdmin mock chains)",
+        "`src/emails/NewMessageEmail.tsx` — email template import (created in T01, needs to be mockable)"
+      ],
+      "expected_output": [
+        "`src/__tests__/messaging.test.ts` — comprehensive test file covering POST/GET /api/messages auth guards, participant checks, message creation, conversation auto-creation, email rate-limit logic, GET /api/conversations auth and role-based listing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -5064,6 +5240,30 @@
       "decision": "S03 task grouping: migration + route changes together in T01",
       "choice": "Bundle migration, create-intent changes, create-recurring changes, and webhook changes into a single task (T01) rather than separate tasks",
       "rationale": "The migration (parent_profiles table), both booking routes (create-intent/create-recurring), and the webhook handler are tightly coupled — the webhook reads what the routes write, both routes share the same parent_profiles lookup pattern, and all require the migration. Splitting them would create tasks that can't be independently verified. The combined task is still only 4 files and 4 steps — well within context limits.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 44,
+      "id": "D033",
+      "when_context": "",
+      "scope": "requirement",
+      "decision": "PARENT-05 status transition",
+      "choice": "validated",
+      "rationale": "M010/S03 delivered: parent_profiles table (migration 0018) stores one Stripe Customer + saved PM per parent account. create-intent attaches parent Customer + setup_future_usage: 'off_session' so card is auto-saved on first booking. create-recurring reuses parent-level Customer from parent_profiles. Webhook payment_intent.amount_capturable_updated handler retrieves PM card details and upserts to parent_profiles. /parent/payment page displays saved card (brand, last4, expiry) with remove action. GET/DELETE /api/parent/payment-method API routes. 18 unit tests all passing. Full suite 444 passing, 0 failures.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 45,
+      "id": "D034",
+      "when_context": "",
+      "scope": "requirement",
+      "decision": "PARENT-09 status transition",
+      "choice": "validated",
+      "rationale": "M010/S03 delivered: Stripe Customer is created per parent account (not per teacher or per recurring schedule) and stored in parent_profiles.stripe_customer_id. create-intent and create-recurring both check parent_profiles first and reuse the existing Customer when found. The saved payment method is reusable across any teacher booking. Existing recurring_schedules.stripe_customer_id remains for backward compat with cron auto-charges. 18 unit tests confirm Customer reuse behavior (no duplicate creation). Full suite 444 passing.",
       "revisable": "Yes",
       "made_by": "agent",
       "superseded_by": null
@@ -6059,6 +6259,72 @@
       "verdict": "✅ pass",
       "duration_ms": 50,
       "created_at": "2026-04-01T13:50:03.370Z"
+    },
+    {
+      "id": 91,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3400,
+      "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 92,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f supabase/migrations/0019_messaging.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 93,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "grep -q 'supabase_realtime' supabase/migrations/0019_messaging.sql",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 94,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/app/api/messages/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 95,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/app/api/conversations/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:08:15.885Z"
+    },
+    {
+      "id": 96,
+      "task_id": "T01",
+      "slice_id": "S04",
+      "milestone_id": "M010",
+      "command": "test -f src/emails/NewMessageEmail.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-01T14:08:15.885Z"
     }
   ]
 }

@@ -533,3 +533,34 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 ```
 
+
+---
+
+## Avoiding TS2702 in Webhook Route Tests with vi.mock'd Stripe (M010/S03)
+
+When testing a webhook route handler that references `Stripe.PaymentIntent` as a type (from the `stripe` module), importing the `Stripe` namespace in the test file causes `TS2702: 'Stripe' only refers to a type, but is being used as a namespace` after `vi.mock('stripe', ...)` replaces the module. Workaround: type the mock PI objects as `any` in the webhook test file rather than `Stripe.PaymentIntent`. This avoids the TS2702 error while still allowing full runtime mock control.
+
+```ts
+// ❌ Causes TS2702 when stripe is vi.mock'd
+import Stripe from 'stripe'
+const mockPI: Stripe.PaymentIntent = { ... }
+
+// ✅ Works — use any for mock objects in webhook tests
+const mockPI: any = { id: 'pi_test', customer: 'cus_test', payment_method: 'pm_test', ... }
+```
+
+---
+
+## Stripe paymentMethods.detach vs. customers.detachPaymentMethod (M010/S03)
+
+To remove a saved card from a Stripe Customer, use `stripe.paymentMethods.detach(pmId)` (standalone call). Do NOT use `stripe.customers.detachPaymentMethod()` — that API doesn't exist in the Node SDK. After detach, update `parent_profiles` to null out the card fields (`stripe_payment_method_id`, `card_brand`, `card_last4`, `card_exp_month`, `card_exp_year`) so the UI reflects the removal.
+
+---
+
+## parent_profiles Table Pattern: Non-Critical PM Storage (M010/S03)
+
+The `parent_profiles` table stores one Stripe Customer + saved card per parent account. Key invariants:
+- `user_id` is the PK (1:1 with `auth.users`) — upsert with `onConflict: 'user_id'`
+- PM card details are upserted in the webhook's `payment_intent.amount_capturable_updated` handler **after** booking confirmation succeeds — wrap the PM upsert in try/catch so a Stripe or DB error here never fails the webhook response (booking confirmation is already done)
+- PM upsert only runs when PI metadata has `parent_id`, `customer`, and `payment_method` — pre-S03 bookings (no `parent_id` in metadata) skip gracefully
+- GET `/api/parent/payment-method` returns only display fields (brand, last4, exp_month, exp_year) — never expose `stripe_payment_method_id` or `stripe_customer_id` to the client
