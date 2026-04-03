@@ -20,8 +20,7 @@ export const getAuthUser = cache(async () => {
  *
  * Returns the teacher row for the authenticated user. The first call
  * fetches from Supabase; subsequent calls within the same request
- * return the cached result. Accepts an optional `select` string but
- * defaults to the columns needed by most pages.
+ * return the cached result.
  */
 export const getTeacher = cache(async () => {
   const { user, supabase } = await getAuthUser()
@@ -34,4 +33,21 @@ export const getTeacher = cache(async () => {
     .maybeSingle()
 
   return { teacher, supabase, userId: user.id }
+})
+
+/**
+ * Cached pending booking count — used by layout Suspense components.
+ * Deduped per request so sidebar, mobile nav, and banner share one query.
+ */
+export const getPendingCount = cache(async () => {
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) return 0
+
+  const { count } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('teacher_id', teacher.id)
+    .eq('status', 'requested')
+
+  return count ?? 0
 })

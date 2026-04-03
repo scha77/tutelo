@@ -1,71 +1,78 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { getAuthUser, getTeacher } from '@/lib/supabase/auth-cache'
+import { getAuthUser, getTeacher, getPendingCount } from '@/lib/supabase/auth-cache'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { MobileHeader } from '@/components/dashboard/MobileHeader'
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
+
+/**
+ * Async sub-components rendered inside Suspense so the layout shell
+ * paints immediately. The pending count query streams in after.
+ */
+async function PendingBadgeSidebar({ teacherName, teacherSlug }: { teacherName: string; teacherSlug: string }) {
+  const pending = await getPendingCount()
+  return <Sidebar teacherName={teacherName} teacherSlug={teacherSlug} pendingCount={pending} />
+}
+
+async function PendingBadgeMobileNav() {
+  const pending = await getPendingCount()
+  return <MobileBottomNav pendingCount={pending} />
+}
+
+async function StripeBanner() {
+  const { teacher } = await getTeacher()
+  if (!teacher || teacher.stripe_charges_enabled) return null
+
+  const pending = await getPendingCount()
+
+  return (
+    <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
+      <p className="text-sm text-amber-800 font-medium">
+        {pending > 0
+          ? `You have ${pending} pending request${pending !== 1 ? 's' : ''}! Connect Stripe to confirm ${pending === 1 ? 'it' : 'them'}.`
+          : 'Connect Stripe to start accepting payments from parents.'}
+      </p>
+      <a
+        href="/dashboard/connect-stripe"
+        className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-700 transition-colors"
+      >
+        Activate Payments →
+      </a>
+    </div>
+  )
+}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Cached — child pages calling getAuthUser()/getTeacher() reuse this result.
+  // Auth gate — must complete before the shell renders.
   const { user, error: userError } = await getAuthUser()
-  if (userError || !user) {
-    redirect('/login')
-  }
+  if (userError || !user) redirect('/login')
 
-  const { teacher, supabase } = await getTeacher()
-
-  // If no teacher row, send to onboarding
-  if (!teacher) {
-    redirect('/onboarding')
-  }
-
-  // Count pending booking requests for badge + banner
-  const { count: pendingCount } = await supabase
-    .from('bookings')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacher.id)
-    .eq('status', 'requested')
-
-  const pending = pendingCount ?? 0
+  const { teacher } = await getTeacher()
+  if (!teacher) redirect('/onboarding')
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar
-        teacherName={teacher.full_name}
-        teacherSlug={teacher.slug}
-        pendingCount={pending}
-      />
+      {/* Sidebar: shows immediately with 0 badge, then streams in real count */}
+      <Suspense fallback={<Sidebar teacherName={teacher.full_name} teacherSlug={teacher.slug} pendingCount={0} />}>
+        <PendingBadgeSidebar teacherName={teacher.full_name} teacherSlug={teacher.slug} />
+      </Suspense>
 
-      {/* Mobile header — fixed top bar, hidden on desktop */}
-      <MobileHeader
-        teacherName={teacher.full_name}
-        teacherSlug={teacher.slug}
-      />
+      <MobileHeader teacherName={teacher.full_name} teacherSlug={teacher.slug} />
 
       <main className="flex-1 overflow-auto pt-14 pb-safe-nav md:pt-0 md:pb-0">
-        {!teacher.stripe_charges_enabled && (
-          <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
-            <p className="text-sm text-amber-800 font-medium">
-              {pending > 0
-                ? `You have ${pending} pending request${pending !== 1 ? 's' : ''}! Connect Stripe to confirm ${pending === 1 ? 'it' : 'them'}.`
-                : 'Connect Stripe to start accepting payments from parents.'}
-            </p>
-            <a
-              href="/dashboard/connect-stripe"
-              className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-700 transition-colors"
-            >
-              Activate Payments →
-            </a>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <StripeBanner />
+        </Suspense>
         {children}
       </main>
 
-      {/* Mobile bottom nav — fixed bottom bar, hidden on desktop */}
-      <MobileBottomNav pendingCount={pending} />
+      <Suspense fallback={<MobileBottomNav pendingCount={0} />}>
+        <PendingBadgeMobileNav />
+      </Suspense>
     </div>
   )
 }
