@@ -661,12 +661,10 @@ For all three auth paths (OAuth callback route, `signIn` server action, login pa
 
 ---
 
-## Pending Production Operations for M010 Features
+## Production Operations for M010 Features — COMPLETED
 
-Before M010 features work in production, these operational steps are required:
-1. Run `supabase db push` (or apply via Supabase dashboard) for migrations 0017 (children), 0018 (parent_profiles), 0019 (conversations/messages)
-2. Set `ADMIN_USER_IDS` env var in Vercel with comma-separated UUID(s) of operator accounts
-3. Confirm Supabase Realtime publication for the `messages` table is active (migration 0019 adds it, but confirm in Supabase dashboard)
-4. Configure Google OAuth in Supabase Authentication settings (Client ID + Secret from Google Cloud Console) and set the authorized redirect URI to `https://tutelo.app/callback`
-
-Without these, the parent dashboard will render but children/payment will fail (DB tables missing), messaging Realtime won't fire, and admin dashboard will return 404 for all users.
+All operational steps completed (April 2026):
+1. ✅ Migrations 0017 (children), 0018 (parent_profiles), 0019 (messaging) applied via Supabase SQL Editor
+2. ✅ `ADMIN_USER_IDS` set in Vercel (Production + Development) and `.env.local`
+3. ✅ Supabase Realtime publication for `messages` table active (via migration 0019)
+4. ✅ Google OAuth configured — Client ID + Secret set in Supabase Authentication → Providers → Google; redirect URI `https://gonbqvhcxspjmxtfsfci.supabase.co/auth/v1/callback` registered in Google Cloud Console
