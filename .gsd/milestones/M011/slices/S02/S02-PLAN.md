@@ -16,7 +16,7 @@ Steps:
   - Estimate: 45m
   - Files: src/components/profile/BookingForm.tsx, src/components/profile/BookingCalendar.tsx
   - Verify: npx vitest run --reporter=dot && npx tsc --noEmit
-- [ ] **T02: Extract SessionTypeSelector, CalendarGrid, TimeSlotsPanel — complete decomposition** — Extract the remaining 3 presentational sub-components from BookingCalendar.tsx, completing the monolith decomposition. After this task, BookingCalendar.tsx is a ~250-line orchestrator that owns state + handlers and delegates rendering to sub-components.
+- [x] **T02: Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design** — Extract the remaining 3 presentational sub-components from BookingCalendar.tsx, completing the monolith decomposition. After this task, BookingCalendar.tsx is a ~250-line orchestrator that owns state + handlers and delegates rendering to sub-components.
 
 Steps:
 1. Create `src/components/profile/SessionTypeSelector.tsx` (~60 lines). Props: sessionTypes, accentColor, onSelect. Visual upgrade: change cards from `border rounded-lg px-5 py-4 hover:bg-muted/50` to `border rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow`. Price uses accent color. Duration shown in muted text.

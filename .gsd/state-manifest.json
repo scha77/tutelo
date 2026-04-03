@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T15:59:44.368Z",
+  "exported_at": "2026-04-03T16:03:15.872Z",
   "milestones": [
     {
       "id": "M001",
@@ -5318,19 +5318,28 @@
       "milestone_id": "M011",
       "slice_id": "S02",
       "id": "T02",
-      "title": "Extract SessionTypeSelector, CalendarGrid, TimeSlotsPanel — complete decomposition",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design",
+      "status": "complete",
+      "one_liner": "Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design",
+      "narrative": "Created three new sub-components from the BookingCalendar monolith: SessionTypeSelector (48 lines) with visual upgrade to rounded-xl shadow-sm hover:shadow-md; CalendarGrid (130 lines) with month navigation, day-of-week headers, date grid, and change-session-type link; TimeSlotsPanel (71 lines) with hover-state time slot buttons and bg-muted/20 background. BookingCalendar updated to import all 4 sub-components (including BookingForm from T01), replacing inline calendar JSX. Removed ChevronRight/isSameDay imports, DAY_HEADERS constant, and inline TimeSlotButton. BookingCalendar reduced from 751 to 617 lines — remaining inline steps (success/error/recurring/auth/payment) stay as planned since they're tightly coupled to state transitions.",
+      "verification_result": "npx tsc --noEmit exits 0 (clean). npx vitest run --reporter=dot: 474 tests pass across 49 test files.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-03T16:03:15.816Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "CalendarGrid takes isAvailable callback instead of raw slot data — keeps availability logic in orchestrator. BookingCalendar is 617 lines rather than ~250 target due to inline success/error/recurring/auth/payment steps and handler functions staying in orchestrator as planned.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/SessionTypeSelector.tsx",
+        "src/components/profile/CalendarGrid.tsx",
+        "src/components/profile/TimeSlotsPanel.tsx",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "key_decisions": [
+        "SessionTypeSelector cards upgraded to rounded-xl shadow-sm hover:shadow-md for elevated design",
+        "CalendarGrid takes isAvailable callback to keep availability logic centralized in orchestrator",
+        "BookingCalendar at 617 lines because success/error/recurring/auth/payment steps remain inline as planned"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M011\nkey_files:\n  - src/components/profile/SessionTypeSelector.tsx\n  - src/components/profile/CalendarGrid.tsx\n  - src/components/profile/TimeSlotsPanel.tsx\n  - src/components/profile/BookingCalendar.tsx\nkey_decisions:\n  - SessionTypeSelector cards upgraded to rounded-xl shadow-sm hover:shadow-md for elevated design\n  - CalendarGrid takes isAvailable callback to keep availability logic centralized in orchestrator\n  - BookingCalendar at 617 lines because success/error/recurring/auth/payment steps remain inline as planned\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T16:03:15.817Z\nblocker_discovered: false\n---\n\n# T02: Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design\n\n**Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design**\n\n## What Happened\n\nCreated three new sub-components from the BookingCalendar monolith: SessionTypeSelector (48 lines) with visual upgrade to rounded-xl shadow-sm hover:shadow-md; CalendarGrid (130 lines) with month navigation, day-of-week headers, date grid, and change-session-type link; TimeSlotsPanel (71 lines) with hover-state time slot buttons and bg-muted/20 background. BookingCalendar updated to import all 4 sub-components (including BookingForm from T01), replacing inline calendar JSX. Removed ChevronRight/isSameDay imports, DAY_HEADERS constant, and inline TimeSlotButton. BookingCalendar reduced from 751 to 617 lines — remaining inline steps (success/error/recurring/auth/payment) stay as planned since they're tightly coupled to state transitions.\n\n## Verification\n\nnpx tsc --noEmit exits 0 (clean). npx vitest run --reporter=dot: 474 tests pass across 49 test files.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 13300ms |\n| 2 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 23800ms |\n\n\n## Deviations\n\nCalendarGrid takes isAvailable callback instead of raw slot data — keeps availability logic in orchestrator. BookingCalendar is 617 lines rather than ~250 target due to inline success/error/recurring/auth/payment steps and handler functions staying in orchestrator as planned.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/SessionTypeSelector.tsx`\n- `src/components/profile/CalendarGrid.tsx`\n- `src/components/profile/TimeSlotsPanel.tsx`\n- `src/components/profile/BookingCalendar.tsx`\n",
       "description": "Extract the remaining 3 presentational sub-components from BookingCalendar.tsx, completing the monolith decomposition. After this task, BookingCalendar.tsx is a ~250-line orchestrator that owns state + handlers and delegates rendering to sub-components.\n\nSteps:\n1. Create `src/components/profile/SessionTypeSelector.tsx` (~60 lines). Props: sessionTypes, accentColor, onSelect. Visual upgrade: change cards from `border rounded-lg px-5 py-4 hover:bg-muted/50` to `border rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow`. Price uses accent color. Duration shown in muted text.\n2. Create `src/components/profile/CalendarGrid.tsx` (~100 lines). Props: calendarDays, currentMonth, selectedDate, today, accentColor, hasSessionTypes, selectedSessionType, onDateClick, onPrevMonth, onNextMonth, onChangeSessionType. Includes month navigation, day-of-week headers, date grid, and the 'Change session type' link.\n3. Create `src/components/profile/TimeSlotsPanel.tsx` (~70 lines). Props: selectedDate, timeSlotsForDay, accentColor, onSlotClick. Includes the TimeSlotButton internal component (manages its own hover state). Panel has `bg-muted/20` background.\n4. Update BookingCalendar.tsx to import and render all 3 new components plus BookingForm from T01. The calendar step JSX (session type selector OR calendar+timeslots) is replaced with component calls. Success/error/recurring/auth/payment steps remain inline in the orchestrator (they're small and tightly coupled to state transitions).\n5. Verify BookingCalendar.tsx is approximately 250 lines (state declarations + handlers + step router rendering sub-components).\n6. Run `npx vitest run --reporter=dot` — 474 tests must pass.\n7. Run `npx tsc --noEmit` — must exit 0.",
       "estimate": "45m",
       "files": [
@@ -7245,6 +7254,28 @@
       "verdict": "✅ pass",
       "duration_ms": 8600,
       "created_at": "2026-04-03T15:59:44.290Z"
+    },
+    {
+      "id": 120,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13300,
+      "created_at": "2026-04-03T16:03:15.816Z"
+    },
+    {
+      "id": 121,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M011",
+      "command": "npx vitest run --reporter=dot",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 23800,
+      "created_at": "2026-04-03T16:03:15.816Z"
     }
   ]
 }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Globe, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, Globe, CheckCircle2 } from 'lucide-react'
 import {
   addMonths,
   subMonths,
@@ -11,7 +11,6 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isSameDay,
   isBefore,
   startOfToday,
   format,
@@ -19,6 +18,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { InlineAuthForm } from '@/components/auth/InlineAuthForm'
 import { BookingForm } from '@/components/profile/BookingForm'
+import { SessionTypeSelector } from '@/components/profile/SessionTypeSelector'
+import { CalendarGrid } from '@/components/profile/CalendarGrid'
+import { TimeSlotsPanel } from '@/components/profile/TimeSlotsPanel'
 import { PaymentStep } from '@/components/profile/PaymentStep'
 import { RecurringOptions } from '@/components/profile/RecurringOptions'
 import type { RecurringConfirmData } from '@/components/profile/RecurringOptions'
@@ -44,8 +46,6 @@ interface BookingCalendarProps {
 }
 
 type SessionType = NonNullable<BookingCalendarProps['sessionTypes']>[number]
-
-const DAY_HEADERS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
 export function BookingCalendar({
   slots,
@@ -552,147 +552,41 @@ export function BookingCalendar({
           </div>
         ) : step === 'calendar' ? (
           hasSessionTypes && !selectedSessionType ? (
-            /* ── Session type selector ── */
-            <div className="p-6 space-y-4">
-              <h3 className="font-semibold text-base">Choose a session type</h3>
-              <div className="space-y-3">
-                {sessionTypes!.map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => {
-                      setSelectedSessionType(st)
-                      setForm((f) => ({ ...f, subject: st.label }))
-                    }}
-                    className="w-full text-left border rounded-lg px-5 py-4 hover:bg-muted/50 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm">{st.label}</span>
-                      <span className="font-semibold text-sm" style={{ color: accentColor }}>
-                        ${Number(st.price).toFixed(0)}
-                      </span>
-                    </div>
-                    {st.duration_minutes && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {st.duration_minutes} min
-                      </p>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <SessionTypeSelector
+              sessionTypes={sessionTypes!}
+              accentColor={accentColor}
+              onSelect={(st) => {
+                setSelectedSessionType(st)
+                setForm((f) => ({ ...f, subject: st.label }))
+              }}
+            />
           ) : (
           <div className="flex flex-col md:flex-row">
-            {/* ── Calendar ── */}
-            <div className={`flex-1 p-6 ${selectedDate ? 'md:border-r' : ''}`}>
-              {/* Session type change link */}
-              {hasSessionTypes && selectedSessionType && (
-                <button
-                  onClick={() => {
-                    setSelectedSessionType(null)
-                    setSelectedDate(null)
-                    setSelectedSlot(null)
-                  }}
-                  className="mb-3 text-xs underline underline-offset-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  ← Change session type ({selectedSessionType.label})
-                </button>
-              )}
-              {/* Month navigation */}
-              <div className="flex items-center justify-between mb-5">
-                <button
-                  onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-                  className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <span className="font-semibold text-base">
-                  {format(currentMonth, 'MMMM yyyy')}
-                </span>
-                <button
-                  onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-                  className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                  aria-label="Next month"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Day-of-week headers */}
-              <div className="grid grid-cols-7 mb-1">
-                {DAY_HEADERS.map((d) => (
-                  <div
-                    key={d}
-                    className="text-center text-xs font-medium text-muted-foreground py-1"
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              {/* Date grid */}
-              <div className="grid grid-cols-7">
-                {calendarDays.map((date) => {
-                  const inMonth = date.getMonth() === currentMonth.getMonth()
-                  const available = isAvailable(date)
-                  const isSelected = selectedDate ? isSameDay(date, selectedDate) : false
-                  const isToday = isSameDay(date, today)
-
-                  return (
-                    <div
-                      key={date.toISOString()}
-                      className="flex items-center justify-center p-0.5"
-                    >
-                      <button
-                        onClick={() => handleDateClick(date)}
-                        disabled={!available}
-                        className={[
-                          'h-9 w-9 rounded-full text-sm transition-all select-none',
-                          !inMonth && 'opacity-30',
-                          isSelected
-                            ? 'font-bold text-white shadow'
-                            : available
-                            ? 'font-semibold hover:bg-muted'
-                            : 'text-muted-foreground cursor-default',
-                          isToday && !isSelected
-                            ? 'ring-1 ring-inset ring-current'
-                            : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                        style={isSelected ? { backgroundColor: accentColor } : undefined}
-                      >
-                        {format(date, 'd')}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* ── Time slots panel ── */}
+            <CalendarGrid
+              calendarDays={calendarDays}
+              currentMonth={currentMonth}
+              selectedDate={selectedDate}
+              today={today}
+              accentColor={accentColor}
+              hasSessionTypes={hasSessionTypes}
+              selectedSessionType={selectedSessionType}
+              isAvailable={isAvailable}
+              onDateClick={handleDateClick}
+              onPrevMonth={() => setCurrentMonth((m) => subMonths(m, 1))}
+              onNextMonth={() => setCurrentMonth((m) => addMonths(m, 1))}
+              onChangeSessionType={() => {
+                setSelectedSessionType(null)
+                setSelectedDate(null)
+                setSelectedSlot(null)
+              }}
+            />
             {selectedDate && (
-              <div className="w-full md:w-64 border-t md:border-t-0 p-6 bg-muted/20">
-                <h3 className="font-semibold mb-4 text-sm">
-                  {format(selectedDate, 'EEEE, MMMM d')}
-                </h3>
-                {timeSlotsForDay.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No times available for this day.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {timeSlotsForDay.map((slot) => (
-                      <TimeSlotButton
-                        key={slot.slotId}
-                        slot={slot}
-                        accentColor={accentColor}
-                        onClick={() => handleSlotClick(slot)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TimeSlotsPanel
+                selectedDate={selectedDate}
+                timeSlotsForDay={timeSlotsForDay}
+                accentColor={accentColor}
+                onSlotClick={handleSlotClick}
+              />
             )}
           </div>
           )
@@ -719,33 +613,5 @@ export function BookingCalendar({
         )}
       </div>
     </section>
-  )
-}
-
-// Separate component to cleanly handle hover state
-function TimeSlotButton({
-  slot,
-  accentColor,
-  onClick,
-}: {
-  slot: TimeSlot
-  accentColor: string
-  onClick: () => void
-}) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="w-full rounded-lg border-2 py-2.5 px-4 text-center text-sm font-semibold transition-colors"
-      style={{
-        borderColor: accentColor,
-        backgroundColor: hovered ? accentColor : 'transparent',
-        color: hovered ? 'white' : accentColor,
-      }}
-    >
-      {slot.startDisplay}
-    </button>
   )
 }
