@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T15:44:07.290Z",
+  "exported_at": "2026-04-03T15:45:22.973Z",
   "milestones": [
     {
       "id": "M001",
@@ -5190,19 +5190,25 @@
       "milestone_id": "M011",
       "slice_id": "S01",
       "id": "T02",
-      "title": "Upgrade CredentialsBar with accent-colored subject chips and structured layout",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Restructured CredentialsBar from flat flex-wrap into a two-row layout with accent-colored subject chips, icon-paired meta items, verified badge pill, and right-aligned rate display with tabular-nums",
+      "status": "complete",
+      "one_liner": "Restructured CredentialsBar from flat flex-wrap into a two-row layout with accent-colored subject chips, icon-paired meta items, verified badge pill, and right-aligned rate display with tabular-nums",
+      "narrative": "Replaced the flat single-row credentials bar with a structured two-section layout. Row 1 contains subject chips (accent-colored via color-mix inline styles) and grade-level chips (lighter muted border treatment). Row 2 contains meta items: verified badge in an emerald background pill with dark-mode support, years experience with Clock icon, location with MapPin icon, and hourly rate pushed right via ml-auto with text-base font-semibold tabular-nums for visual prominence. Removed Badge component dependency in favor of custom styled spans for full control over accent color integration. Component returns null when there's nothing to display.",
+      "verification_result": "TypeScript type-check (npx tsc --noEmit) passed with exit 0. Full test suite (npx vitest run --reporter=dot) passed: 474 tests across 49 test files, zero failures.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-03T15:45:22.943Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Added lucide icons (MapPin, Clock, DollarSign) to meta items for visual hierarchy — not specified in plan but consistent with the premium polish goal. Removed shadcn Badge component dependency in favor of custom spans for full accent-color control.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/CredentialsBar.tsx"
+      ],
+      "key_decisions": [
+        "Used color-mix(in srgb, var(--accent) 15%, transparent) inline styles for subject chips to avoid Tailwind bg-accent conflict",
+        "Added lucide icons for meta items to reinforce visual hierarchy",
+        "Rate display pushed right with ml-auto for visual prominence"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M011\nkey_files:\n  - src/components/profile/CredentialsBar.tsx\nkey_decisions:\n  - Used color-mix(in srgb, var(--accent) 15%, transparent) inline styles for subject chips to avoid Tailwind bg-accent conflict\n  - Added lucide icons for meta items to reinforce visual hierarchy\n  - Rate display pushed right with ml-auto for visual prominence\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T15:45:22.943Z\nblocker_discovered: false\n---\n\n# T02: Restructured CredentialsBar from flat flex-wrap into a two-row layout with accent-colored subject chips, icon-paired meta items, verified badge pill, and right-aligned rate display with tabular-nums\n\n**Restructured CredentialsBar from flat flex-wrap into a two-row layout with accent-colored subject chips, icon-paired meta items, verified badge pill, and right-aligned rate display with tabular-nums**\n\n## What Happened\n\nReplaced the flat single-row credentials bar with a structured two-section layout. Row 1 contains subject chips (accent-colored via color-mix inline styles) and grade-level chips (lighter muted border treatment). Row 2 contains meta items: verified badge in an emerald background pill with dark-mode support, years experience with Clock icon, location with MapPin icon, and hourly rate pushed right via ml-auto with text-base font-semibold tabular-nums for visual prominence. Removed Badge component dependency in favor of custom styled spans for full control over accent color integration. Component returns null when there's nothing to display.\n\n## Verification\n\nTypeScript type-check (npx tsc --noEmit) passed with exit 0. Full test suite (npx vitest run --reporter=dot) passed: 474 tests across 49 test files, zero failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 5800ms |\n| 2 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 9900ms |\n\n\n## Deviations\n\nAdded lucide icons (MapPin, Clock, DollarSign) to meta items for visual hierarchy — not specified in plan but consistent with the premium polish goal. Removed shadcn Badge component dependency in favor of custom spans for full accent-color control.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/CredentialsBar.tsx`\n",
       "description": "Restructure the flat credentials bar into a more intentional layout with accent-colored subject chips. Subject badges get inline styles using color-mix: `style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}` — DO NOT use the Tailwind bg-accent utility (it conflicts with the teacher's accent color override on <main>). Grade level chips get a lighter treatment. Rate display gets font-semibold text-base with tabular-nums. Verified badge keeps emerald + CheckCircle but gets a subtle background pill. Consider a two-section layout: subjects+grades row, then meta items. The component reads accent color from the CSS variable, not a prop — this is the established pattern.",
       "estimate": "30m",
       "files": [
@@ -6997,6 +7003,28 @@
       "verdict": "✅ pass",
       "duration_ms": 9200,
       "created_at": "2026-04-03T15:44:07.268Z"
+    },
+    {
+      "id": 113,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 5800,
+      "created_at": "2026-04-03T15:45:22.943Z"
+    },
+    {
+      "id": 114,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx vitest run --reporter=dot",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9900,
+      "created_at": "2026-04-03T15:45:22.943Z"
     }
   ]
 }
