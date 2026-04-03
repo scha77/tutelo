@@ -24,20 +24,40 @@ export interface NavItem {
   href: string
   label: string
   icon: LucideIcon
+  description?: string
 }
 
 export const navItems: NavItem[] = [
   { href: '/dashboard',              label: 'Overview',     icon: LayoutDashboard },
   { href: '/dashboard/requests',     label: 'Requests',     icon: Inbox           },
   { href: '/dashboard/sessions',     label: 'Sessions',     icon: CalendarCheck   },
-  { href: '/dashboard/students',     label: 'Students',     icon: Users           },
-  { href: '/dashboard/waitlist',     label: 'Waitlist',     icon: ListOrdered     },
-  { href: '/dashboard/page',         label: 'Page',         icon: FileText        },
+  { href: '/dashboard/students',     label: 'Students',     icon: Users,          description: 'Manage your enrolled students'        },
+  { href: '/dashboard/waitlist',     label: 'Waitlist',     icon: ListOrdered,    description: 'View parents waiting for availability' },
+  { href: '/dashboard/page',         label: 'Page',         icon: FileText,       description: 'Edit your public profile page'         },
   { href: '/dashboard/availability', label: 'Availability', icon: Calendar        },
-  { href: '/dashboard/promote',      label: 'Promote',      icon: Megaphone       },
-  { href: '/dashboard/analytics',    label: 'Analytics',    icon: BarChart2       },
-  { href: '/dashboard/messages',     label: 'Messages',     icon: MessageSquare   },
-  { href: '/dashboard/settings',     label: 'Settings',     icon: Settings        },
+  { href: '/dashboard/promote',      label: 'Promote',      icon: Megaphone,      description: 'Flyers, QR codes, and share links'    },
+  { href: '/dashboard/analytics',    label: 'Analytics',    icon: BarChart2,      description: 'Traffic and booking stats'             },
+  { href: '/dashboard/messages',     label: 'Messages',     icon: MessageSquare,  description: 'Chat with parents'                    },
+  { href: '/dashboard/settings',     label: 'Settings',     icon: Settings,       description: 'Account, rate, and preferences'       },
+]
+
+/** Primary tabs shown in the mobile bottom nav bar. */
+export const primaryNavItems: NavItem[] = [
+  navItems[0], // Overview
+  navItems[1], // Requests
+  navItems[2], // Sessions
+  navItems[6], // Availability
+]
+
+/** Items shown in the mobile "More" menu panel. */
+export const moreNavItems: NavItem[] = [
+  navItems[3], // Students
+  navItems[4], // Waitlist
+  navItems[5], // Page
+  navItems[7], // Promote
+  navItems[8], // Analytics
+  navItems[9], // Messages
+  navItems[10], // Settings
 ]
 
 /**

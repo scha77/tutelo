@@ -726,3 +726,42 @@ Tailwind v3 (in use here) does not have `text-balance` or `text-pretty` utility 
 
 `SocialLinks` in `src/app/[slug]/page.tsx` was changed in M011/S01 to always render (even when no social links are set) because it now displays a "Powered by Tutelo" attribution footer. Previously it returned null when the teacher had no social links. If you add conditional rendering back, ensure the attribution footer still displays.
 
+
+---
+
+## BookingCalendar Decomposition: Line Count vs. Target
+
+The S02 plan targeted BookingCalendar.tsx at ~250 lines after decomposition. The actual result is ~617 lines. This is not a failure — it reflects an explicit design decision: the success/error/recurring/auth/payment step JSX and all async handlers (createPaymentIntent, createRecurringIntent, handleSubmit) remain inline in the orchestrator because they are tightly coupled to the step state machine. Only the *calendar-step* presentation was extracted. Future slices that want to reduce the orchestrator further should note that the 5 non-calendar steps and the handler block account for the remaining ~350 lines.
+
+---
+
+## Sub-component Props Shape for BookingCalendar Family
+
+The four booking sub-components use prop-drilling from BookingCalendar orchestrator:
+- **BookingForm** (~15 props): form, setForm, onSubmit, submitting, creatingIntent, firstName, subjects, hasSessionTypes, children, childrenLoaded, selectedDate, selectedSlot, selectedSessionType, stripeConnected, accentColor, onBack
+- **SessionTypeSelector**: sessionTypes, accentColor, onSelect
+- **CalendarGrid**: calendarDays, currentMonth, selectedDate, today, accentColor, hasSessionTypes, selectedSessionType, onDateClick, onPrevMonth, onNextMonth, onChangeSessionType, isAvailable (callback)
+- **TimeSlotsPanel**: selectedDate, timeSlotsForDay, accentColor, onSlotClick
+
+All four are purely presentational — no state, no async calls. Tests that render BookingCalendar exercise all four sub-components via integration (no separate unit tests for sub-components needed).
+
+---
+
+## Accent Chip Pattern in Step Headers
+
+All step headers in the booking flow (BookingForm, auth step, payment step) use a consistent flex-wrap layout for the date/time/session breadcrumb:
+```tsx
+<div className="text-sm text-muted-foreground leading-tight flex items-center gap-2 flex-wrap">
+  <span>{date}</span>
+  <span>·</span>
+  <span>{time}</span>
+  {selectedSessionType && (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+      style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+      {selectedSessionType.name}
+    </span>
+  )}
+</div>
+```
+The flex-wrap + gap-2 layout is required to prevent the chip from overflowing on narrow booking panel widths. Do not use inline-block or fixed-width approaches.
+

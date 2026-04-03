@@ -1,10 +1,12 @@
-# S03: Mobile Navigation Overhaul
+---
+estimated_steps: 39
+estimated_files: 2
+skills_used: []
+---
 
-**Goal:** Teacher mobile bottom nav shows 5 labeled primary tabs (Overview, Requests, Sessions, Availability, More) with a More menu bottom panel listing remaining items with icons, labels, and descriptions. Parent mobile nav shows all 5 tabs with visible labels. Users can navigate without guessing what icons mean.
-**Demo:** After this: After this: teacher mobile bottom nav shows 4-5 labeled primary tabs with a More menu for remaining items. Parent mobile nav has labeled tabs. Users can navigate without guessing what icons mean.
+# T01: Extend nav data model and rewrite teacher MobileBottomNav with primary tabs + More panel
 
-## Tasks
-- [x] **T01: Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel** — The teacher mobile bottom nav currently renders all 11 nav items as icon-only tabs, which is unusable. This task extends the NavItem interface with an optional description field, splits navItems into primaryNavItems (5) and moreNavItems (7), and rewrites MobileBottomNav to render primary tabs with visible labels plus a "More" tab that opens an AnimatePresence bottom-sheet panel listing the remaining items with icon + label + description, and Sign Out at the bottom.
+The teacher mobile bottom nav currently renders all 11 nav items as icon-only tabs, which is unusable. This task extends the NavItem interface with an optional description field, splits navItems into primaryNavItems (5) and moreNavItems (7), and rewrites MobileBottomNav to render primary tabs with visible labels plus a "More" tab that opens an AnimatePresence bottom-sheet panel listing the remaining items with icon + label + description, and Sign Out at the bottom.
 
 ## Steps
 
@@ -49,36 +51,19 @@
 - [ ] More tab highlighted when current path matches a more-menu item
 - [ ] Sign Out uses `<form action={signOut}>` pattern (server action preserved)
 - [ ] `tsc --noEmit` clean
-  - Estimate: 1.5h
-  - Files: src/lib/nav.ts, src/components/dashboard/MobileBottomNav.tsx
-  - Verify: npx tsc --noEmit && npx vitest run
-- [ ] **T02: Rewrite ParentMobileNav with visible labels and run full verification** — The parent mobile bottom nav currently renders 5 items + sign out as icon-only tabs. This task makes all labels visible and runs the complete verification suite for the slice.
 
-## Steps
+## Inputs
 
-1. In `src/components/parent/ParentMobileNav.tsx`, targeted rewrite:
-   - Keep the same overall structure (fixed bottom, safe-area padding, `m.nav` with `slideFromBottom`)
-   - Make labels visible: remove `sr-only` class from label spans, use `text-[10px]` visible text below icons (same pattern as updated teacher nav from T01)
-   - Sign Out tab also gets visible "Sign out" label
-   - Keep active state indicator dot
-   - Keep `<form action={signOut}>` server action pattern
-   - Ensure all 5 items + Sign Out fit comfortably (6 flex-1 items at mobile width is fine — 5 was the original + Sign Out)
+- `src/lib/nav.ts`
+- `src/lib/animation.ts`
+- `src/components/dashboard/MobileBottomNav.tsx`
+- `src/actions/auth.ts`
 
-2. Verify the full slice:
-   - `npx tsc --noEmit` — must be clean
-   - `npx vitest run` — all 474+ tests pass
-   - `npx next build` — builds successfully
-   - Confirm no imports of `description` from NavItem in parent-nav.ts (it reuses the interface but 5 items don't need descriptions since there's no More menu)
+## Expected Output
 
-## Must-Haves
+- `src/lib/nav.ts`
+- `src/components/dashboard/MobileBottomNav.tsx`
 
-- [ ] ParentMobileNav renders all 5 tabs with visible labels (not sr-only)
-- [ ] Sign Out has visible label
-- [ ] Active state indicator preserved
-- [ ] Server action signOut pattern preserved
-- [ ] `tsc --noEmit` clean
-- [ ] All 474+ tests pass
-- [ ] `next build` succeeds
-  - Estimate: 30m
-  - Files: src/components/parent/ParentMobileNav.tsx
-  - Verify: npx tsc --noEmit && npx vitest run && npx next build
+## Verification
+
+npx tsc --noEmit && npx vitest run

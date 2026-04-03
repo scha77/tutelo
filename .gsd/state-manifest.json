@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T16:05:54.910Z",
+  "exported_at": "2026-04-03T16:17:27.103Z",
   "milestones": [
     {
       "id": "M001",
@@ -1336,16 +1336,16 @@
       "milestone_id": "M011",
       "id": "S02",
       "title": "Booking Calendar Restructure & Polish",
-      "status": "pending",
+      "status": "complete",
       "risk": "high",
       "depends": [
         "S01"
       ],
       "demo": "After this: the booking flow from date selection → time slot → form → payment feels smooth and intentional. The calendar, time slots, form fields, and payment step are visually cohesive with the new profile page. The 935-line monolith is decomposed into maintainable sub-components.",
       "created_at": "2026-04-03T15:32:15.905Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-03T16:09:07.461Z",
+      "full_summary_md": "---\nid: S02\nparent: M011\nmilestone: M011\nprovides:\n  - BookingForm.tsx — form step sub-component usable independently if booking UX needs further restructuring\n  - SessionTypeSelector.tsx — session type card grid, reusable if session type selection is needed elsewhere\n  - CalendarGrid.tsx — calendar grid with month navigation, reusable for any date-picker surface\n  - TimeSlotsPanel.tsx — time slot grid with hover states, reusable for availability previews\n  - Established accent chip pattern with color-mix for all step header breadcrumbs in booking flow\nrequires:\n  - slice: S01\n    provides: color-mix accent chip pattern (D043), rounded-xl + shadow-sm elevated card pattern, S01 visual language that S02 booking flow must match\naffects:\n  - S05 — landing page + global consistency pass reads S02 visual patterns as part of consistency audit\nkey_files:\n  - src/components/profile/BookingForm.tsx\n  - src/components/profile/SessionTypeSelector.tsx\n  - src/components/profile/CalendarGrid.tsx\n  - src/components/profile/TimeSlotsPanel.tsx\n  - src/components/profile/BookingCalendar.tsx\n  - src/components/profile/RecurringOptions.tsx\n  - src/components/profile/PaymentStep.tsx\nkey_decisions:\n  - All state and async handlers kept in BookingCalendar orchestrator (D045) — sub-components are purely presentational with prop-drilling\n  - CalendarGrid accepts isAvailable callback not raw slot arrays (D046) — availability logic stays centralized\n  - Accent chip pattern: color-mix(in srgb, var(--accent) 15%, transparent) inline style in all step headers — consistent with S01 CredentialsBar pattern (D043)\n  - SessionTypeSelector cards upgraded to rounded-xl shadow-sm hover:shadow-md for elevated card design\n  - Shield icon chosen over Lock for PaymentStep trust signal — conveys security without implying restriction\npatterns_established:\n  - Presentational sub-component extraction: new booking sub-components are stateless, receive all data/callbacks via typed props, and are exercised through BookingCalendar in integration tests — no separate unit tests needed\n  - Accent chip in booking step headers: flex-wrap breadcrumb with inline color-mix style for session type chip — handles narrow widths without overflow\n  - Visual consistency token: rounded-xl + shadow-sm + hover:shadow-md is the elevated card pattern across SessionTypeSelector, ReviewsSection, and other M011 components\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  - .gsd/milestones/M011/slices/S02/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M011/slices/S02/tasks/T02-SUMMARY.md\n  - .gsd/milestones/M011/slices/S02/tasks/T03-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T16:09:07.462Z\nblocker_discovered: false\n---\n\n# S02: Booking Calendar Restructure & Polish\n\n**Decomposed the 933-line BookingCalendar monolith into 4 presentational sub-components and applied premium visual treatment across every booking flow step — all 3 booking paths functional, 474 tests passing, build green.**\n\n## What Happened\n\nS02 tackled both the structural debt and the visual gap in the booking flow across three tasks.\n\n**T01 — BookingForm extraction:** The booking form step (student name/child selector, subject, email, notes, SMS, submit) was extracted from BookingCalendar.tsx into a standalone BookingForm.tsx (263 lines). The step header was upgraded with a flex-wrap breadcrumb that displays the session type as an accent-colored chip using `color-mix(in srgb, var(--accent) 15%, transparent)`, matching the S01 CredentialsBar visual language. The form body received `bg-muted/5` for subtle differentiation. All state and async handlers stay in BookingCalendar — BookingForm is purely presentational with ~15 props. BookingCalendar reduced from 933 to 751 lines.\n\n**T02 — Remaining 3 sub-component extractions:** Three additional presentational sub-components completed the decomposition. SessionTypeSelector (48 lines) received visual elevation: `rounded-xl shadow-sm hover:shadow-md transition-shadow` on cards, accent-colored prices. CalendarGrid (130 lines) received the month navigation, day-of-week headers, date grid, and change-session-type link; it takes an `isAvailable` callback to keep availability logic centralized in the orchestrator. TimeSlotsPanel (71 lines) received `bg-muted/20` background and the hover-state TimeSlotButton. BookingCalendar updated to import all 4 sub-components, replacing all inline calendar-step JSX. The orchestrator landed at 617 lines — above the ~250-line plan target because success/error/recurring/auth/payment step JSX and all async handlers stay inline as designed.\n\n**T03 — Remaining flow surfaces polished:** RecurringOptions.tsx upgraded with a Repeat icon on the schedule type label, `rounded-xl` toggle buttons, and `rounded-xl shadow-sm` on the projected dates list. PaymentStep.tsx gained a Shield trust signal (\"Secure payment\" in muted text with Shield icon) and a \"Complete your booking\" heading above the Stripe PaymentElement. BookingCalendar auth and payment step headers were upgraded to the same flex-wrap + accent chip pattern as BookingForm, ensuring visual consistency across every step that shows the booking context breadcrumb. Final gate: `next build` compiles cleanly across all 67 routes.\n\n## Verification\n\nAll three verification gates pass at every task and confirmed at slice close: `npx vitest run --reporter=dot` — 474 tests pass across 49 test files (including booking-child-selector tests that exercise BookingForm and sub-components through BookingCalendar). `npx tsc --noEmit` — exits 0, no type errors. `npx next build` — compiles successfully, generates all 67 routes.\n\n## Requirements Advanced\n\n- UI-02 — BookingCalendar monolith decomposed into 4 sub-components; all booking flow steps receive premium visual treatment matching S01 language\n- UI-08 — SessionTypeSelector, RecurringOptions, PaymentStep, and step headers all upgraded with intentional design choices — rounded-xl cards, trust signals, accent chips, Repeat/Shield icons\n- UI-09 — Step breadcrumbs now show session type context at every step; trust signal added to payment step; visual consistency across steps reduces cognitive load\n\n## Requirements Validated\n\n- UI-02 — BookingCalendar 933-line monolith decomposed into BookingForm (263 lines), SessionTypeSelector (48 lines), CalendarGrid (130 lines), TimeSlotsPanel (71 lines). All 3 booking paths (deferred, direct, recurring) function through integration test suite. 474 tests passing, tsc clean, next build success.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nBookingCalendar orchestrator is ~617 lines rather than the ~250-line target in the plan. The delta is accounted for: success/error/recurring/auth/payment step JSX (5 steps that are tightly coupled to state transitions) and the full async handler block (createPaymentIntent, createRecurringIntent, handleSubmit) remain inline by design. Only the calendar-step presentation was extracted to sub-components. This was recognized during T02 and is the correct tradeoff — extracting tightly state-coupled steps would require prop-drilling or context just to reach the same handlers. CalendarGrid uses an isAvailable callback rather than raw slot arrays — a deviation from the plan description but an improvement (keeps availability logic in the orchestrator).\n\n## Known Limitations\n\nBookingCalendar orchestrator at 617 lines is still materially smaller than the original 933-line monolith (~34% reduction) and the sub-components are individually testable in isolation. The remaining inline steps could be extracted in a future slice if needed, but current size is manageable.\n\n## Follow-ups\n\nS03 (Mobile Navigation Overhaul) is independent of S02 and can proceed immediately. S04 (Dashboard Polish) depends on S03. S05 (Landing Page & Global Consistency Pass) depends on S01 and S04. No blocking issues discovered during S02.\n\n## Files Created/Modified\n\n- `src/components/profile/BookingForm.tsx` — New file — 263-line presentational form step sub-component extracted from BookingCalendar. Includes accent-colored session type chip in step header, bg-muted/5 form body.\n- `src/components/profile/SessionTypeSelector.tsx` — New file — 48-line session type card grid. Upgraded to rounded-xl shadow-sm hover:shadow-md with accent-colored prices.\n- `src/components/profile/CalendarGrid.tsx` — New file — 130-line calendar grid with month navigation, day-of-week headers, date cells, and change-session-type link. Takes isAvailable callback.\n- `src/components/profile/TimeSlotsPanel.tsx` — New file — 71-line time slot panel with bg-muted/20 background and hover-state TimeSlotButton.\n- `src/components/profile/BookingCalendar.tsx` — Reduced from 933 to 617 lines. Imports and renders 4 sub-components. Auth and payment step headers upgraded with flex-wrap + accent chip pattern. Cleaned up 6 unused imports.\n- `src/components/profile/RecurringOptions.tsx` — Repeat icon on schedule type label, rounded-xl toggle buttons, rounded-xl shadow-sm projected dates list.\n- `src/components/profile/PaymentStep.tsx` — Shield trust signal ('Secure payment') and 'Complete your booking' heading added above Stripe PaymentElement.\n",
+      "full_uat_md": "# S02: Booking Calendar Restructure & Polish — UAT\n\n**Milestone:** M011\n**Written:** 2026-04-03T16:09:07.463Z\n\n## UAT: S02 — Booking Calendar Restructure & Polish\n\n**Preconditions:**\n- Dev server running at localhost:3000\n- Test teacher account exists: soosup.cha+test@gmail.com / testing123 (has Stripe connected for direct booking path)\n- A second test teacher exists without Stripe connected (for deferred booking path)\n- A test teacher with session types configured exists\n- Browser at default viewport (desktop) unless stated otherwise\n\n---\n\n### TC-01: Session Type Selector Visual — Elevated Cards\n\n**Goal:** Verify SessionTypeSelector renders with rounded-xl, shadow-sm, and hover:shadow-md card treatment.\n\n**Steps:**\n1. Navigate to a teacher profile page that has session types configured (e.g., `/[slug]` for a teacher with session types).\n2. Click \"Book a Session\" to open the booking calendar.\n3. Observe the session type selection step.\n\n**Expected:**\n- Session type cards have visibly rounded corners (rounded-xl).\n- Cards have a subtle shadow (shadow-sm) at rest.\n- Hovering a card shows a stronger shadow (hover:shadow-md) and a smooth transition.\n- Price is displayed in the teacher's accent color.\n- Duration is shown in muted text below the price.\n\n---\n\n### TC-02: Session Type Chip in BookingForm Step Header\n\n**Goal:** Verify the accent-colored session type chip appears in the form step breadcrumb.\n\n**Steps:**\n1. Navigate to a teacher profile with session types. Open booking calendar.\n2. Select a session type, select a date, select a time slot.\n3. Observe the step header in the booking form step.\n\n**Expected:**\n- Step header shows: date · time · [session type chip]\n- The session type chip has a tinted background using color-mix (15% of the teacher's accent color).\n- Chip text is in the teacher's accent color.\n- Layout wraps gracefully at narrow widths (does not overflow the panel).\n- A back button (chevron) is present to return to the calendar.\n\n---\n\n### TC-03: BookingForm Visual — Card Background\n\n**Goal:** Verify the form body has subtle background differentiation.\n\n**Steps:**\n1. Proceed to the booking form step (after TC-02 setup).\n2. Observe the form area below the step header.\n\n**Expected:**\n- The form body area has a subtle muted background (bg-muted/5) distinguishing it from the header.\n- Form fields (name/child selector, subject, email, notes, phone/SMS) are visible and functional.\n- Submit button uses the teacher's accent color.\n\n---\n\n### TC-04: Deferred Booking Path — End to End\n\n**Goal:** Verify the deferred (no-Stripe) booking path works through the decomposed orchestrator.\n\n**Steps:**\n1. Navigate to a teacher profile without Stripe connected.\n2. Open booking calendar. Select date → time → fill form → submit.\n3. Observe the success step.\n\n**Expected:**\n- Booking completes without errors.\n- Success step shows \"Booking Request Sent\" (or equivalent) confirmation.\n- No console errors. No broken layout.\n\n---\n\n### TC-05: Direct Booking Path with Payment — End to End\n\n**Goal:** Verify the direct (Stripe-connected) booking path works including the PaymentStep.\n\n**Steps:**\n1. Navigate to a teacher profile with Stripe connected (soosup.cha+test@gmail.com teacher).\n2. Open booking calendar. Select date → time → fill form → proceed to payment step.\n3. Observe the payment step UI.\n4. (Optional: complete with Stripe test card 4242 4242 4242 4242.)\n\n**Expected:**\n- Payment step shows \"Complete your booking\" heading.\n- A Shield icon with \"Secure payment\" text appears above the Stripe PaymentElement.\n- PaymentElement renders correctly.\n- On test card completion, success step shown.\n\n---\n\n### TC-06: Auth Step Header — Accent Chip Consistency\n\n**Goal:** Verify the auth step header uses the same accent chip pattern as the form step.\n\n**Steps:**\n1. Access a booking flow that requires auth (teacher with Stripe, not logged in as parent).\n2. Proceed through date → time → form → reach auth step.\n3. Observe the auth step header.\n\n**Expected:**\n- Auth step header shows the same flex-wrap breadcrumb with date · time · [session type chip].\n- Chip uses color-mix accent tint — identical styling to the form step header.\n- Back button present.\n\n---\n\n### TC-07: RecurringOptions — Repeat Icon and Rounded-xl Treatment\n\n**Goal:** Verify RecurringOptions visual upgrades are present for recurring booking path.\n\n**Steps:**\n1. Log in as a parent with a saved child. Navigate to a teacher with session types and Stripe connected.\n2. Open booking, proceed to recurring booking option (if available via the recurring flow).\n3. Observe RecurringOptions component.\n\n**Expected:**\n- \"Schedule type\" label has a Repeat icon paired with it.\n- Frequency toggle buttons (Weekly / Bi-weekly) have rounded-xl corners.\n- Projected dates list has rounded-xl border, divide-y, and shadow-sm.\n- \"Add another session\" button (if present) also has Repeat icon.\n\n---\n\n### TC-08: CalendarGrid — Month Navigation and Date Grid\n\n**Goal:** Verify CalendarGrid renders correctly as a standalone sub-component.\n\n**Steps:**\n1. Open any booking calendar that has passed session type selection.\n2. Observe the calendar grid step.\n3. Click Previous Month and Next Month arrows.\n4. Click an available date.\n\n**Expected:**\n- Month name and year update correctly on prev/next navigation.\n- Available dates are clickable; unavailable dates are visually muted/disabled.\n- Clicking an available date advances to time slot selection.\n- \"Change session type\" link is visible below the calendar (if session types are configured) and navigates back to session type selector.\n\n---\n\n### TC-09: TimeSlotsPanel — Visual Treatment\n\n**Goal:** Verify TimeSlotsPanel visual appearance.\n\n**Steps:**\n1. In the booking calendar, click an available date.\n2. Observe the time slots panel.\n\n**Expected:**\n- Panel has a subtle muted background (bg-muted/20).\n- Time slot buttons are visible with hover states.\n- Clicking a time slot advances to the booking form step.\n\n---\n\n### TC-10: Recurring Booking Path — End to End\n\n**Goal:** Verify the recurring booking path works through the decomposed orchestrator.\n\n**Steps:**\n1. Log in as a parent. Navigate to a teacher with Stripe connected.\n2. Complete booking form with recurring options set.\n3. Proceed through to recurring confirmation step.\n\n**Expected:**\n- RecurringOptions component renders with projected dates.\n- Confirmation step shows all scheduled dates.\n- No regression in recurring booking functionality.\n- 474 test suite passes (automated gate).\n\n---\n\n### TC-11: Automated Verification (CI Gate)\n\n**Goal:** Confirm all automated gates pass at slice completion.\n\n**Steps:**\n1. Run `npx vitest run --reporter=dot`\n2. Run `npx tsc --noEmit`\n3. Run `npx next build`\n\n**Expected:**\n- vitest: 474 tests pass, 0 failures, across 49 test files.\n- tsc: exits 0, no type errors.\n- next build: exits 0, 67 routes compiled.\n\n",
       "goal": "The 933-line BookingCalendar monolith is decomposed into cohesive sub-components (BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel) and the orchestrator is ~250 lines. Every visual surface in the booking flow — session type cards, form area, payment step, recurring options — gets premium treatment matching the S01 visual language (rounded-xl cards, accent chips, elevated shadows). All 3 booking paths (deferred, direct, recurring) continue to work. 474 tests pass, tsc clean, next build success.",
       "success_criteria": "- BookingCalendar.tsx reduced from 933 lines to ~250 lines (orchestrator only)\n- 4 new sub-component files: BookingForm.tsx, SessionTypeSelector.tsx, CalendarGrid.tsx, TimeSlotsPanel.tsx\n- Session type selector cards use rounded-xl + shadow-sm + hover:shadow-md elevation\n- Booking form wrapped in a subtle card/bg treatment\n- PaymentStep has a \"Secure payment\" trust signal with lock icon\n- RecurringOptions projected dates list uses rounded-xl\n- Step header shows session type as accent-colored chip\n- All 474 tests pass (npx vitest run)\n- TypeScript clean (npx tsc --noEmit)\n- Build succeeds (npx next build)",
       "proof_level": "contract — existing test suite covers all 3 booking paths and component render; visual changes verified by build success and type safety",
@@ -1366,11 +1366,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Replace the unlabeled icon-only mobile bottom navs with labeled primary tabs + More menu pattern.",
-      "success_criteria": "- Teacher mobile nav: 4-5 primary tabs with icons AND labels visible\n- Remaining teacher nav items accessible via a More menu/sheet\n- More menu shows items with icons, labels, and clear tap targets\n- Parent mobile nav: all 5 items have visible labels (no More menu needed at 5 items)\n- Navigation works at 375px and 390px viewport widths\n- Active state clearly indicated on both primary tabs and More menu items\n- More menu opens/closes smoothly",
-      "proof_level": "Browser verification at mobile viewports (375px, 390px)",
-      "integration_closure": "Nav shell is the container for all dashboard pages — verified that all pages render correctly within the new nav",
-      "observability_impact": "None — visual/structural only",
+      "goal": "Teacher mobile bottom nav shows 5 labeled primary tabs (Overview, Requests, Sessions, Availability, More) with a More menu bottom panel listing remaining items with icons, labels, and descriptions. Parent mobile nav shows all 5 tabs with visible labels. Users can navigate without guessing what icons mean.",
+      "success_criteria": "- Teacher mobile nav renders exactly 5 primary tabs with visible labels (not sr-only)\n- Tapping \"More\" tab opens an AnimatePresence bottom panel listing Students, Waitlist, Page, Promote, Analytics, Messages, Settings with icons + labels + descriptions, and Sign Out at bottom\n- Tapping backdrop or navigating from More menu dismisses the panel\n- Pending badge on Requests tab still works\n- Parent mobile nav renders all 5 tabs with visible labels (not sr-only) + Sign Out\n- Active state indicator preserved on both navs\n- `tsc --noEmit` clean, all 474+ tests pass, `next build` succeeds",
+      "proof_level": "This slice proves: integration (nav data model → UI rendering). Real runtime required: yes (visual verification at mobile breakpoint). Human/UAT required: yes (visual check of label readability and More panel feel).",
+      "integration_closure": "Upstream surfaces consumed: `src/lib/nav.ts` (NavItem interface, navItems array, isActivePath), `src/lib/parent-nav.ts` (parentNavItems, isParentActivePath), `src/lib/animation.ts` (slideFromBottom, fastTransition), `src/actions/auth.ts` (signOut server action). New wiring: primaryNavItems/moreNavItems exports from nav.ts consumed by MobileBottomNav; description field on NavItem. What remains: S04 dashboard polish, S05 global consistency — neither depends on nav changes.",
+      "observability_impact": "None — this is a purely presentational change with no backend, async, or stateful behavior.",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -5408,6 +5408,84 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel",
+      "status": "complete",
+      "one_liner": "Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel",
+      "narrative": "Extended NavItem interface with optional description field, added descriptions to 7 secondary nav items, and exported primaryNavItems (4) and moreNavItems (7) from nav.ts. Rewrote MobileBottomNav to render 4 primary tabs with visible labels plus a 5th More tab that opens an AnimatePresence bottom-sheet panel showing secondary items with icon + label + description, plus Sign Out. Backdrop dismissal, active state detection for More tab, and pending badge on Requests are all preserved.",
+      "verification_result": "npx tsc --noEmit passed clean (0 errors). npx vitest run passed with 474 tests passing across 49 test files.",
+      "duration": "",
+      "completed_at": "2026-04-03T16:17:27.064Z",
+      "blocker_discovered": false,
+      "deviations": "Defined primaryNavItems by explicit index reference instead of slicing first 4 items, since Availability is at navItems index 6 not index 3.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/lib/nav.ts",
+        "src/components/dashboard/MobileBottomNav.tsx"
+      ],
+      "key_decisions": [
+        "Selected primary tabs by explicit index reference since Availability is at index 6 in navItems array"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M011\nkey_files:\n  - src/lib/nav.ts\n  - src/components/dashboard/MobileBottomNav.tsx\nkey_decisions:\n  - Selected primary tabs by explicit index reference since Availability is at index 6 in navItems array\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T16:17:27.064Z\nblocker_discovered: false\n---\n\n# T01: Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel\n\n**Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel**\n\n## What Happened\n\nExtended NavItem interface with optional description field, added descriptions to 7 secondary nav items, and exported primaryNavItems (4) and moreNavItems (7) from nav.ts. Rewrote MobileBottomNav to render 4 primary tabs with visible labels plus a 5th More tab that opens an AnimatePresence bottom-sheet panel showing secondary items with icon + label + description, plus Sign Out. Backdrop dismissal, active state detection for More tab, and pending badge on Requests are all preserved.\n\n## Verification\n\nnpx tsc --noEmit passed clean (0 errors). npx vitest run passed with 474 tests passing across 49 test files.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3500ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 13300ms |\n\n\n## Deviations\n\nDefined primaryNavItems by explicit index reference instead of slicing first 4 items, since Availability is at navItems index 6 not index 3.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/nav.ts`\n- `src/components/dashboard/MobileBottomNav.tsx`\n",
+      "description": "The teacher mobile bottom nav currently renders all 11 nav items as icon-only tabs, which is unusable. This task extends the NavItem interface with an optional description field, splits navItems into primaryNavItems (5) and moreNavItems (7), and rewrites MobileBottomNav to render primary tabs with visible labels plus a \"More\" tab that opens an AnimatePresence bottom-sheet panel listing the remaining items with icon + label + description, and Sign Out at the bottom.\n\n## Steps\n\n1. In `src/lib/nav.ts`:\n   - Add `description?: string` to the `NavItem` interface\n   - Add descriptions to all 11 nav items (e.g. Students → \"Manage your enrolled students\", Waitlist → \"View parents waiting for availability\", Page → \"Edit your public profile page\", Promote → \"Flyers, QR codes, and share links\", Analytics → \"Traffic and booking stats\", Messages → \"Chat with parents\", Settings → \"Account, rate, and preferences\"). Primary items can have empty/no descriptions.\n   - Export `primaryNavItems` = first 4 items (Overview, Requests, Sessions, Availability)\n   - Export `moreNavItems` = remaining 7 items (Students, Waitlist, Page, Promote, Analytics, Messages, Settings)\n   - Keep existing `navItems` export unchanged (Sidebar.tsx uses it)\n   - Keep `isActivePath` unchanged\n\n2. In `src/components/dashboard/MobileBottomNav.tsx`, full rewrite:\n   - Import `primaryNavItems`, `moreNavItems` from `@/lib/nav`\n   - Import `AnimatePresence` from `motion/react` and `* as m` from `motion/react-client`\n   - Add `const [moreOpen, setMoreOpen] = useState(false)` state\n   - Render primary tabs (4 items) with visible labels below icons (remove `sr-only`, use `text-[10px]` visible text). Keep active indicator dot and pending badge on Requests.\n   - Render a 5th \"More\" tab with `Ellipsis` icon (from lucide-react) + visible \"More\" label. When `moreOpen`, highlight the More tab.\n   - When More tab tapped: toggle `moreOpen` state\n   - AnimatePresence wraps the More panel:\n     - Backdrop: `motion.div` fixed inset-0, bg-black/40, onClick → close, z-40\n     - Panel: `motion.div` fixed bottom of screen (above nav bar height), rounded-t-2xl, bg-background, z-50. Slide animation: initial y: \"100%\" → animate y: 0, exit y: \"100%\". Transition: duration 0.3, ease \"easeOut\".\n     - Panel content: grid/list of moreNavItems, each showing Icon (h-5 w-5) + label (font-medium) + description (text-muted-foreground text-sm). Each item is a Link that also calls `setMoreOpen(false)` on click.\n     - Sign Out at bottom: `<form action={signOut}>` button styled consistently, separated by a border-t.\n     - Panel should have a drag handle indicator bar at top (w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto)\n   - The nav bar itself keeps the same fixed-bottom positioning with safe-area padding\n   - Detect if current path matches any moreNavItem — if so, highlight More tab as active\n\n3. Verify: `npx tsc --noEmit` passes. `npx vitest run` passes (474+ tests). Visually confirm at mobile breakpoint that 5 labeled tabs appear and More panel works.\n\n## Must-Haves\n\n- [ ] NavItem interface has optional `description` field\n- [ ] `primaryNavItems` and `moreNavItems` exported from nav.ts\n- [ ] Existing `navItems` export unchanged (Sidebar compatibility)\n- [ ] MobileBottomNav renders 5 labeled tabs (Overview, Requests, Sessions, Availability, More)\n- [ ] Labels are visible (not sr-only)\n- [ ] More tab opens AnimatePresence bottom panel with 7 items + Sign Out\n- [ ] More panel items show icon + label + description\n- [ ] Backdrop dismisses panel\n- [ ] Pending badge on Requests preserved\n- [ ] Active state indicator on primary tabs preserved\n- [ ] More tab highlighted when current path matches a more-menu item\n- [ ] Sign Out uses `<form action={signOut}>` pattern (server action preserved)\n- [ ] `tsc --noEmit` clean",
+      "estimate": "1.5h",
+      "files": [
+        "src/lib/nav.ts",
+        "src/components/dashboard/MobileBottomNav.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx vitest run",
+      "inputs": [
+        "src/lib/nav.ts",
+        "src/lib/animation.ts",
+        "src/components/dashboard/MobileBottomNav.tsx",
+        "src/actions/auth.ts"
+      ],
+      "expected_output": [
+        "src/lib/nav.ts",
+        "src/components/dashboard/MobileBottomNav.tsx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Rewrite ParentMobileNav with visible labels and run full verification",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "The parent mobile bottom nav currently renders 5 items + sign out as icon-only tabs. This task makes all labels visible and runs the complete verification suite for the slice.\n\n## Steps\n\n1. In `src/components/parent/ParentMobileNav.tsx`, targeted rewrite:\n   - Keep the same overall structure (fixed bottom, safe-area padding, `m.nav` with `slideFromBottom`)\n   - Make labels visible: remove `sr-only` class from label spans, use `text-[10px]` visible text below icons (same pattern as updated teacher nav from T01)\n   - Sign Out tab also gets visible \"Sign out\" label\n   - Keep active state indicator dot\n   - Keep `<form action={signOut}>` server action pattern\n   - Ensure all 5 items + Sign Out fit comfortably (6 flex-1 items at mobile width is fine — 5 was the original + Sign Out)\n\n2. Verify the full slice:\n   - `npx tsc --noEmit` — must be clean\n   - `npx vitest run` — all 474+ tests pass\n   - `npx next build` — builds successfully\n   - Confirm no imports of `description` from NavItem in parent-nav.ts (it reuses the interface but 5 items don't need descriptions since there's no More menu)\n\n## Must-Haves\n\n- [ ] ParentMobileNav renders all 5 tabs with visible labels (not sr-only)\n- [ ] Sign Out has visible label\n- [ ] Active state indicator preserved\n- [ ] Server action signOut pattern preserved\n- [ ] `tsc --noEmit` clean\n- [ ] All 474+ tests pass\n- [ ] `next build` succeeds",
+      "estimate": "30m",
+      "files": [
+        "src/components/parent/ParentMobileNav.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx vitest run && npx next build",
+      "inputs": [
+        "src/components/parent/ParentMobileNav.tsx",
+        "src/lib/parent-nav.ts",
+        "src/lib/nav.ts"
+      ],
+      "expected_output": [
+        "src/components/parent/ParentMobileNav.tsx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -5947,6 +6025,42 @@
       "decision": "BookingCalendar decomposition strategy — state ownership and component boundaries",
       "choice": "All state (form, step, selectedDate, selectedSlot, etc.) and all async handlers (createPaymentIntent, createRecurringIntent, handleSubmit) stay in BookingCalendar orchestrator. Sub-components receive state and callbacks via props. BookingForm receives ~15 props (form, setForm, onSubmit, submitting, etc.) rather than co-locating form state.",
       "rationale": "Keeping state in the orchestrator preserves the step state machine in one place, avoids needing to lift state back up when transitioning between steps, and keeps the existing test surface unchanged — booking-child-selector.test.ts renders BookingCalendar and the new sub-components are exercised through it without needing mock updates. The prop-drilling is verbose but explicit and type-safe.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 63,
+      "id": "D046",
+      "when_context": "M011/S02/T02",
+      "scope": "architecture",
+      "decision": "CalendarGrid availability data interface",
+      "choice": "CalendarGrid accepts an isAvailable(date) callback instead of raw slot data arrays",
+      "rationale": "Keeping availability logic (slot data lookups, timezone math) centralized in BookingCalendar orchestrator means CalendarGrid stays purely presentational — it just needs to know whether to render a date as available. Passing raw slot arrays would bleed domain logic into the grid and require re-fetching on every render.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 64,
+      "id": "D047",
+      "when_context": "M011/S02",
+      "scope": "requirement",
+      "decision": "UI-02 requirement status transition",
+      "choice": "validated",
+      "rationale": "M011/S02 delivered: BookingCalendar 933-line monolith decomposed into 4 presentational sub-components (BookingForm 263 lines, SessionTypeSelector 48 lines, CalendarGrid 130 lines, TimeSlotsPanel 71 lines). All booking flow steps (session type, calendar, form, payment, auth, recurring, success/error) receive premium visual treatment: accent-colored chips in step headers, rounded-xl elevated cards in SessionTypeSelector, bg-muted/20 TimeSlotsPanel, rounded-xl projected dates with Repeat icon in RecurringOptions, Shield trust signal and heading in PaymentStep. All 3 booking paths (deferred, direct, recurring) continue to function. 474 tests pass, tsc clean, next build success (67 routes).",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 66,
+      "id": "D048",
+      "when_context": "M011/S03",
+      "scope": "navigation",
+      "decision": "More menu interaction pattern for teacher mobile nav",
+      "choice": "Custom AnimatePresence bottom panel using motion/react-client — state in MobileBottomNav, slide-up animation (y: 100% → 0), backdrop overlay, click-backdrop-to-dismiss. No new dependencies.",
+      "rationale": "Matches existing motion patterns in the codebase (OnboardingWizard uses AnimatePresence). Avoids adding vaul/sheet dependency. Gives full control over the slide-up animation and dismiss behavior. The existing motion library already supports everything needed.",
       "revisable": "Yes",
       "made_by": "agent",
       "superseded_by": null
@@ -7316,6 +7430,28 @@
       "verdict": "✅ pass",
       "duration_ms": 22400,
       "created_at": "2026-04-03T16:05:54.863Z"
+    },
+    {
+      "id": 125,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3500,
+      "created_at": "2026-04-03T16:17:27.064Z"
+    },
+    {
+      "id": 126,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M011",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13300,
+      "created_at": "2026-04-03T16:17:27.064Z"
     }
   ]
 }

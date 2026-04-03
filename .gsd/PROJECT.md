@@ -83,6 +83,8 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [x] **M010:** Parent & Admin — Parent dashboard with multi-child management, saved payment cards, real-time teacher-parent messaging, Google SSO verification, read-only admin dashboard (5 slices, 55 new tests, 4 migrations, 95 files changed)
 - [ ] **M011:** UI Overhaul — Raise every user-facing surface from functional MVP to modern SaaS premium: profile page, booking flow, mobile navigation, both dashboards, landing page, global consistency
+  - S01 ✅ Teacher Profile Page Overhaul — HeroSection (taller banner, larger avatar, deeper overlap), CredentialsBar (accent chips, icon-paired meta, emerald verified badge), AboutSection (accent border, text-wrap:pretty), ReviewsSection (SVG stars, elevated cards, accent avatars), SocialLinks (pill links, Tutelo attribution footer). 474 tests passing.
+  - S02 ✅ Booking Calendar Restructure & Polish — BookingCalendar 933-line monolith decomposed into 4 sub-components (BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel). Accent chip in all step headers. SessionTypeSelector rounded-xl elevated cards. RecurringOptions Repeat icon + rounded-xl toggles. PaymentStep Shield trust signal. All 3 booking paths functional. 474 tests, tsc clean, build green.
 
 ---
-*Last updated: 2026-04-03 after production deployment fix. All M001–M010 code pushed to origin/main and deployed to Vercel. All Supabase migrations (0001–0019) applied to production. iPhone bottom nav safe area fix deployed. Waitlist/settings pages confirmed working. 474 tests passing, tsc clean, build green.*
+*Last updated: 2026-04-03 — M011/S02 complete. BookingCalendar decomposed, booking flow fully polished. 474 tests passing, tsc clean, build green.*
