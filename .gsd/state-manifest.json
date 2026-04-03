@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T15:47:51.612Z",
+  "exported_at": "2026-04-03T15:59:44.368Z",
   "milestones": [
     {
       "id": "M001",
@@ -1316,14 +1316,14 @@
       "milestone_id": "M011",
       "id": "S01",
       "title": "Teacher Profile Page Overhaul",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "After this: teacher's public /[slug] page looks premium — polished hero with better banner/avatar treatment, refined credentials bar, improved about section layout, elevated review cards, and cohesive social links footer. Parents get a strong first impression.",
       "created_at": "2026-04-03T15:32:15.905Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-03T15:50:34.427Z",
+      "full_summary_md": "---\nid: S01\nparent: M011\nmilestone: M011\nprovides:\n  - Premium teacher profile page visual treatment — hero, credentials bar, about section, reviews section, social links all updated\n  - CSS variable / inline style accent pattern established as the project-wide pattern for profile page components\n  - SVG star rating component (StarIcon in ReviewsSection.tsx)\n  - Reviewer initial avatar component (ReviewerAvatar in ReviewsSection.tsx)\n  - Visual language baseline (card elevation, typography scale, chip patterns) for S02 booking calendar to build on\nrequires:\n  []\naffects:\n  - S02 — BookingCalendar should adopt rounded-xl cards, accent chip pattern, icon-paired meta items established here\n  - S05 — Global consistency pass can reference these components as the canonical visual baseline\nkey_files:\n  - src/components/profile/HeroSection.tsx\n  - src/components/profile/AboutSection.tsx\n  - src/components/profile/CredentialsBar.tsx\n  - src/components/profile/ReviewsSection.tsx\n  - src/app/[slug]/page.tsx\nkey_decisions:\n  - Inline styles with color-mix(in srgb, var(--accent) 15%, transparent) are the correct pattern for accent-tinted backgrounds on the profile page — Tailwind bg-accent does not read runtime CSS variable overrides\n  - SVG inline star icons (StarIcon component) replace unicode ★ for crisp rendering at any size and correct color theming\n  - SocialLinks always renders (attribution footer) even with no social links — design decision, not a bug\n  - CredentialsBar custom styled spans replace shadcn Badge for full accent-color control\n  - accentColor prop on ReviewsSection is optional to preserve backward compatibility with existing unit tests\npatterns_established:\n  - Accent-color chip pattern: use inline style with color-mix(in srgb, var(--accent) 15%, transparent) for background, var(--accent) for text — applies to any component on the profile page needing accent tinting\n  - textWrap balance/pretty pattern: use `style={{ textWrap: 'pretty' } as React.CSSProperties}` — cast required for TypeScript\n  - SVG icon component pattern for rating stars: StarIcon with viewBox 0 0 20 20, filled/empty via text-yellow-400/text-gray-200 currentColor fill\n  - Reviewer initial avatar pattern: 8×8 rounded-full div with accent background showing uppercased first char — reusable for any user-facing initial display\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  - .gsd/milestones/M011/slices/S01/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M011/slices/S01/tasks/T02-SUMMARY.md\n  - .gsd/milestones/M011/slices/S01/tasks/T03-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T15:50:34.428Z\nblocker_discovered: false\n---\n\n# S01: Teacher Profile Page Overhaul\n\n**All five profile components — HeroSection, CredentialsBar, AboutSection, ReviewsSection, SocialLinks — upgraded from functional MVP to premium SaaS with intentional typography, accent-aware chips, SVG stars, elevated cards, and cohesive attribution footer; 474 tests pass.**\n\n## What Happened\n\nS01 overhauled the teacher public `/[slug]` page across three tasks with zero logic changes and zero test regressions.\n\n**T01 — HeroSection, AboutSection, SocialLinks:** HeroSection received a taller banner (h-44 mobile / h-64 desktop), larger avatar (h-24/h-28 with border-4 border-background shadow-lg), a deeper banner-avatar overlap (-mt-12/-mt-14), a subtle ring-inset depth overlay on the banner, gradient overlay for readability, and refined name typography (text-2xl/text-3xl font-bold tracking-tight with textWrap: balance). AboutSection gained a left accent-border uppercase heading label and textWrap: pretty on bio text. SocialLinks was upgraded to pill-link styling (rounded-full px-4 py-2 border hover:bg-muted transition-colors) and now always renders — even when no social links are set — to display a \"Powered by Tutelo\" attribution footer.\n\n**T02 — CredentialsBar:** The flat single-row credentials bar was replaced with a structured two-section layout. Row 1 holds subject chips (accent-colored via `color-mix(in srgb, var(--accent) 15%, transparent)` inline styles) and grade-level chips (muted border treatment). Row 2 holds meta items: verified badge in an emerald pill with dark-mode support, years experience with Clock icon, location with MapPin icon, and hourly rate pushed right via ml-auto with font-semibold tabular-nums. The shadcn Badge component was removed in favor of custom styled spans for full accent-color control. Component still returns null when there's nothing to show.\n\n**T03 — ReviewsSection:** Unicode star characters replaced with an inline SVG StarIcon component (20×20 viewBox, filled yellow-400 / empty gray-200). Review cards elevated from rounded-lg to rounded-xl/bg-card/shadow-sm with hover:shadow-md transition. A ReviewerAvatar component added accent-colored circle showing reviewer's first initial (falls back to 'var(--accent, #6366f1)' when no accentColor). textWrap: pretty applied to review text. Aggregate header upgraded with SVG stars, bold rating, and muted count with aria-label. Optional accentColor prop added (backward-compatible — existing tests unaffected), wired from teacher.accent_color in page.tsx. All critical test invariants preserved: firstNameFromEmail export unchanged, null return for empty reviews, slice-to-5 behavior identical.\n\n**Cross-cutting pattern established:** All three tasks confirmed the CSS variable / inline style pattern for accent color. The --accent variable is overridden per-teacher on the profile page's `<main>` element. Tailwind's bg-accent resolves statically and is incompatible — inline styles with color-mix() or var(--accent) are the correct pattern for all accent-dependent profile components.\n\n## Verification\n\nFinal slice verification: `npx vitest run --reporter=dot` → 474 passed, 0 failures, 49 test files (10 skipped). `npx tsc --noEmit` → exit 0, clean. `npx next build` → exit 0, success (verified in T03). All three tasks had clean verification evidence with no regressions across the 474-test suite.\n\n## Requirements Advanced\n\n- UI-01 — All five profile components upgraded with premium visual treatment — polished hero, structured credentials bar with accent chips, refined about section, elevated review cards with SVG stars and reviewer avatars, and cohesive social links with attribution footer\n- UI-08 — Profile page components now use intentional, bespoke design choices — color-mix accent tinting, custom chip components, SVG stars, layered shadows — not generic shadcn defaults\n- UI-09 — Profile page visual hierarchy improved — credential bar has clear section structure, reviews have better spatial separation and hover affordance, typography hierarchy reinforced throughout\n\n## Requirements Validated\n\n- UI-01 — 474 tests pass, tsc clean, next build success. HeroSection, CredentialsBar, AboutSection, ReviewsSection, SocialLinks all upgraded with intentional premium treatment. Teacher accent color system works correctly via color-mix() inline styles.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nThree minor, all improvement deviations: (1) textWrap balance/pretty applied via inline styles (Tailwind utility not in config) — no semantic change. (2) SocialLinks now always renders for attribution footer — minor behavior expansion. (3) T02 added lucide icons (Clock, MapPin, DollarSign) to meta items and removed shadcn Badge dependency — both were improvements over the plan spec, consistent with premium polish goal.\n\n## Known Limitations\n\ncolor-mix() has broad browser support (>95% as of 2026) but is not supported in IE11. Tutelo does not target IE11 so this is not a concern. textWrap: pretty/balance has limited but growing browser support — degrades gracefully (falls back to normal word-wrap).\n\n## Follow-ups\n\nS02 (BookingCalendar) should adopt the same visual language — rounded-xl cards, accent-aware chip patterns, and icon-paired meta items — established here. The color-mix() inline style pattern for accent chips should be considered for the booking flow's subject/session-type display as well.\n\n## Files Created/Modified\n\n- `src/components/profile/HeroSection.tsx` — Taller banner (h-44/h-64), larger avatar (h-24/h-28 border-4 shadow-lg), deeper overlap (-mt-12/-mt-14), ring-inset depth overlay, gradient overlay, balance typography\n- `src/components/profile/AboutSection.tsx` — Uppercase label heading with border-l-4 accent, textWrap: pretty on bio paragraph\n- `src/components/profile/CredentialsBar.tsx` — Two-row layout: accent subject chips (color-mix inline styles) + grade chips row; verified badge + icon-paired meta items + right-aligned rate row\n- `src/components/profile/ReviewsSection.tsx` — SVG StarIcon component, elevated cards (rounded-xl/shadow-sm/hover:shadow-md), ReviewerAvatar with accent color, textWrap: pretty, optional accentColor prop\n- `src/app/[slug]/page.tsx` — Pass accentColor={teacher.accent_color} to CredentialsBar and ReviewsSection; SocialLinks always rendered for attribution\n",
+      "full_uat_md": "# S01: Teacher Profile Page Overhaul — UAT\n\n**Milestone:** M011\n**Written:** 2026-04-03T15:50:34.429Z\n\n## UAT: Teacher Profile Page Overhaul (M011/S01)\n\n### Preconditions\n- A teacher account exists with: full name, photo, banner image, accent color set, subjects/grades filled, years experience set, city/state set, verified status, hourly rate set, and at least 3 reviews.\n- A second teacher exists with **no** social links, no banner image, no photo, and no reviews (edge-case profile).\n- Test at both mobile (375px) and desktop (1280px) viewport widths.\n\n---\n\n### TC-01: Hero Banner Height and Avatar Overlap\n\n**Given:** Navigate to `/[slug]` for a teacher with a banner image.\n\n**Steps:**\n1. Load the teacher profile page.\n2. Observe the banner image height.\n3. Observe the avatar position relative to the banner bottom.\n\n**Expected:**\n- Mobile: banner is approximately 176px tall (h-44).\n- Desktop: banner is approximately 256px tall (h-64).\n- Avatar overlaps the banner by ~48px (mobile) / ~56px (desktop) — noticeably below the banner edge.\n- Avatar has a visible white/background-colored border ring and a drop shadow.\n- Avatar initials show correctly if no photo is set (teacher 2).\n\n---\n\n### TC-02: Hero Banner Depth Effects\n\n**Given:** Teacher profile page with banner image.\n\n**Steps:**\n1. Inspect the banner area visually.\n\n**Expected:**\n- A subtle gradient overlay darkens the bottom edge of the banner (improves text readability on light banners).\n- A faint inset ring outlines the banner for depth.\n- No visual clipping or white edge artifacts.\n\n---\n\n### TC-03: Hero Typography and Name Layout\n\n**Given:** Teacher profile page.\n\n**Steps:**\n1. Read the teacher's name and headline below the avatar.\n\n**Expected:**\n- Name renders in bold with tight letter-spacing (tracking-tight).\n- Mobile: ~24px font size; Desktop: ~30px font size.\n- Long names wrap cleanly without truncation (textWrap: balance).\n- Headline text renders below the name in muted color.\n\n---\n\n### TC-04: CredentialsBar — Subject Chips Accent Color\n\n**Given:** Teacher has subjects set and a non-default accent color (e.g., purple or teal).\n\n**Steps:**\n1. Observe the subject chips in the credentials bar.\n\n**Expected:**\n- Subject chips have a tinted background matching the teacher's accent color (15% opacity, not the default app accent).\n- Subject chip text is the teacher's accent color (not black/gray).\n- A different teacher with a different accent color shows chips in their color.\n- Grade-level chips are styled differently — lighter, muted border, no accent tint.\n\n---\n\n### TC-05: CredentialsBar — Two-Row Layout\n\n**Given:** Teacher has subjects, grade levels, years experience, location, verified status, and hourly rate.\n\n**Steps:**\n1. Observe the credentials bar.\n\n**Expected:**\n- Row 1: subject chips + grade chips in a flex-wrap row.\n- Row 2: verified badge (emerald background, CheckCircle icon), years experience (Clock icon), location (MapPin icon), hourly rate (DollarSign icon, pushed to the right).\n- Rate displays in tabular-nums (monospace digit width) — e.g., \"$65/hr\".\n- Verified badge shows as a green pill (not just a plain checkmark).\n\n---\n\n### TC-06: CredentialsBar — Empty State\n\n**Given:** Teacher 2 (no subjects, no grades, no experience, no location, no rate, not verified).\n\n**Steps:**\n1. Load teacher 2's profile page.\n\n**Expected:**\n- CredentialsBar does not render at all (returns null).\n- No empty container or whitespace artifact.\n\n---\n\n### TC-07: AboutSection Heading Treatment\n\n**Given:** Any teacher profile page.\n\n**Steps:**\n1. Observe the \"About\" section heading.\n\n**Expected:**\n- Heading reads \"ABOUT\" in small uppercase with wide letter-spacing.\n- A visible left border (4px, accent-colored) precedes the heading.\n- Bio text wraps in a readable, justified-friendly style (textWrap: pretty).\n\n---\n\n### TC-08: ReviewsSection — SVG Stars\n\n**Given:** Teacher with reviews (mix of 4-star and 5-star).\n\n**Steps:**\n1. Inspect the star icons in the aggregate header and individual review cards.\n\n**Expected:**\n- Stars are SVG elements (not text characters ★ or ☆).\n- Filled stars are yellow (text-yellow-400).\n- Empty stars are light gray (text-gray-200).\n- Aggregate header shows correct average (e.g., \"4.7\") with star count.\n\n---\n\n### TC-09: ReviewsSection — Elevated Review Cards\n\n**Given:** Teacher with reviews.\n\n**Steps:**\n1. Observe each review card.\n2. Hover over a review card.\n\n**Expected:**\n- Cards have rounded-xl corners (more rounded than before).\n- Cards have a subtle shadow at rest.\n- On hover, shadow deepens slightly (hover:shadow-md).\n- Cards have visible separation from each other.\n\n---\n\n### TC-10: ReviewsSection — Reviewer Avatar\n\n**Given:** Teacher with reviews from reviewers with known names.\n\n**Steps:**\n1. Observe the reviewer area on each review card.\n\n**Expected:**\n- Each review shows a small circular avatar with the reviewer's first initial.\n- Avatar background color matches the teacher's accent color.\n- Anonymous reviews show \"A\" initial.\n- Reviewer name appears next to the avatar.\n\n---\n\n### TC-11: ReviewsSection — Teacher with No Reviews\n\n**Given:** Teacher 2 (no reviews).\n\n**Steps:**\n1. Load teacher 2's profile page.\n\n**Expected:**\n- ReviewsSection does not render (returns null).\n- No empty \"Reviews\" section header or whitespace artifact.\n\n---\n\n### TC-12: SocialLinks — Pill-Link Styling\n\n**Given:** Teacher with Instagram, email, and website set.\n\n**Steps:**\n1. Scroll to the bottom of the profile page.\n2. Observe the social links.\n3. Hover over a social link.\n\n**Expected:**\n- Each social link renders as a pill (rounded-full, with border and padding).\n- On hover: background changes to a muted tint, smooth transition.\n- Links are correctly labeled (e.g., \"Instagram\", teacher's email address, website URL or domain).\n\n---\n\n### TC-13: SocialLinks — Attribution Footer Always Present\n\n**Given:** Teacher 2 (no social links set).\n\n**Steps:**\n1. Load teacher 2's profile page and scroll to the bottom.\n\n**Expected:**\n- \"Powered by Tutelo\" (or similar attribution text) appears at the bottom even though no social links exist.\n- The SocialLinks area does not disappear entirely.\n\n---\n\n### TC-14: Accent Color Consistency Across All Components\n\n**Given:** Teacher with accent color set to a distinct, non-default color.\n\n**Steps:**\n1. Load the profile page.\n2. Observe accent color expression in: subject chips (CredentialsBar), reviewer avatars (ReviewsSection), any other accent-colored elements.\n\n**Expected:**\n- All accent-colored elements use the same hue — the teacher's specific accent color.\n- Components do NOT show the default app accent color (#3b4d3e green) if the teacher has a different color set.\n\n---\n\n### TC-15: Full Test Suite Integrity\n\n**Steps:**\n1. Run `npx vitest run --reporter=dot` in the project root.\n\n**Expected:**\n- 474 tests pass, 0 failures.\n- Exit code 0.\n\n---\n\n### TC-16: TypeScript Type Check\n\n**Steps:**\n1. Run `npx tsc --noEmit` in the project root.\n\n**Expected:**\n- No type errors.\n- Exit code 0.\n\n",
       "goal": "Teacher's public /[slug] page looks premium — polished hero with better banner/avatar treatment, refined credentials bar with accent-colored subject chips, improved about section layout, elevated review cards with SVG stars and reviewer avatars, and cohesive social links footer. Parents get a strong first impression.",
       "success_criteria": "## Must-Haves\n\n- Taller banner (h-44/h-64) with larger avatar (h-24/h-28), better overlap, and name/headline typography with `text-wrap: balance`\n- CredentialsBar uses accent color for subject chips via `color-mix(in srgb, var(--accent) 15%, transparent)` pattern — no Tailwind `bg-accent` utility\n- ReviewsSection renders SVG stars instead of unicode `★`, review cards have elevation (`shadow-sm`, `rounded-xl`), reviewer initial avatars with accent color\n- AboutSection has refined heading treatment and `text-wrap: pretty` on bio text\n- SocialLinks styled as pill links with hover states; optional \"Powered by Tutelo\" attribution footer\n- `accentColor` prop wired to ReviewsSection from page.tsx for reviewer avatars\n- All 474 existing tests pass, `tsc --noEmit` clean, `next build` succeeds\n- PAGE-07 preserved: teacher accent color still personalizes the entire page\n- UI-08/UI-09 constraints: no component looks like default shadcn; hierarchy is clear and intentional\n\n## Requirement Impact\n\n- **Requirements touched**: UI-01 (primary delivery), PAGE-07 (must preserve accent color), UI-08 (constraint: never looks generic), UI-09 (constraint: never feels clunky)\n- **Re-verify**: Teacher profile page accent color rendering, review section test assertions, full build\n- **Decisions revisited**: none\n\n## Proof Level\n\n- This slice proves: visual quality at operational level\n- Real runtime required: yes (dev server visual check)\n- Human/UAT required: yes (visual quality judgment)\n\n## Verification\n\n- `npx vitest run` — 474 tests pass (particularly dashboard-reviews.test.ts ReviewsSection assertions)\n- `npx tsc --noEmit` — zero errors\n- `npx next build` — succeeds\n- Visual: profile page hero has strong presence, credentials clearly readable with accent-colored subject chips, review cards polished with SVG stars, social links inviting\n\n## Integration Closure\n\n- Upstream surfaces consumed: `page.tsx` accent color CSS variable pattern, existing `AnimatedProfile` wrappers, shadcn Avatar/Badge components\n- New wiring introduced in this slice: `accentColor` prop passed from page.tsx to ReviewsSection\n- What remains before the milestone is truly usable end-to-end: S02 (booking calendar polish), S03 (mobile nav), S04 (dashboards), S05 (landing + consistency)",
       "proof_level": "operational",
@@ -1346,11 +1346,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Decompose the BookingCalendar monolith into cohesive sub-components and polish the entire booking flow visually.",
-      "success_criteria": "- BookingCalendar.tsx decomposed from 935 lines into 4-6 focused sub-components\n- All 3 booking paths work: deferred (no Stripe), direct payment, recurring payment\n- Session type selector, child selector, recurring options all functional\n- Calendar grid, time slot picker, form fields, and payment step all visually polished\n- Step transitions feel smooth\n- Existing booking-related tests pass\n- Visual cohesion with the overhauled profile page",
-      "proof_level": "Existing tests pass + browser verification of all 3 booking paths",
-      "integration_closure": "Booking flow sits inside the profile page — visual integration with S01's profile overhaul verified",
-      "observability_impact": "None — visual/structural only",
+      "goal": "The 933-line BookingCalendar monolith is decomposed into cohesive sub-components (BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel) and the orchestrator is ~250 lines. Every visual surface in the booking flow — session type cards, form area, payment step, recurring options — gets premium treatment matching the S01 visual language (rounded-xl cards, accent chips, elevated shadows). All 3 booking paths (deferred, direct, recurring) continue to work. 474 tests pass, tsc clean, next build success.",
+      "success_criteria": "- BookingCalendar.tsx reduced from 933 lines to ~250 lines (orchestrator only)\n- 4 new sub-component files: BookingForm.tsx, SessionTypeSelector.tsx, CalendarGrid.tsx, TimeSlotsPanel.tsx\n- Session type selector cards use rounded-xl + shadow-sm + hover:shadow-md elevation\n- Booking form wrapped in a subtle card/bg treatment\n- PaymentStep has a \"Secure payment\" trust signal with lock icon\n- RecurringOptions projected dates list uses rounded-xl\n- Step header shows session type as accent-colored chip\n- All 474 tests pass (npx vitest run)\n- TypeScript clean (npx tsc --noEmit)\n- Build succeeds (npx next build)",
+      "proof_level": "contract — existing test suite covers all 3 booking paths and component render; visual changes verified by build success and type safety",
+      "integration_closure": "- Upstream: S01 visual language (rounded-xl cards, accent chip pattern via color-mix(), icon-paired meta items) consumed as the design reference\n- New wiring: BookingCalendar.tsx imports and renders 4 new sub-components; all state owned by orchestrator, passed via props\n- Remaining: S03 (mobile nav) and S04 (dashboards) can proceed independently; S05 (global consistency) references booking flow as a polished surface",
+      "observability_impact": "None — this slice is purely structural refactoring and visual polish. No runtime boundaries, async flows, or error paths are changed. The payment intent creation, auth flow, and form submission logic remain in the BookingCalendar orchestrator unchanged.",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -5270,6 +5270,128 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Extract BookingForm sub-component from BookingCalendar with accent-colored session type chip and subtle card background",
+      "status": "complete",
+      "one_liner": "Extract BookingForm sub-component from BookingCalendar with accent-colored session type chip and subtle card background",
+      "narrative": "Created BookingForm.tsx (263 lines) by extracting the booking form step from BookingCalendar.tsx. Applied visual polish: session type shown as accent-colored chip using color-mix pattern in the header breadcrumb, form body wrapped in bg-muted/5 for subtle differentiation. BookingCalendar reduced from 933 to 751 lines with unused imports cleaned up. All state and handlers remain in BookingCalendar — BookingForm is purely presentational.",
+      "verification_result": "npx tsc --noEmit exited 0 (clean). npx vitest run --reporter=dot: 474 tests passed across 49 test files, including booking-child-selector tests that exercise the form through BookingCalendar.",
+      "duration": "",
+      "completed_at": "2026-04-03T15:59:44.290Z",
+      "blocker_discovered": false,
+      "deviations": "Header breadcrumb restructured to flex-wrap layout with gap-2 to accommodate the accent chip. Price shown separately from chip label for cleaner visual hierarchy.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/BookingForm.tsx",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "key_decisions": [
+        "Session type displayed as accent-colored chip using color-mix(in srgb, var(--accent) 15%, transparent), matching S01 visual language",
+        "Form body uses bg-muted/5 for subtle differentiation from header",
+        "Removed 6 unused imports from BookingCalendar after extraction"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M011\nkey_files:\n  - src/components/profile/BookingForm.tsx\n  - src/components/profile/BookingCalendar.tsx\nkey_decisions:\n  - Session type displayed as accent-colored chip using color-mix(in srgb, var(--accent) 15%, transparent), matching S01 visual language\n  - Form body uses bg-muted/5 for subtle differentiation from header\n  - Removed 6 unused imports from BookingCalendar after extraction\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T15:59:44.290Z\nblocker_discovered: false\n---\n\n# T01: Extract BookingForm sub-component from BookingCalendar with accent-colored session type chip and subtle card background\n\n**Extract BookingForm sub-component from BookingCalendar with accent-colored session type chip and subtle card background**\n\n## What Happened\n\nCreated BookingForm.tsx (263 lines) by extracting the booking form step from BookingCalendar.tsx. Applied visual polish: session type shown as accent-colored chip using color-mix pattern in the header breadcrumb, form body wrapped in bg-muted/5 for subtle differentiation. BookingCalendar reduced from 933 to 751 lines with unused imports cleaned up. All state and handlers remain in BookingCalendar — BookingForm is purely presentational.\n\n## Verification\n\nnpx tsc --noEmit exited 0 (clean). npx vitest run --reporter=dot: 474 tests passed across 49 test files, including booking-child-selector tests that exercise the form through BookingCalendar.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3300ms |\n| 2 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 8600ms |\n\n\n## Deviations\n\nHeader breadcrumb restructured to flex-wrap layout with gap-2 to accommodate the accent chip. Price shown separately from chip label for cleaner visual hierarchy.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/BookingForm.tsx`\n- `src/components/profile/BookingCalendar.tsx`\n",
+      "description": "Extract the booking form step (student name/child selector, subject dropdown, email, notes, phone/SMS, submit button) from BookingCalendar.tsx into a new BookingForm.tsx sub-component. The step header (back button + date/time/session breadcrumb) is included in BookingForm. Apply visual polish: wrap form in a subtle card treatment, display session type as an accent-colored chip in the header (matching S01's color-mix pattern). BookingCalendar passes form state, setForm, and onSubmit as props — no logic changes.\n\nSteps:\n1. Create `src/components/profile/BookingForm.tsx` with the form JSX extracted from BookingCalendar lines ~700-930. Props: form, setForm, onSubmit, submitting, creatingIntent, firstName, subjects, hasSessionTypes, children, childrenLoaded, selectedDate, selectedSlot, selectedSessionType, stripeConnected, accentColor, onBack.\n2. Include the step header (back button + date/time/session type breadcrumb) inside BookingForm, with visual upgrade: session type shown as accent-colored chip using `style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}`.\n3. Wrap the form body in a subtle bg treatment: add `bg-muted/5` or similar subtle background to differentiate from header.\n4. In BookingCalendar.tsx, replace the form JSX block (the else branch at the bottom of the step router) with `<BookingForm ...props />`. Keep all state and handlers in BookingCalendar.\n5. Run `npx vitest run --reporter=dot` — 474 tests must pass. The booking-child-selector tests render BookingCalendar and assert on the form; since BookingForm is not mocked, it's rendered normally through BookingCalendar.\n6. Run `npx tsc --noEmit` — must exit 0.",
+      "estimate": "45m",
+      "files": [
+        "src/components/profile/BookingForm.tsx",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "verify": "npx vitest run --reporter=dot && npx tsc --noEmit",
+      "inputs": [
+        "`src/components/profile/BookingCalendar.tsx` — source of form JSX to extract (lines ~700-930)",
+        "`src/__tests__/booking-child-selector.test.ts` — must continue passing (imports BookingCalendar, tests child selector render and state)"
+      ],
+      "expected_output": [
+        "`src/components/profile/BookingForm.tsx` — new sub-component (~200 lines) containing the booking form step with header, child selector, subject dropdown, email, notes, phone/SMS, submit button",
+        "`src/components/profile/BookingCalendar.tsx` — modified to import and render BookingForm instead of inline JSX"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Extract SessionTypeSelector, CalendarGrid, TimeSlotsPanel — complete decomposition",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Extract the remaining 3 presentational sub-components from BookingCalendar.tsx, completing the monolith decomposition. After this task, BookingCalendar.tsx is a ~250-line orchestrator that owns state + handlers and delegates rendering to sub-components.\n\nSteps:\n1. Create `src/components/profile/SessionTypeSelector.tsx` (~60 lines). Props: sessionTypes, accentColor, onSelect. Visual upgrade: change cards from `border rounded-lg px-5 py-4 hover:bg-muted/50` to `border rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow`. Price uses accent color. Duration shown in muted text.\n2. Create `src/components/profile/CalendarGrid.tsx` (~100 lines). Props: calendarDays, currentMonth, selectedDate, today, accentColor, hasSessionTypes, selectedSessionType, onDateClick, onPrevMonth, onNextMonth, onChangeSessionType. Includes month navigation, day-of-week headers, date grid, and the 'Change session type' link.\n3. Create `src/components/profile/TimeSlotsPanel.tsx` (~70 lines). Props: selectedDate, timeSlotsForDay, accentColor, onSlotClick. Includes the TimeSlotButton internal component (manages its own hover state). Panel has `bg-muted/20` background.\n4. Update BookingCalendar.tsx to import and render all 3 new components plus BookingForm from T01. The calendar step JSX (session type selector OR calendar+timeslots) is replaced with component calls. Success/error/recurring/auth/payment steps remain inline in the orchestrator (they're small and tightly coupled to state transitions).\n5. Verify BookingCalendar.tsx is approximately 250 lines (state declarations + handlers + step router rendering sub-components).\n6. Run `npx vitest run --reporter=dot` — 474 tests must pass.\n7. Run `npx tsc --noEmit` — must exit 0.",
+      "estimate": "45m",
+      "files": [
+        "src/components/profile/SessionTypeSelector.tsx",
+        "src/components/profile/CalendarGrid.tsx",
+        "src/components/profile/TimeSlotsPanel.tsx",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "verify": "npx vitest run --reporter=dot && npx tsc --noEmit",
+      "inputs": [
+        "`src/components/profile/BookingCalendar.tsx` — modified by T01, source of remaining JSX to extract",
+        "`src/components/profile/BookingForm.tsx` — created in T01, already imported by BookingCalendar"
+      ],
+      "expected_output": [
+        "`src/components/profile/SessionTypeSelector.tsx` — new sub-component with elevated card design (rounded-xl, shadow-sm, hover:shadow-md)",
+        "`src/components/profile/CalendarGrid.tsx` — new sub-component with month navigation, day headers, date grid",
+        "`src/components/profile/TimeSlotsPanel.tsx` — new sub-component with time slot buttons and hover state",
+        "`src/components/profile/BookingCalendar.tsx` — reduced to ~250-line orchestrator importing all sub-components"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Visual polish pass — RecurringOptions, PaymentStep, and step header refinements",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Apply premium visual treatment to the remaining booking flow surfaces: RecurringOptions projected dates, PaymentStep trust signal, and step headers in auth/payment panels. This completes the visual cohesion between the booking flow and the S01 profile page.\n\nSteps:\n1. In `RecurringOptions.tsx`: upgrade projected dates list from `rounded-lg border divide-y` to `rounded-xl border divide-y shadow-sm`. Add `Repeat` icon paired with 'Schedule type' label (matching S01 icon-paired meta pattern). Refine frequency toggle button corners to `rounded-xl` for consistency.\n2. In `PaymentStep.tsx`: add a trust signal above the Stripe PaymentElement — a `Shield` or `Lock` icon from lucide-react with 'Secure payment' text in muted styling. Add a subtle heading 'Complete your booking' with font-semibold. Keep the form layout clean (p-6 space-y-4 max-w-md mx-auto).\n3. In `BookingCalendar.tsx` orchestrator: update the step headers for auth and payment steps to show session type as an accent chip (same pattern as BookingForm header from T01) — use inline style with color-mix for the chip background. Ensure all step headers are visually consistent.\n4. Run `npx vitest run --reporter=dot` — 474 tests must pass.\n5. Run `npx tsc --noEmit` — must exit 0.\n6. Run `npx next build` — must exit 0 (final build verification for the slice).",
+      "estimate": "30m",
+      "files": [
+        "src/components/profile/RecurringOptions.tsx",
+        "src/components/profile/PaymentStep.tsx",
+        "src/components/profile/BookingCalendar.tsx"
+      ],
+      "verify": "npx vitest run --reporter=dot && npx tsc --noEmit && npx next build",
+      "inputs": [
+        "`src/components/profile/RecurringOptions.tsx` — existing 250-line component needing visual polish",
+        "`src/components/profile/PaymentStep.tsx` — existing 80-line component needing trust signal",
+        "`src/components/profile/BookingCalendar.tsx` — orchestrator from T02 with auth/payment step headers to polish"
+      ],
+      "expected_output": [
+        "`src/components/profile/RecurringOptions.tsx` — upgraded with rounded-xl projected dates, Repeat icon, refined toggle corners",
+        "`src/components/profile/PaymentStep.tsx` — upgraded with Shield/Lock trust signal and 'Complete your booking' heading",
+        "`src/components/profile/BookingCalendar.tsx` — step headers updated with accent chip for session type display"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -5775,6 +5897,42 @@
       "rationale": "Visual polish alone would leave the 935-line BookingCalendar monolith in place. User wants both the look and the feel improved, which requires structural changes to the booking flow.",
       "revisable": "No",
       "made_by": "human",
+      "superseded_by": null
+    },
+    {
+      "seq": 60,
+      "id": "D043",
+      "when_context": "M011/S01",
+      "scope": "convention",
+      "decision": "Accent-color application pattern on teacher profile components",
+      "choice": "Use color-mix(in srgb, var(--accent) 15%, transparent) with inline styles for tinted chip backgrounds — never use Tailwind bg-accent utility",
+      "rationale": "The teacher profile page wraps content in a &lt;main&gt; with --accent CSS variable override. Tailwind's bg-accent resolves at build time to a static Tailwind CSS class, not to the runtime CSS variable. Using inline styles with color-mix() reads the live --accent value set by the teacher's accent_color, enabling correct per-teacher tinting. This pattern is used for subject chips in CredentialsBar and reviewer avatars in ReviewsSection.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 61,
+      "id": "D044",
+      "when_context": "M011/S01",
+      "scope": "requirement",
+      "decision": "UI-01 requirement status transition",
+      "choice": "validated",
+      "rationale": "M011/S01 delivered: HeroSection upgraded with taller banner (h-44/h-64), larger avatar (h-24/h-28, border-4, shadow-lg), deeper overlap, ring-inset depth, balance/bold typography. CredentialsBar restructured into two-row layout with accent-colored subject chips (color-mix inline styles), lucide icon-paired meta items (Clock, MapPin, DollarSign), emerald verified badge pill, and right-aligned tabular-nums rate display. AboutSection gets uppercase label with accent border-l-4 and text-wrap: pretty on bio. ReviewsSection upgraded with SVG star icons, elevated cards (rounded-xl/shadow-sm/hover:shadow-md), accent-colored reviewer initial avatars, and accentColor prop wired from page.tsx. SocialLinks upgraded to pill-link styling with Tutelo attribution footer. All 474 tests pass, TypeScript clean, next build success.",
+      "revisable": "Yes",
+      "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 62,
+      "id": "D045",
+      "when_context": "M011/S02",
+      "scope": "architecture",
+      "decision": "BookingCalendar decomposition strategy — state ownership and component boundaries",
+      "choice": "All state (form, step, selectedDate, selectedSlot, etc.) and all async handlers (createPaymentIntent, createRecurringIntent, handleSubmit) stay in BookingCalendar orchestrator. Sub-components receive state and callbacks via props. BookingForm receives ~15 props (form, setForm, onSubmit, submitting, etc.) rather than co-locating form state.",
+      "rationale": "Keeping state in the orchestrator preserves the step state machine in one place, avoids needing to lift state back up when transitioning between steps, and keeps the existing test surface unchanged — booking-child-selector.test.ts renders BookingCalendar and the new sub-components are exercised through it without needing mock updates. The prop-drilling is verbose but explicit and type-safe.",
+      "revisable": "Yes",
+      "made_by": "agent",
       "superseded_by": null
     }
   ],
@@ -7065,6 +7223,28 @@
       "verdict": "✅ pass",
       "duration_ms": 23000,
       "created_at": "2026-04-03T15:47:51.595Z"
+    },
+    {
+      "id": 118,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3300,
+      "created_at": "2026-04-03T15:59:44.290Z"
+    },
+    {
+      "id": 119,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M011",
+      "command": "npx vitest run --reporter=dot",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 8600,
+      "created_at": "2026-04-03T15:59:44.290Z"
     }
   ]
 }

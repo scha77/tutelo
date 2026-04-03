@@ -702,3 +702,27 @@ When migrations may be partially applied (e.g., one table created manually, anot
 - Indexes: `CREATE INDEX IF NOT EXISTS`
 - Policies: `DROP POLICY IF EXISTS ... ; CREATE POLICY ...` (Postgres has no `CREATE POLICY IF NOT EXISTS`)
 - Publications: wrap `ALTER PUBLICATION ... ADD TABLE` in a `DO $$ ... EXCEPTION WHEN duplicate_object THEN NULL; END $$` block
+
+---
+
+## Tailwind bg-accent vs CSS variable --accent on Teacher Profile Page
+
+On the teacher `/[slug]` page, the `<main>` element has `--accent` overridden as an inline CSS variable to the teacher's `accent_color`. This means **any component that reads `--accent` dynamically (via inline styles) will correctly show the teacher's chosen color**, but **Tailwind's `bg-accent` utility class does NOT** — it resolves to a static class with the default theme value, not the runtime CSS variable.
+
+**Pattern to use:** `style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}`  
+**Pattern to avoid:** `className="bg-accent text-accent-foreground"` on the profile page
+
+This applies to CredentialsBar subject chips, ReviewsSection reviewer avatars, and any future profile component that needs accent tinting.
+
+---
+
+## textWrap: balance/pretty Requires Inline Style in This Project
+
+Tailwind v3 (in use here) does not have `text-balance` or `text-pretty` utility classes built in. Use inline styles: `style={{ textWrap: 'pretty' } as React.CSSProperties}` or `style={{ textWrap: 'balance' } as React.CSSProperties}`. Cast to `React.CSSProperties` to avoid TypeScript errors since these are newer CSS properties not yet in the standard type definitions.
+
+---
+
+## SocialLinks Always Renders for Attribution Footer
+
+`SocialLinks` in `src/app/[slug]/page.tsx` was changed in M011/S01 to always render (even when no social links are set) because it now displays a "Powered by Tutelo" attribution footer. Previously it returned null when the teacher had no social links. If you add conditional rendering back, ensure the attribution footer still displays.
+
