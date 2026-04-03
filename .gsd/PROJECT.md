@@ -15,13 +15,8 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - All 124 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02 + 9 recurring sessions from M009 + 14 parent & admin from M010)
-- **Parent & Admin (M010 — complete ✅):**
-  - S01 ✅ Parent Dashboard & Multi-Child — `children` table (migration 0017) with RLS + `child_id` FK on bookings, parent-only auth routing to `/parent` across all 3 auth paths, auth-guarded `(parent)` route group with 3 pages, ParentSidebar + ParentMobileNav, `/api/parent/children` CRUD API, BookingCalendar child selector, 46 unit tests.
-  - S02 ✅ Google SSO Verification — Fixed OAuth `redirectTo` bug (`/auth/callback` → `/callback`), 7 unit tests covering all 4 callback routing paths + AUTH-04 provider-agnostic smoke test.
-  - S03 ✅ Saved Payment Methods — `parent_profiles` table (migration 0018) with Stripe Customer + saved card fields, `create-intent` + `create-recurring` Customer resolution, webhook PM upsert, `/parent/payment` page, 18 unit tests.
-  - S04 ✅ Teacher-Parent Messaging — `conversations` + `messages` tables (migration 0019) with Realtime publication, 3 API routes, `ChatWindow` with Supabase Realtime subscription + optimistic send, conversation list + detail pages for both roles, `NewMessageEmail`, 5-min rate limit, 21 unit tests.
-  - S05 ✅ Admin Dashboard — `(admin)` route group with `ADMIN_USER_IDS` env-var gate (`notFound()` for non-admins), 6 stat cards, 15-item activity feed, 9 unit tests.
-- 474 tests passing (0 failures); `tsc --noEmit` clean; `npx next build` succeeds
+- **Design Polish (M011 — complete ✅):** Every user-facing surface upgraded to premium SaaS standard — teacher profile page, booking flow (decomposed into 4 sub-components), mobile navigation (labeled tabs + More menu), all 16 dashboard pages (headers, tinted pills, avatar circles, card elevation), landing page (proper footer, hero badge), and global consistency on auth/booking-confirmed/directory pages.
+- 474 tests passing (0 failures); `tsc --noEmit` clean; `npx next build` succeeds (67 pages)
 - **Recurring Sessions (M009 — complete ✅):**
   - S01 ✅ Schema & Recurring Booking Creation — `recurring_schedules` table, `generateRecurringDates` + `checkDateConflicts` utilities, `POST /api/direct-booking/create-recurring` (Stripe setup_future_usage), `RecurringOptions` UI component in BookingCalendar, `RecurringBookingConfirmationEmail` template. 25 tests passing.
   - S02 ✅ Saved Cards & Auto-Charge Cron — Stripe Customer per schedule, per-session auto-charge cron (`/api/cron/recurring-charges`, runs noon UTC daily), `payment_failed` booking status, failed-charge notification emails.
@@ -57,7 +52,7 @@ See `LAUNCH.md` for production environment documentation.
 - **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`.
 - **SMS:** Twilio SDK in `src/lib/sms.ts`. All sends gated on `phone IS NOT NULL AND sms_opt_in = true`. A2P 10DLC registration required for production delivery.
 - **Verification:** School email verification via custom token flow. Token gen + Resend email + public callback route stamps `verified_at`.
-- **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations. Design follows 4pt grid system, one sans-serif font family, semantic colors.
+- **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations. Design follows 4pt grid system, one sans-serif font family, semantic colors. Premium card standard: `rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow`. Tinted icon pills: `color-mix(in srgb, var(--primary) 12%, transparent)` in dashboards, `var(--accent)` on teacher profile only. Page headers: `text-2xl font-bold tracking-tight` + muted subtitle.
 - **OG Images & Flyers:** File-based `opengraph-image.tsx` (edge runtime) for OG tags on teacher pages. `/api/flyer/[slug]/route.tsx` (Node.js runtime) for printable flyer PNG — uses Node runtime for `qrcode.toDataURL()` canvas compatibility.
 
 ## Test Accounts
@@ -82,10 +77,12 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
 - [x] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [x] **M010:** Parent & Admin — Parent dashboard with multi-child management, saved payment cards, real-time teacher-parent messaging, Google SSO verification, read-only admin dashboard (5 slices, 55 new tests, 4 migrations, 95 files changed)
-- [ ] **M011:** UI Overhaul — Raise every user-facing surface from functional MVP to modern SaaS premium: profile page, booking flow, mobile navigation, both dashboards, landing page, global consistency
-  - S01 ✅ Teacher Profile Page Overhaul — HeroSection (taller banner, larger avatar, deeper overlap), CredentialsBar (accent chips, icon-paired meta, emerald verified badge), AboutSection (accent border, text-wrap:pretty), ReviewsSection (SVG stars, elevated cards, accent avatars), SocialLinks (pill links, Tutelo attribution footer). 474 tests passing.
-  - S02 ✅ Booking Calendar Restructure & Polish — BookingCalendar 933-line monolith decomposed into 4 sub-components (BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel). Accent chip in all step headers. SessionTypeSelector rounded-xl elevated cards. RecurringOptions Repeat icon + rounded-xl toggles. PaymentStep Shield trust signal. All 3 booking paths functional. 474 tests, tsc clean, build green.
-  - S03 ✅ Mobile Navigation Overhaul — NavItem interface extended with optional `description` field. `primaryNavItems` (4: Overview, Requests, Sessions, Availability) and `moreNavItems` (7: Students, Waitlist, Page, Promote, Analytics, Messages, Settings) exported from `nav.ts`. MobileBottomNav rewritten: 5 labeled tabs (4 primary + More) + AnimatePresence bottom-sheet panel with icon/label/description rows + Sign Out. Backdrop dismissal, active dot on More when deeper page is current, pending badge on Requests all preserved. ParentMobileNav confirmed already had visible labels. 474 tests, tsc clean, build green.
+- [x] **M011:** Design Polish & Visual Consistency — Raised every user-facing surface from functional MVP to premium SaaS standard: teacher profile, booking flow, mobile navigation, both dashboards, landing page, global consistency
+  - S01 ✅ Teacher Profile Page Overhaul — HeroSection, CredentialsBar, AboutSection, ReviewsSection, SocialLinks all redesigned with premium patterns
+  - S02 ✅ Booking Calendar Restructure & Polish — 935→617 line orchestrator + 4 extracted sub-components (CalendarGrid, TimeSlotsPanel, SessionTypeSelector, BookingForm)
+  - S03 ✅ Mobile Navigation Overhaul — 4 labeled primary tabs + More panel for teachers, labeled tabs for parents
+  - S04 ✅ Dashboard Polish — Premium headers, tinted icon pills, avatar circles, card elevation, empty states across all 11 teacher + 5 parent pages
+  - S05 ✅ Landing Page & Global Consistency — Proper footer with nav links, hero pill badge, card wrappers on auth/booking-confirmed/tutors directory
 
 ---
-*Last updated: 2026-04-03 — M011/S03 complete. Mobile nav overhauled with labeled tabs and More panel. 474 tests passing, tsc clean, build green.*
+*Last updated: 2026-04-03 — M011 complete and deployed. All user-facing surfaces polished to premium standard. 474 tests passing, tsc clean, build green.*

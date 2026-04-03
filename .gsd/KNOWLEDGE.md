@@ -784,3 +784,76 @@ The More panel uses `bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))` to
 
 When T02 was planned, the expectation was that `ParentMobileNav.tsx` needed sr-only label removal. In reality, it already had visible `text-[10px]` labels on all 5 tabs and Sign Out. Always read the actual component before planning label-visibility changes — the component may have already been updated as part of a previous slice or task.
 
+---
+
+## Premium Dashboard Card Standard (M011)
+
+All dashboard cards use this pattern:
+```
+className="rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow"
+```
+For stat cards or cards without hover interaction, omit `hover:shadow-md transition-shadow`.
+
+Tinted icon pill (dashboard context):
+```tsx
+<div className="rounded-lg p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+  <Icon className="h-4 w-4 text-primary" />
+</div>
+```
+
+**Important:** Use `var(--primary)` in dashboards. Use `var(--accent)` ONLY on the teacher `/[slug]` profile page where `--accent` is overridden to the teacher's chosen color. In the dashboard, `--accent` resolves to near-white and is invisible.
+
+---
+
+## Premium Page Header Pattern (M011)
+
+Every dashboard page uses this header:
+```tsx
+<div>
+  <h1 className="text-2xl font-bold tracking-tight">Page Title</h1>
+  <p className="mt-1 text-sm text-muted-foreground">Subtitle describing the page.</p>
+</div>
+```
+
+The `tracking-tight` on h1 is essential for the premium look. The subtitle uses `mt-1` (not `mt-2`) for tighter coupling.
+
+---
+
+## Empty State Pattern (M011)
+
+All empty states follow this pattern:
+```tsx
+<div className="flex flex-col items-center justify-center py-16 text-center">
+  <LucideIcon className="h-10 w-10 text-muted-foreground/50 mb-4" />
+  <h2 className="text-lg font-semibold">No items yet</h2>
+  <p className="text-muted-foreground mt-1 max-w-sm">Description text.</p>
+</div>
+```
+
+Icon size is `h-10 w-10` (dashboard) or `h-12 w-12` (parent pages). Use `/50` opacity on the icon for subtlety.
+
+---
+
+## Avatar Initial Circle Pattern (M011)
+
+For user/child avatar placeholders:
+```tsx
+<div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-primary shrink-0"
+  style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+  {name.charAt(0).toUpperCase()}
+</div>
+```
+
+`h-9 w-9` is the standard size across both teacher and parent pages. `shrink-0` prevents the circle from collapsing in flex layouts.
+
+---
+
+## color-mix Is the Canonical Tinting Approach (M011)
+
+`color-mix(in srgb, var(--primary) 12%, transparent)` is the only tinting pattern used in Tutelo. It:
+- Respects the theme (works in both light and dark mode)
+- Avoids hardcoded colors (no `bg-blue-50` or `bg-primary/10`)
+- Uses CSS-level mixing (no Tailwind arbitrary value gymnastics)
+
+The `12%` opacity is the standard for pill backgrounds. Use `15%` for slightly stronger tinting (e.g., subject chips on the profile page with `--accent`).
+
