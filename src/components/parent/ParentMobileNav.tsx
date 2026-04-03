@@ -40,7 +40,7 @@ export function ParentMobileNav() {
                 <span className="absolute top-1 h-1 w-1 rounded-full bg-foreground" />
               )}
               <Icon className="mt-1 h-5 w-5" />
-              <span className="sr-only">{label}</span>
+              <span className="truncate max-w-full">{label}</span>
             </Link>
           )
         })}
@@ -52,7 +52,7 @@ export function ParentMobileNav() {
             className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] text-muted-foreground active:text-foreground transition-colors"
           >
             <LogOut className="mt-1 h-5 w-5" />
-            <span className="sr-only">Sign out</span>
+            <span className="truncate max-w-full">Sign out</span>
           </button>
         </form>
       </div>

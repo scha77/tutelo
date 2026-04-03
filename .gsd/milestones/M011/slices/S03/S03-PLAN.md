@@ -52,7 +52,7 @@
   - Estimate: 1.5h
   - Files: src/lib/nav.ts, src/components/dashboard/MobileBottomNav.tsx
   - Verify: npx tsc --noEmit && npx vitest run
-- [ ] **T02: Rewrite ParentMobileNav with visible labels and run full verification** — The parent mobile bottom nav currently renders 5 items + sign out as icon-only tabs. This task makes all labels visible and runs the complete verification suite for the slice.
+- [x] **T02: Confirmed ParentMobileNav already has visible labels on all 5 tabs plus Sign Out, and ran full verification: tsc clean, 474 tests pass, next build succeeds** — The parent mobile bottom nav currently renders 5 items + sign out as icon-only tabs. This task makes all labels visible and runs the complete verification suite for the slice.
 
 ## Steps
 
