@@ -50,7 +50,7 @@ export function WizardStep1({ userId }: WizardStep1Props) {
 
     const supabase = createClient()
     const ext = file.name.split('.').pop()
-    const path = `profile-images/${userId}/${Date.now()}.${ext}`
+    const path = `${userId}/${Date.now()}.${ext}`
 
     const { error } = await supabase.storage.from('profile-images').upload(path, file, {
       upsert: true,

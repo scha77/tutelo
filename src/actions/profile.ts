@@ -105,7 +105,7 @@ export async function uploadBannerImage(
   }
 
   const ext = file.name.split('.').pop() ?? 'jpg'
-  const path = `profile-images/${userId}/banner-${Date.now()}.${ext}`
+  const path = `${userId}/banner-${Date.now()}.${ext}`
 
   // Use admin client to bypass storage RLS — this is a trusted server action,
   // already auth-gated by getAuthUserId() above.
@@ -146,7 +146,7 @@ export async function uploadProfilePhoto(
   }
 
   const ext = file.name.split('.').pop() ?? 'jpg'
-  const path = `profile-images/${userId}/photo-${Date.now()}.${ext}`
+  const path = `${userId}/photo-${Date.now()}.${ext}`
 
   const { supabaseAdmin } = await import('@/lib/supabase/service')
   const { data, error } = await supabaseAdmin.storage

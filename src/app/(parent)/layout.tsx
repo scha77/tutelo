@@ -10,26 +10,23 @@ export default async function ParentLayout({
 }) {
   const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData?.user) {
+  // Fast local JWT decode — proxy already verified/refreshed the session
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
+  if (claimsError || !claimsData?.claims?.sub) {
     redirect('/login?redirect=/parent')
   }
 
-  const userId = userData.user.id
-  const userEmail = userData.user.email ?? ''
+  const userId = claimsData.claims.sub as string
+  const userEmail = (claimsData.claims.email as string) ?? ''
 
-  // Check if user also has a teacher role (for dual-role cross-link)
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id')
-    .eq('user_id', userId)
-    .maybeSingle()
+  // Parallelize the two independent queries
+  const [teacherResult, childrenResult] = await Promise.all([
+    supabase.from('teachers').select('id').eq('user_id', userId).maybeSingle(),
+    supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', userId),
+  ])
 
-  // Count children for sidebar badge
-  const { count: childrenCount } = await supabase
-    .from('children')
-    .select('id', { count: 'exact', head: true })
-    .eq('parent_id', userId)
+  const teacher = teacherResult.data
+  const childrenCount = childrenResult.count
 
   return (
     <div className="flex min-h-screen">
