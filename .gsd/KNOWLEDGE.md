@@ -664,7 +664,41 @@ For all three auth paths (OAuth callback route, `signIn` server action, login pa
 ## Production Operations for M010 Features — COMPLETED
 
 All operational steps completed (April 2026):
-1. ✅ Migrations 0017 (children), 0018 (parent_profiles), 0019 (messaging) applied via Supabase SQL Editor
+1. ✅ All migrations (0001–0019) applied to Supabase production via `supabase db push --linked` (April 3, 2026). Migrations 0011–0016 had been missed; 0017–0019 re-registered.
 2. ✅ `ADMIN_USER_IDS` set in Vercel (Production + Development) and `.env.local`
 3. ✅ Supabase Realtime publication for `messages` table active (via migration 0019)
 4. ✅ Google OAuth configured — Client ID + Secret set in Supabase Authentication → Providers → Google; redirect URI `https://gonbqvhcxspjmxtfsfci.supabase.co/auth/v1/callback` registered in Google Cloud Console
+5. ✅ All code (M001–M010 + bottom nav fix) pushed to `origin/main` and deployed to Vercel (April 3, 2026)
+
+---
+
+## Supabase Migrations Must Be Explicitly Applied — Code Deploy ≠ DB Deploy
+
+Pushing code to `origin/main` triggers a Vercel deploy, but Supabase migrations are **not** automatically applied. They must be pushed separately via `supabase db push --linked` (or applied manually in the Supabase SQL Editor). A code deploy that references new tables/columns will cause runtime errors if the corresponding migration hasn't been applied.
+
+**Symptom:** "Application error: a client-side exception has occurred" on pages that query missing tables. The server component's Supabase query fails, the RSC throws, and Next.js's error propagation triggers React Router hooks-mismatch bug (#310). The browser console shows "Rendered more hooks than during the previous render" — which is misleading because the root cause is a missing DB table, not a hooks violation.
+
+**Checklist for every milestone deploy:**
+1. `git push origin main` — deploys code to Vercel
+2. `supabase db push --linked` — applies pending migrations to production Supabase
+3. Verify env vars on Vercel if new ones were added
+4. Spot-check affected pages in production
+
+---
+
+## CREATE INDEX CONCURRENTLY Cannot Run in supabase db push
+
+`supabase db push` wraps each migration file in a transaction pipeline. `CREATE INDEX CONCURRENTLY` is incompatible with transactions and will fail with `SQLSTATE 25001`. For small tables, use `CREATE INDEX` (without CONCURRENTLY). For large tables where a lock-free index build is needed, apply the CONCURRENTLY statement manually via the Supabase SQL Editor outside a transaction.
+
+**Affected:** `supabase/migrations/0012_teachers_search_vector.sql` (fixed by removing CONCURRENTLY).
+
+---
+
+## Make All Migrations Idempotent for Re-run Safety
+
+When migrations may be partially applied (e.g., one table created manually, another via CLI), all statements should be idempotent:
+- Tables: `CREATE TABLE IF NOT EXISTS`
+- Columns: `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+- Indexes: `CREATE INDEX IF NOT EXISTS`
+- Policies: `DROP POLICY IF EXISTS ... ; CREATE POLICY ...` (Postgres has no `CREATE POLICY IF NOT EXISTS`)
+- Publications: wrap `ALTER PUBLICATION ... ADD TABLE` in a `DO $$ ... EXCEPTION WHEN duplicate_object THEN NULL; END $$` block
