@@ -18,8 +18,15 @@ export function AboutSection({ teacher }: AboutSectionProps) {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-6">
-      <h2 className="mb-3 text-xl font-semibold">About</h2>
-      <p className="leading-relaxed text-muted-foreground">{bioText}</p>
+      <h2 className="mb-3 border-l-4 border-current pl-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        About
+      </h2>
+      <p
+        className="leading-relaxed text-muted-foreground"
+        style={{ textWrap: 'pretty' } as React.CSSProperties}
+      >
+        {bioText}
+      </p>
     </section>
   )
 }

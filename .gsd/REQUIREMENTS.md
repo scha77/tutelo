@@ -4,159 +4,104 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Active
 
-### PARENT-04 — Parent can manage multiple children under one account
-- Class: core-capability
-- Status: active
-- Description: Parent account can add multiple children (name, grade level). Booking form allows selecting which child the session is for.
-- Why it matters: Many families have multiple children needing tutoring. One account per family, not per child.
-- Source: user
-- Primary owning slice: M010/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: New children table. Replaces the current free-text student_name field in booking form with a child selector for logged-in parents.
-
-### PARENT-05 — Parent can save payment methods for faster rebooking
+### UI-01 — Teacher profile page visual overhaul
 - Class: quality-attribute
 - Status: active
-- Description: After first payment, parent's card is saved via Stripe Customer object. Future bookings can use saved card with one click.
-- Why it matters: Reduces booking friction. Parent doesn't re-enter card details every time.
+- Description: The teacher public profile page (/[slug]) — hero, credentials bar, about section, reviews section, social links — gets a premium visual treatment. Polished typography, intentional spacing, refined card treatments, better visual hierarchy.
+- Why it matters: This is the conversion page. Parents land here from a shared link — the first impression determines whether they book.
 - Source: user
-- Primary owning slice: M010/S03
+- Primary owning slice: M011/S01
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Single saved card per parent. Auto-saved on first Stripe booking. Viewable/removable from parent dashboard.
+- Notes: Must feel premium and intentional, never like a generic template. The teacher's accent color should still work as a personalization layer.
 
-### PARENT-06 — In-app messaging between parent and teacher
-- Class: core-capability
-- Status: active
-- Description: Text-only messaging thread between parent and teacher within the app. One thread per teacher-parent relationship. New message notifications via email.
-- Why it matters: Teachers and parents need to coordinate logistics (rescheduling, homework focus areas, progress updates) without exchanging personal phone numbers.
-- Source: user
-- Primary owning slice: M010/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Supabase Realtime for live updates. Per-relationship thread (not per-child or per-booking).
-
-### PARENT-07 — Parent gets a login-required dashboard with booking history and upcoming sessions
-- Class: core-capability
-- Status: active
-- Description: Authenticated parent dashboard at /parent with sidebar nav showing My Children, My Bookings (upcoming + history), Saved Card, and Messages. Layout mirrors teacher dashboard patterns.
-- Why it matters: Parents need a home base to manage their tutoring relationships across multiple teachers and children.
-- Source: inferred
-- Primary owning slice: M010/S01
-- Supporting slices: M010/S03, M010/S04
-- Validation: unmapped
-- Notes: Separate route group from teacher dashboard. Must handle dual-role users (someone who is both a teacher and a parent).
-
-### PARENT-08 — Booking form child selector replaces free-text student name for logged-in parents
-- Class: core-capability
-- Status: active
-- Description: When a logged-in parent with children on file books a session, the booking form shows a child dropdown instead of the free-text "Student's name" field. Guest bookings (no account) continue using free text.
-- Why it matters: Ties bookings to structured child records for history and analytics. Reduces typos and inconsistencies.
-- Source: inferred
-- Primary owning slice: M010/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Backward compatible — existing bookings with free-text student_name stay as-is. New bookings from logged-in parents get child_id FK.
-
-### PARENT-09 — Parent Stripe Customer created at account level for saved card reuse across teachers
-- Class: core-capability
-- Status: active
-- Description: A Stripe Customer is created per parent account (not per teacher or per recurring schedule). The saved payment method is reusable across any teacher booking.
-- Why it matters: Parents booking with multiple teachers shouldn't re-enter card details for each one.
-- Source: inferred
-- Primary owning slice: M010/S03
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Existing recurring schedule Stripe Customers (per-schedule) stay as-is for backward compatibility. New parent-level Customer is the primary going forward.
-
-### MSG-01 — One messaging thread per teacher-parent relationship with text messages
-- Class: core-capability
-- Status: active
-- Description: A conversations table links teacher_id + parent_id. A messages table stores sender, body, and timestamp. Thread is auto-created on first message. Both teacher and parent can initiate.
-- Why it matters: Structured threads prevent message sprawl and enable read-state tracking.
-- Source: inferred
-- Primary owning slice: M010/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: No file attachments. Text only.
-
-### MSG-02 — Real-time message delivery via Supabase Realtime postgres_changes
+### UI-02 — Booking calendar step flow restructure and polish
 - Class: quality-attribute
 - Status: active
-- Description: New messages appear instantly in the recipient's open chat without page refresh. Uses Supabase Realtime subscription on the messages table filtered by conversation_id.
-- Why it matters: Real-time messaging is table stakes — polling or refresh-to-see-new-messages would feel broken.
-- Source: inferred
-- Primary owning slice: M010/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: First use of Supabase Realtime in the project. Requires enabling Realtime on the messages table in Supabase.
-
-### MSG-03 — Email notification to recipient on new message
-- Class: quality-attribute
-- Status: active
-- Description: When a message is sent, the recipient gets an email notification with a preview of the message and a link to the conversation. Rate-limited to prevent spam (e.g., batch messages within a 5-minute window into one email).
-- Why it matters: Parents and teachers aren't always in the app. Email notification closes the loop.
-- Source: inferred
-- Primary owning slice: M010/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Uses existing Resend email infrastructure. New React Email template.
-
-### ADMIN-01 — Admin dashboard with teacher count, booking volume, revenue metrics
-- Class: operability
-- Status: active
-- Description: Protected admin route showing platform-wide metrics: total teachers, active teachers, total bookings, revenue (captured payments), conversion rates.
-- Why it matters: Platform operator needs visibility into business health without querying the database directly.
+- Description: The multi-step booking flow (date → time → form → payment) gets both structural refactoring and visual polish. Steps feel smooth and clear. The 935-line BookingCalendar monolith gets decomposed into cohesive sub-components.
+- Why it matters: The booking flow is where conversion happens. A heavy or confusing flow loses parents. Structural refactoring makes the component maintainable.
 - Source: user
-- Primary owning slice: M010/S05
+- Primary owning slice: M011/S02
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Read-only. Admin access gated by ADMIN_USER_IDS env var.
+- Notes: All existing booking paths must continue to work — deferred, direct, recurring. Session type selection, child selector, recurring options all still functional.
 
-### ADMIN-02 — Admin can view recent activity (signups, bookings, completions)
-- Class: operability
-- Status: active
-- Description: Activity feed showing recent platform events: new teacher signups, booking requests, session completions, Stripe connections.
-- Why it matters: Quick pulse check on platform activity without running queries.
-- Source: user
-- Primary owning slice: M010/S05
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Derived from existing tables (teachers.created_at, bookings.created_at, etc.). No new event system needed.
-
-### ADMIN-04 — Admin access gated by ADMIN_USER_IDS env var allowlist
-- Class: operability
-- Status: active
-- Description: Admin dashboard access is controlled by a comma-separated list of Supabase user IDs in ADMIN_USER_IDS env var. Non-admin users see 404.
-- Why it matters: Simple, no-migration access control that fits pre-scale stage.
-- Source: inferred
-- Primary owning slice: M010/S05
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Can be upgraded to DB role later if needed.
-
-### AUTH-03 — Teacher or parent can sign in with Google SSO
+### UI-03 — Mobile navigation overhaul with labeled primary tabs and More menu
 - Class: core-capability
 - Status: active
-- Description: A "Continue with Google" button on the login/signup page initiates OAuth via Supabase Google provider. On first sign-in, a new user record is created automatically. On return, the existing session is resumed. Works for both teacher and parent accounts.
-- Why it matters: Google SSO removes the password barrier — teachers and parents already have Google accounts and trust the flow. Reduces signup abandonment and "forgot password" support burden.
+- Description: Teacher mobile bottom nav (currently 11 unlabeled icons + sign out) replaced with 4-5 labeled primary tabs and a "More" menu for remaining items. Parent mobile nav (5 unlabeled icons + sign out) similarly gets visible labels. Users can navigate without guessing what icons mean.
+- Why it matters: The current mobile nav is a barrier to navigation — users must guess or tap randomly to discover features.
 - Source: user
-- Primary owning slice: M010/S02
+- Primary owning slice: M011/S03
 - Supporting slices: none
 - Validation: unmapped
-- Notes: LoginForm.tsx already has the Google OAuth button wired. Needs Supabase provider configured and end-to-end verification.
+- Notes: Primary tabs should be the most-used destinations. "More" menu surfaces remaining items with labels and descriptions.
 
-### AUTH-04 — Teacher can verify school affiliation via .edu email OTP after Google login
-- Class: differentiator
+### UI-04 — Teacher dashboard visual polish
+- Class: quality-attribute
 - Status: active
-- Description: After signing in with Google (or email+password), a teacher can still trigger the school email verification flow — entering their school email address, receiving a one-time code, and confirming it. The verified school email is stored independently of the auth provider email. A "verified" badge appears on their profile once confirmed.
-- Why it matters: Many teachers have a personal Gmail they use for everything, but their credibility signal is their school email. Decoupling auth from verification means they get the convenience of Google login without losing the trust badge.
+- Description: All teacher dashboard pages (overview, sessions, requests, students, waitlist, page, availability, promote, analytics, messages, settings) get premium visual treatment — better card designs, visual hierarchy, stats presentation, empty states, spacing.
+- Why it matters: Teachers use the dashboard daily. It should feel professional and easy to scan.
 - Source: user
-- Primary owning slice: M010/S02
+- Primary owning slice: M011/S04
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Verification OTP flow already exists (VERIFY-01, M005/S03). This requirement tracks the guarantee that it works post-Google-login.
+- Notes: Must maintain all existing functionality. Focus on visual hierarchy, card treatments, and information density.
+
+### UI-05 — Parent dashboard visual polish
+- Class: quality-attribute
+- Status: active
+- Description: All parent dashboard pages (overview, children, bookings, payment, messages) get the same premium treatment as the teacher dashboard.
+- Why it matters: Parents are paying customers — their dashboard should feel as polished as the teacher side.
+- Source: user
+- Primary owning slice: M011/S04
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Smaller surface area than teacher dashboard (5 pages vs 11), can be done in same slice.
+
+### UI-06 — Landing page visual tightening
+- Class: quality-attribute
+- Status: active
+- Description: The marketing landing page gets a tightening pass — sharper typography, more intentional spacing, refined micro-interactions. No structural changes.
+- Why it matters: Landing page is the first touchpoint for teachers discovering Tutelo.
+- Source: user
+- Primary owning slice: M011/S05
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Landing page already got design attention in M003. This is refinement, not redesign.
+
+### UI-07 — Global consistency pass across all surfaces
+- Class: quality-attribute
+- Status: active
+- Description: Typography scale, spacing rhythm, border radii, shadow treatment, and component patterns are consistent across every surface — landing, profile, both dashboards, booking flow, login, onboarding, directory.
+- Why it matters: The app should feel like one cohesive product, not 10 milestones of accumulated features.
+- Source: user
+- Primary owning slice: M011/S05
+- Supporting slices: M011/S01, M011/S02, M011/S03, M011/S04
+- Validation: unmapped
+- Notes: May involve updating globals.css, establishing a spacing scale, and auditing component usage.
+
+### UI-08 — App never looks like a generic template
+- Class: constraint
+- Status: active
+- Description: Every surface must have intentional, premium design choices. No default shadcn/ui with default spacing. Card treatments, typography, colors, and layout should feel bespoke to Tutelo.
+- Why it matters: User's explicit negative constraint — the app must never look like a template.
+- Source: user
+- Primary owning slice: M011/all
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Quality constraint applied across all slices, not a standalone deliverable.
+
+### UI-09 — App never feels clunky or confusing
+- Class: constraint
+- Status: active
+- Description: Interactions are smooth, navigation is clear, affordances are obvious, transitions are intentional. No mystery icons, no jarring layout shifts, no walls of undifferentiated content.
+- Why it matters: User's explicit negative constraint — the app must never feel clunky or confusing.
+- Source: user
+- Primary owning slice: M011/all
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Quality constraint applied across all slices, not a standalone deliverable.
 
 ## Validated
 
@@ -906,6 +851,104 @@ This file is the explicit capability and coverage contract for the project.
 - Primary Slice: M009/S03
 - Validated by: M009/S03 — Recurring + Payment Failed badges on ConfirmedSessionCard
 
+### PARENT-04 — Parent can manage multiple children under one account
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M010/S01
+- Validated by: M010/S01 — children table with RLS + child_id FK on bookings, /api/parent/children CRUD, child selector in BookingCalendar; 46 tests
+
+### PARENT-05 — Parent can save payment methods for faster rebooking
+- Class: quality-attribute
+- Status: validated
+- Source: user
+- Primary Slice: M010/S03
+- Validated by: M010/S03 — parent_profiles table, webhook PM upsert, /parent/payment page; 18 tests
+
+### PARENT-06 — In-app messaging between parent and teacher
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M010/S04
+- Validated by: M010/S04 — conversations + messages tables, Realtime subscription, ChatWindow; 21 tests
+
+### PARENT-07 — Parent gets a login-required dashboard with booking history and upcoming sessions
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S01
+- Validated by: M010/S01 — /parent route group with 3 pages, ParentSidebar + ParentMobileNav; 15 tests
+
+### PARENT-08 — Booking form child selector replaces free-text student name for logged-in parents
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S01
+- Validated by: M010/S01 — BookingCalendar child selector with useEffect + fetch pattern; 15 tests
+
+### PARENT-09 — Parent Stripe Customer created at account level for saved card reuse across teachers
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S03
+- Validated by: M010/S03 — parent_profiles.stripe_customer_id, Customer reuse across booking routes; 18 tests
+
+### MSG-01 — One messaging thread per teacher-parent relationship with text messages
+- Class: core-capability
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S04
+- Validated by: M010/S04 — conversations table with UNIQUE constraint, messages table, auto-creation; 21 tests
+
+### MSG-02 — Real-time message delivery via Supabase Realtime postgres_changes
+- Class: quality-attribute
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S04
+- Validated by: M010/S04 — Supabase Realtime subscription with dedup, migration 0019 Realtime publication
+
+### MSG-03 — Email notification to recipient on new message
+- Class: quality-attribute
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S04
+- Validated by: M010/S04 — NewMessageEmail template, 5-min rate limit, Resend delivery
+
+### ADMIN-01 — Admin dashboard with teacher count, booking volume, revenue metrics
+- Class: operability
+- Status: validated
+- Source: user
+- Primary Slice: M010/S05
+- Validated by: M010/S05 — 6 stat cards, Promise.all queries; 9 tests
+
+### ADMIN-02 — Admin can view recent activity (signups, bookings, completions)
+- Class: operability
+- Status: validated
+- Source: user
+- Primary Slice: M010/S05
+- Validated by: M010/S05 — 15-item activity feed, derived from existing tables
+
+### ADMIN-04 — Admin access gated by ADMIN_USER_IDS env var allowlist
+- Class: operability
+- Status: validated
+- Source: inferred
+- Primary Slice: M010/S05
+- Validated by: M010/S05 — notFound() for non-admins, ADMIN_USER_IDS env var; 9 tests
+
+### AUTH-03 — Teacher or parent can sign in with Google SSO
+- Class: core-capability
+- Status: validated
+- Source: user
+- Primary Slice: M010/S02
+- Validated by: M010/S02 — Fixed OAuth redirectTo bug, 7 tests
+
+### AUTH-04 — Teacher can verify school affiliation via .edu email OTP after Google login
+- Class: differentiator
+- Status: validated
+- Source: user
+- Primary Slice: M010/S02
+- Validated by: M010/S02 — Provider-agnostic smoke test confirms no provider-specific logic
+
 ## Deferred
 
 ### ADMIN-03 — Admin moderation (suspend teachers, remove reviews, refund bookings)
@@ -917,18 +960,29 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: none
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Deferred until platform reaches scale where manual DB intervention is insufficient. Depends on ADMIN-01/ADMIN-02 foundation.
+- Notes: Deferred until platform reaches scale where manual DB intervention is insufficient.
 
 ### A2P-01 — A2P 10DLC carrier registration for production SMS delivery
 - Class: operability
 - Status: deferred
 - Description: Register with carriers for A2P 10DLC compliance so SMS messages reach non-test phone numbers.
-- Why it matters: SMS code is complete and tested but production delivery is blocked until carrier registration (2-4 weeks external process).
+- Why it matters: SMS code is complete and tested but production delivery is blocked until carrier registration.
 - Source: inferred
 - Primary owning slice: none
 - Supporting slices: none
 - Validation: unmapped
-- Notes: External process, not a code task. Twilio campaign registration required.
+- Notes: External process, not a code task.
+
+### UI-10 — Dark mode support across all surfaces
+- Class: quality-attribute
+- Status: deferred
+- Description: Full dark mode support with theme toggle, verified across all 30 pages and 65 components.
+- Why it matters: CSS variable foundation exists but no component has been tested against it.
+- Source: user
+- Primary owning slice: none
+- Supporting slices: none
+- Validation: unmapped
+- Notes: Deferred by user decision. Foundation is in place for a future milestone.
 
 ## Out of Scope
 
@@ -938,27 +992,23 @@ This file is the explicit capability and coverage contract for the project.
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| PARENT-04 | core-capability | validated | M010/S01 | none | M010/S01 |
-| PARENT-05 | quality-attribute | validated | M010/S03 | none | M010/S03 |
-| PARENT-06 | core-capability | validated | M010/S04 | none | M010/S04 |
-| PARENT-07 | core-capability | validated | M010/S01 | M010/S03, M010/S04 | M010/S01 |
-| PARENT-08 | core-capability | validated | M010/S01 | none | M010/S01 |
-| PARENT-09 | core-capability | validated | M010/S03 | none | M010/S03 |
-| MSG-01 | core-capability | validated | M010/S04 | none | M010/S04 |
-| MSG-02 | quality-attribute | validated | M010/S04 | none | M010/S04 |
-| MSG-03 | quality-attribute | validated | M010/S04 | none | M010/S04 |
-| ADMIN-01 | operability | validated | M010/S05 | none | M010/S05 |
-| ADMIN-02 | operability | validated | M010/S05 | none | M010/S05 |
-| ADMIN-04 | operability | validated | M010/S05 | none | M010/S05 |
-| AUTH-03 | core-capability | validated | M010/S02 | none | M010/S02 |
-| AUTH-04 | differentiator | validated | M010/S02 | none | M010/S02 |
+| UI-01 | quality-attribute | active | M011/S01 | none | unmapped |
+| UI-02 | quality-attribute | active | M011/S02 | none | unmapped |
+| UI-03 | core-capability | active | M011/S03 | none | unmapped |
+| UI-04 | quality-attribute | active | M011/S04 | none | unmapped |
+| UI-05 | quality-attribute | active | M011/S04 | none | unmapped |
+| UI-06 | quality-attribute | active | M011/S05 | none | unmapped |
+| UI-07 | quality-attribute | active | M011/S05 | M011/S01-S04 | unmapped |
+| UI-08 | constraint | active | M011/all | none | unmapped |
+| UI-09 | constraint | active | M011/all | none | unmapped |
 | ADMIN-03 | operability | deferred | none | none | unmapped |
 | A2P-01 | operability | deferred | none | none | unmapped |
+| UI-10 | quality-attribute | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 14
-- Mapped to slices: 14
-- Validated: 108
-- Deferred: 2
+- Active requirements: 9
+- Mapped to slices: 9
+- Validated: 115
+- Deferred: 3
 - Unmapped active requirements: 0

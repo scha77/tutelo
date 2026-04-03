@@ -87,43 +87,54 @@ interface SocialLinksProps {
 
 function SocialLinks({ instagram, email, website }: SocialLinksProps) {
   const hasLinks = instagram || email || website
-  if (!hasLinks) return null
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-4 border-t">
-      <div className="flex flex-wrap justify-center gap-4">
-        {instagram && (
-          <a
-            href={`https://instagram.com/${instagram}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Instagram className="h-4 w-4" />
-            <span>@{instagram}</span>
-          </a>
-        )}
-        {email && (
-          <a
-            href={`mailto:${email}`}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Mail className="h-4 w-4" />
-            <span>{email}</span>
-          </a>
-        )}
-        {website && (
-          <a
-            href={website.startsWith('http') ? website : `https://${website}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Globe className="h-4 w-4" />
-            <span>{website}</span>
-          </a>
-        )}
-      </div>
+    <section className="mx-auto max-w-3xl px-4 py-6 border-t">
+      {hasLinks && (
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          {instagram && (
+            <a
+              href={`https://instagram.com/${instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Instagram className="h-4 w-4" />
+              <span>@{instagram}</span>
+            </a>
+          )}
+          {email && (
+            <a
+              href={`mailto:${email}`}
+              className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Mail className="h-4 w-4" />
+              <span>{email}</span>
+            </a>
+          )}
+          {website && (
+            <a
+              href={website.startsWith('http') ? website : `https://${website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Globe className="h-4 w-4" />
+              <span>{website}</span>
+            </a>
+          )}
+        </div>
+      )}
+      {/* Attribution footer */}
+      <p className="text-center text-xs text-muted-foreground/60">
+        Powered by{' '}
+        <a
+          href="https://tutelo.app"
+          className="underline underline-offset-2 transition-colors hover:text-muted-foreground"
+        >
+          Tutelo
+        </a>
+      </p>
     </section>
   )
 }

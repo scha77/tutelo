@@ -82,7 +82,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] **M008:** Discovery & Analytics — Public teacher directory with search/filters, SEO category pages, sitemap, page view tracking, conversion funnel analytics
 - [x] **M009:** Recurring Sessions — Recurring booking schedules (weekly/biweekly), auto-created future sessions, per-session payments, series cancellation
 - [x] **M010:** Parent & Admin — Parent dashboard with multi-child management, saved payment cards, real-time teacher-parent messaging, Google SSO verification, read-only admin dashboard (5 slices, 55 new tests, 4 migrations, 95 files changed)
-- [ ] **M011:** TBD — Next milestone
+- [ ] **M011:** UI Overhaul — Raise every user-facing surface from functional MVP to modern SaaS premium: profile page, booking flow, mobile navigation, both dashboards, landing page, global consistency
 
 ---
 *Last updated: 2026-04-03 after production deployment fix. All M001–M010 code pushed to origin/main and deployed to Vercel. All Supabase migrations (0001–0019) applied to production. iPhone bottom nav safe area fix deployed. Waitlist/settings pages confirmed working. 474 tests passing, tsc clean, build green.*

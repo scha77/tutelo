@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-01T14:42:42.175Z",
+  "exported_at": "2026-04-03T15:44:07.290Z",
   "milestones": [
     {
       "id": "M001",
@@ -454,6 +454,75 @@
       ],
       "requirement_coverage": "Covers: PARENT-04, PARENT-05, PARENT-06, PARENT-07, PARENT-08, PARENT-09, MSG-01, MSG-02, MSG-03, ADMIN-01, ADMIN-02, ADMIN-04, AUTH-03, AUTH-04. Leaves for later: ADMIN-03 (deferred). Orphan risks: none.",
       "boundary_map_markdown": "### S01 → S03, S04\n\nProduces:\n- `children` table (id, parent_user_id, name, grade_level, created_at)\n- `parents` table or column on auth.users metadata (stripe_customer_id for parent-level Stripe Customer)\n- `/parent` route group with layout, sidebar, auth guard\n- `/parent/children` page with add/edit/remove child UI\n- `/parent/bookings` page with booking history\n- BookingCalendar child selector when parent is logged in with children on file\n- Auth callback route updated to handle parent-only users (no teacher row)\n\nConsumes: nothing (first slice)\n\n### S02 (independent)\n\nProduces:\n- Verified Google OAuth flow (Supabase provider configured)\n- Auth callback handles Google-authed users correctly\n- School email verification confirmed working post-Google-login\n\nConsumes: nothing (independent verification slice)\n\n### S03 → S04\n\nProduces:\n- Parent-level Stripe Customer (stripe_customer_id on parents/children table or user metadata)\n- `/parent/payment` page showing saved card (last-4, brand) with remove button\n- Booking flow detects saved card and offers \"Pay with saved card\" option\n- SetupIntent-based card save on first Stripe booking\n\nConsumes from S01:\n- Parent dashboard layout and auth guard\n- `/parent` route group structure\n\n### S04\n\nProduces:\n- `conversations` table (id, teacher_id, parent_user_id, created_at, updated_at)\n- `messages` table (id, conversation_id, sender_id, body, created_at, read_at)\n- `/parent/messages` page with conversation list and chat view\n- Teacher dashboard messages page (new page or section)\n- Supabase Realtime subscription for live message delivery\n- NewMessageEmail React Email template\n- Fire-and-forget email notification on new message\n\nConsumes from S01:\n- Parent dashboard layout and auth guard\n- Parent user identification pattern\n\n### S05 (independent)\n\nProduces:\n- `/admin` route group with layout, env var auth guard\n- Admin metrics page: teacher count, active teachers, booking volume, revenue, conversion rates\n- Admin activity feed: recent signups, bookings, completions\n- ADMIN_USER_IDS env var check in layout\n\nConsumes: nothing (reads from existing tables)"
+    },
+    {
+      "id": "M011",
+      "title": "",
+      "status": "queued",
+      "depends_on": [],
+      "created_at": "2026-04-03T15:27:35.947Z",
+      "completed_at": null,
+      "vision": "Raise every user-facing surface from functional MVP to modern SaaS premium. The teacher profile page (conversion surface), booking flow, mobile navigation, both dashboards, and landing page all get intentional design treatment. No surface should look like a generic template or feel clunky to use.",
+      "success_criteria": [
+        "Teacher /[slug] profile page looks polished and premium — hero, credentials, about, reviews all have intentional design",
+        "Booking flow from date → time → form → payment feels smooth, not heavy or confusing",
+        "Mobile bottom nav shows labeled primary tabs with a More menu — users can navigate without guessing",
+        "Teacher dashboard pages (11 pages) have premium card treatments, visual hierarchy, and intentional spacing",
+        "Parent dashboard pages (5 pages) match the same visual standard as teacher dashboard",
+        "Landing page is tightened — sharper typography, more intentional spacing",
+        "Typography, spacing, and component patterns are consistent across every surface",
+        "No surface looks like a generic shadcn/ui template with default styling",
+        "All 474+ existing tests pass with zero regressions",
+        "tsc --noEmit clean and next build succeeds"
+      ],
+      "key_risks": [
+        {
+          "risk": "BookingCalendar 935-line monolith decomposition",
+          "whyItMatters": "Three booking paths (deferred, direct, recurring) plus session types, child selector, recurring options, and inline auth all live in one component. Decomposing while preserving all paths risks functional regressions."
+        },
+        {
+          "risk": "Scope creep — polish is unbounded",
+          "whyItMatters": "Each surface could absorb infinite attention. Without clear 'done' criteria per slice, this milestone could expand indefinitely."
+        },
+        {
+          "risk": "Mobile nav More menu interaction pattern",
+          "whyItMatters": "The slide-up sheet needs to feel native and smooth, not janky. Animation timing and backdrop behavior matter."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "BookingCalendar decomposition",
+          "retireIn": "S02",
+          "whatWillBeProven": "All 3 booking paths work end-to-end after decomposition — deferred booking, direct payment, recurring payment. Existing booking tests pass."
+        },
+        {
+          "riskOrUnknown": "Scope creep",
+          "retireIn": "Each slice",
+          "whatWillBeProven": "Each slice has explicit 'done' criteria in its plan. Browser verification against running app confirms visual outcomes."
+        },
+        {
+          "riskOrUnknown": "Mobile nav More menu",
+          "retireIn": "S03",
+          "whatWillBeProven": "More menu opens smoothly, shows all remaining items with labels, closes on tap-outside. Works at 375px and 390px viewports."
+        }
+      ],
+      "verification_contract": "All 474+ existing tests pass. tsc --noEmit clean. next build succeeds. No functional regressions in any booking path.",
+      "verification_integration": "Visual consistency across all surfaces verified via browser at desktop and mobile viewports.",
+      "verification_operational": "None — no backend changes.",
+      "verification_uat": "User can navigate the teacher profile page, complete a mock booking flow, navigate the mobile dashboard, and browse all dashboard pages — everything feels cohesive and premium.",
+      "definition_of_done": [
+        "All 5 slices complete with summaries",
+        "Teacher profile page visually overhauled — hero, credentials, about, reviews, social links",
+        "Booking calendar decomposed into sub-components and visually polished",
+        "Mobile bottom nav replaced with labeled primary tabs + More menu (both teacher and parent)",
+        "All 11 teacher dashboard pages and 5 parent dashboard pages polished",
+        "Landing page tightened",
+        "Global consistency pass complete — typography, spacing, component patterns unified",
+        "474+ tests pass, tsc clean, next build succeeds",
+        "No surface looks like a generic template"
+      ],
+      "requirement_coverage": "Covers: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09. Deferred: UI-10 (dark mode).",
+      "boundary_map_markdown": "### S01 → S02\n\nProduces:\n- Polished profile page layout patterns (hero, credentials, about, reviews) that S02's booking calendar must visually integrate with\n- Established spacing rhythm, card treatment patterns, and typography scale for the profile page\n\nConsumes:\n- nothing (first slice, sets the visual tone)\n\n### S01 → S05\n\nProduces:\n- Visual treatment patterns (card styles, spacing, typography) that S05 uses as reference for the global consistency pass\n\n### S02 → S04\n\nProduces:\n- BookingCalendar decomposed into sub-components — patterns for component decomposition that S04 can reference\n- Polished form field treatments reusable across dashboard forms\n\n### S03 → S04\n\nProduces:\n- MobileBottomNav with labeled tabs + More menu — dashboard pages render inside this nav shell\n- ParentMobileNav with same pattern\n\nConsumes:\n- nothing (independent of profile work)\n\n### S04 → S05\n\nProduces:\n- Polished dashboard card treatments, stat presentations, and page layouts\n- Consistent patterns across 16 dashboard pages\n\nConsumes from S03:\n- Mobile nav shell for layout context\n\n### S05\n\nProduces:\n- Tightened landing page\n- Global consistency audit — any cross-surface inconsistencies caught and fixed\n\nConsumes from S01:\n- Profile page visual patterns as reference baseline\nConsumes from S04:\n- Dashboard visual patterns as reference baseline"
     }
   ],
   "slices": [
@@ -1240,6 +1309,113 @@
       "proof_level": "contract — server component renders with mocked Supabase data; access gate tested with mocked auth",
       "integration_closure": "Upstream: `src/lib/supabase/service.ts` (supabaseAdmin), `src/lib/supabase/server.ts` (createClient for auth), `src/actions/auth.ts` (signOut). No new wiring — uses established patterns. What remains: nothing — this is the final slice in M010.",
       "observability_impact": "None — read-only server component with no async flows, background processes, or error paths beyond auth gating.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S01",
+      "title": "Teacher Profile Page Overhaul",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "After this: teacher's public /[slug] page looks premium — polished hero with better banner/avatar treatment, refined credentials bar, improved about section layout, elevated review cards, and cohesive social links footer. Parents get a strong first impression.",
+      "created_at": "2026-04-03T15:32:15.905Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Teacher's public /[slug] page looks premium — polished hero with better banner/avatar treatment, refined credentials bar with accent-colored subject chips, improved about section layout, elevated review cards with SVG stars and reviewer avatars, and cohesive social links footer. Parents get a strong first impression.",
+      "success_criteria": "## Must-Haves\n\n- Taller banner (h-44/h-64) with larger avatar (h-24/h-28), better overlap, and name/headline typography with `text-wrap: balance`\n- CredentialsBar uses accent color for subject chips via `color-mix(in srgb, var(--accent) 15%, transparent)` pattern — no Tailwind `bg-accent` utility\n- ReviewsSection renders SVG stars instead of unicode `★`, review cards have elevation (`shadow-sm`, `rounded-xl`), reviewer initial avatars with accent color\n- AboutSection has refined heading treatment and `text-wrap: pretty` on bio text\n- SocialLinks styled as pill links with hover states; optional \"Powered by Tutelo\" attribution footer\n- `accentColor` prop wired to ReviewsSection from page.tsx for reviewer avatars\n- All 474 existing tests pass, `tsc --noEmit` clean, `next build` succeeds\n- PAGE-07 preserved: teacher accent color still personalizes the entire page\n- UI-08/UI-09 constraints: no component looks like default shadcn; hierarchy is clear and intentional\n\n## Requirement Impact\n\n- **Requirements touched**: UI-01 (primary delivery), PAGE-07 (must preserve accent color), UI-08 (constraint: never looks generic), UI-09 (constraint: never feels clunky)\n- **Re-verify**: Teacher profile page accent color rendering, review section test assertions, full build\n- **Decisions revisited**: none\n\n## Proof Level\n\n- This slice proves: visual quality at operational level\n- Real runtime required: yes (dev server visual check)\n- Human/UAT required: yes (visual quality judgment)\n\n## Verification\n\n- `npx vitest run` — 474 tests pass (particularly dashboard-reviews.test.ts ReviewsSection assertions)\n- `npx tsc --noEmit` — zero errors\n- `npx next build` — succeeds\n- Visual: profile page hero has strong presence, credentials clearly readable with accent-colored subject chips, review cards polished with SVG stars, social links inviting\n\n## Integration Closure\n\n- Upstream surfaces consumed: `page.tsx` accent color CSS variable pattern, existing `AnimatedProfile` wrappers, shadcn Avatar/Badge components\n- New wiring introduced in this slice: `accentColor` prop passed from page.tsx to ReviewsSection\n- What remains before the milestone is truly usable end-to-end: S02 (booking calendar polish), S03 (mobile nav), S04 (dashboards), S05 (landing + consistency)",
+      "proof_level": "operational",
+      "integration_closure": "Upstream: page.tsx accent color CSS variable, AnimatedProfile wrappers, shadcn components. New wiring: accentColor prop to ReviewsSection. Remaining: S02-S05 for full milestone.",
+      "observability_impact": "None — purely visual changes with no runtime behavior, async flows, or error paths modified.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S02",
+      "title": "Booking Calendar Restructure & Polish",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "After this: the booking flow from date selection → time slot → form → payment feels smooth and intentional. The calendar, time slots, form fields, and payment step are visually cohesive with the new profile page. The 935-line monolith is decomposed into maintainable sub-components.",
+      "created_at": "2026-04-03T15:32:15.905Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Decompose the BookingCalendar monolith into cohesive sub-components and polish the entire booking flow visually.",
+      "success_criteria": "- BookingCalendar.tsx decomposed from 935 lines into 4-6 focused sub-components\n- All 3 booking paths work: deferred (no Stripe), direct payment, recurring payment\n- Session type selector, child selector, recurring options all functional\n- Calendar grid, time slot picker, form fields, and payment step all visually polished\n- Step transitions feel smooth\n- Existing booking-related tests pass\n- Visual cohesion with the overhauled profile page",
+      "proof_level": "Existing tests pass + browser verification of all 3 booking paths",
+      "integration_closure": "Booking flow sits inside the profile page — visual integration with S01's profile overhaul verified",
+      "observability_impact": "None — visual/structural only",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S03",
+      "title": "Mobile Navigation Overhaul",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "After this: teacher mobile bottom nav shows 4-5 labeled primary tabs with a More menu for remaining items. Parent mobile nav has labeled tabs. Users can navigate without guessing what icons mean.",
+      "created_at": "2026-04-03T15:32:15.905Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Replace the unlabeled icon-only mobile bottom navs with labeled primary tabs + More menu pattern.",
+      "success_criteria": "- Teacher mobile nav: 4-5 primary tabs with icons AND labels visible\n- Remaining teacher nav items accessible via a More menu/sheet\n- More menu shows items with icons, labels, and clear tap targets\n- Parent mobile nav: all 5 items have visible labels (no More menu needed at 5 items)\n- Navigation works at 375px and 390px viewport widths\n- Active state clearly indicated on both primary tabs and More menu items\n- More menu opens/closes smoothly",
+      "proof_level": "Browser verification at mobile viewports (375px, 390px)",
+      "integration_closure": "Nav shell is the container for all dashboard pages — verified that all pages render correctly within the new nav",
+      "observability_impact": "None — visual/structural only",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S04",
+      "title": "Dashboard Polish",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S03"
+      ],
+      "demo": "After this: all 11 teacher dashboard pages and 5 parent dashboard pages feel premium — better card treatments, visual hierarchy, stats presentation, empty states, and spacing. The dashboards feel like a cohesive, intentionally designed product.",
+      "created_at": "2026-04-03T15:32:15.905Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Polish all teacher and parent dashboard pages to the 'modern SaaS premium' visual standard.",
+      "success_criteria": "- Teacher dashboard overview: polished stats bar, elevated session preview cards, refined review previews\n- Sessions page: better upcoming/past visual separation, elevated card design\n- Requests page: improved request card treatments\n- Students page: cleaner list presentation\n- All other teacher pages (waitlist, page, availability, promote, analytics, messages, settings): consistent polish\n- Parent dashboard (overview, children, bookings, payment, messages): same visual standard\n- Empty states are helpful and well-designed, not just 'No items'\n- All existing functionality preserved",
+      "proof_level": "Browser verification of all 16 dashboard pages at desktop and mobile viewports",
+      "integration_closure": "Dashboard pages render inside S03's new mobile nav shell — visual integration verified",
+      "observability_impact": "None — visual only",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S05",
+      "title": "Landing Page & Global Consistency Pass",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01",
+        "S04"
+      ],
+      "demo": "After this: the landing page is tightened. Typography, spacing, and component patterns are consistent across every surface. The whole app feels like one product, not 10 milestones of accumulated features.",
+      "created_at": "2026-04-03T15:32:15.905Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Tighten the landing page and perform a global consistency audit across all surfaces.",
+      "success_criteria": "- Landing page: sharper typography, more intentional spacing, refined micro-interactions\n- Typography scale consistent across landing, profile, dashboards, booking flow\n- Spacing rhythm (4pt grid) applied consistently\n- Card treatments, border radii, and shadow usage unified\n- Login page and onboarding wizard visually consistent with the rest of the app\n- Directory page (/tutors) and teacher cards consistent with profile page treatment\n- No visual outliers — the whole app reads as one product\n- All 474+ tests pass, tsc clean, next build succeeds",
+      "proof_level": "Full test suite + browser verification across all major surfaces",
+      "integration_closure": "Final integration slice — verifies visual consistency across all surfaces touched by S01-S04",
+      "observability_impact": "None — visual only",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -4963,6 +5139,124 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Upgraded HeroSection (taller banner, larger avatar, ring-inset depth, refined typography), AboutSection (accent-border heading, text-wrap pretty), and SocialLinks (pill-link styling, Tutelo attribution footer) for a premium first impression",
+      "status": "complete",
+      "one_liner": "Upgraded HeroSection (taller banner, larger avatar, ring-inset depth, refined typography), AboutSection (accent-border heading, text-wrap pretty), and SocialLinks (pill-link styling, Tutelo attribution footer) for a premium first impression",
+      "narrative": "Applied visual polish to three profile components with zero logic changes. HeroSection gets h-44/h-64 banner, h-24/h-28 avatar with shadow-lg, deeper overlap (-mt-12/-mt-14), ring-inset depth overlay, and responsive text-2xl/text-3xl with text-wrap: balance. AboutSection heading becomes a small uppercase label with border-l-4 accent and bio gets text-wrap: pretty. SocialLinks upgraded to pill-link styling (rounded-full border px-4 py-2 hover:bg-muted) with a Tutelo attribution footer that always renders.",
+      "verification_result": "TypeScript type-check (npx tsc --noEmit) passed clean with exit 0. Full test suite (npx vitest run --reporter=dot) passed: 474 tests, 49 test files, zero failures.",
+      "duration": "",
+      "completed_at": "2026-04-03T15:44:07.267Z",
+      "blocker_discovered": false,
+      "deviations": "Used inline style for textWrap balance/pretty since Tailwind utility not available. SocialLinks now always renders for attribution even when no social links exist.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/HeroSection.tsx",
+        "src/components/profile/AboutSection.tsx",
+        "src/app/[slug]/page.tsx"
+      ],
+      "key_decisions": [
+        "Used inline style for textWrap balance/pretty since Tailwind utility not in config",
+        "SocialLinks always renders now (for attribution) even without social links"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M011\nkey_files:\n  - src/components/profile/HeroSection.tsx\n  - src/components/profile/AboutSection.tsx\n  - src/app/[slug]/page.tsx\nkey_decisions:\n  - Used inline style for textWrap balance/pretty since Tailwind utility not in config\n  - SocialLinks always renders now (for attribution) even without social links\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T15:44:07.268Z\nblocker_discovered: false\n---\n\n# T01: Upgraded HeroSection (taller banner, larger avatar, ring-inset depth, refined typography), AboutSection (accent-border heading, text-wrap pretty), and SocialLinks (pill-link styling, Tutelo attribution footer) for a premium first impression\n\n**Upgraded HeroSection (taller banner, larger avatar, ring-inset depth, refined typography), AboutSection (accent-border heading, text-wrap pretty), and SocialLinks (pill-link styling, Tutelo attribution footer) for a premium first impression**\n\n## What Happened\n\nApplied visual polish to three profile components with zero logic changes. HeroSection gets h-44/h-64 banner, h-24/h-28 avatar with shadow-lg, deeper overlap (-mt-12/-mt-14), ring-inset depth overlay, and responsive text-2xl/text-3xl with text-wrap: balance. AboutSection heading becomes a small uppercase label with border-l-4 accent and bio gets text-wrap: pretty. SocialLinks upgraded to pill-link styling (rounded-full border px-4 py-2 hover:bg-muted) with a Tutelo attribution footer that always renders.\n\n## Verification\n\nTypeScript type-check (npx tsc --noEmit) passed clean with exit 0. Full test suite (npx vitest run --reporter=dot) passed: 474 tests, 49 test files, zero failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3400ms |\n| 2 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 9200ms |\n\n\n## Deviations\n\nUsed inline style for textWrap balance/pretty since Tailwind utility not available. SocialLinks now always renders for attribution even when no social links exist.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/HeroSection.tsx`\n- `src/components/profile/AboutSection.tsx`\n- `src/app/[slug]/page.tsx`\n",
+      "description": "Upgrade the three simplest profile components in one pass. HeroSection gets a taller banner (h-44/h-64), larger avatar (h-24/h-28 with border-4 + shadow-lg), better overlap (-mt-12/-mt-14), refined name typography (text-2xl/text-3xl font-bold tracking-tight with text-wrap: balance), and a subtle ring-inset on the banner image for depth. AboutSection gets a refined heading treatment (small uppercase label or left accent border) and text-wrap: pretty on bio text. SocialLinks gets pill-link styling (rounded-full px-4 py-2 border hover:bg-muted transition-colors) and a subtle 'Powered by Tutelo' attribution footer. No logic changes, no new props needed, no tests to worry about for these three components.",
+      "estimate": "45m",
+      "files": [
+        "src/components/profile/HeroSection.tsx",
+        "src/components/profile/AboutSection.tsx",
+        "src/app/[slug]/page.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx vitest run --reporter=dot 2>&1 | tail -3",
+      "inputs": [
+        "`src/components/profile/HeroSection.tsx` — current MVP hero with h-40 banner, h-20 avatar, text-2xl name",
+        "`src/components/profile/AboutSection.tsx` — current plain h2 + p layout",
+        "`src/app/[slug]/page.tsx` — contains SocialLinks function and page composition"
+      ],
+      "expected_output": [
+        "`src/components/profile/HeroSection.tsx` — upgraded with taller banner, larger avatar, better typography",
+        "`src/components/profile/AboutSection.tsx` — upgraded with refined heading and text-wrap: pretty",
+        "`src/app/[slug]/page.tsx` — SocialLinks upgraded with pill styling + Tutelo attribution footer"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Upgrade CredentialsBar with accent-colored subject chips and structured layout",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Restructure the flat credentials bar into a more intentional layout with accent-colored subject chips. Subject badges get inline styles using color-mix: `style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}` — DO NOT use the Tailwind bg-accent utility (it conflicts with the teacher's accent color override on <main>). Grade level chips get a lighter treatment. Rate display gets font-semibold text-base with tabular-nums. Verified badge keeps emerald + CheckCircle but gets a subtle background pill. Consider a two-section layout: subjects+grades row, then meta items. The component reads accent color from the CSS variable, not a prop — this is the established pattern.",
+      "estimate": "30m",
+      "files": [
+        "src/components/profile/CredentialsBar.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx vitest run --reporter=dot 2>&1 | tail -3",
+      "inputs": [
+        "`src/components/profile/CredentialsBar.tsx` — current flat flex-wrap with secondary/outline badges",
+        "`src/components/profile/HeroSection.tsx` — reference for updated visual style from T01"
+      ],
+      "expected_output": [
+        "`src/components/profile/CredentialsBar.tsx` — upgraded with accent-colored subject chips, structured layout, prominent rate display"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Upgrade ReviewsSection with SVG stars, elevated cards, and reviewer avatars — wire accentColor and verify all tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "The ReviewsSection has the most constraints: 3 unit tests in src/__tests__/dashboard-reviews.test.ts that call ReviewsSection({ reviews }) directly and check JSON.stringify output for '4.7', '\" review\"', 'Review 0'...'Review 4'. The tests check serialized JSX structure, not rendered HTML.\n\nChanges:\n1. Replace unicode ★ with inline SVG stars in renderStars() — use <svg viewBox='0 0 20 20'> with <path> for a star shape, filled yellow-400 or gray-200. The tests don't directly assert on star characters (they check '4.7' and review text), so SVG replacement is safe.\n2. Upgrade review cards from 'rounded-lg border p-4' to 'rounded-xl border bg-card shadow-sm p-5' for elevation.\n3. Add reviewer initial avatar: small div with rounded-full, accent-colored background showing first letter of reviewer_name (or 'A' for Anonymous). This requires an accentColor prop.\n4. Add text-wrap: pretty on review_text.\n5. Upgrade aggregate rating header: SVG stars + rating number + count with better typography.\n6. Add accentColor prop to ReviewsSection interface.\n7. Wire accentColor in page.tsx: pass `accentColor={teacher.accent_color}` to the ReviewsSection component.\n8. Run full verification: vitest (474 pass), tsc --noEmit (clean), next build (success).\n\nCRITICAL: Do NOT rename or remove the `firstNameFromEmail` export — it is tested. Do NOT change the component's behavior of returning null for empty reviews or slicing to 5. The avg rating calculation and count display logic must produce identical string values.",
+      "estimate": "45m",
+      "files": [
+        "src/components/profile/ReviewsSection.tsx",
+        "src/app/[slug]/page.tsx",
+        "src/__tests__/dashboard-reviews.test.ts"
+      ],
+      "verify": "npx vitest run --reporter=dot 2>&1 | tail -3 && npx tsc --noEmit && npx next build 2>&1 | tail -5",
+      "inputs": [
+        "`src/components/profile/ReviewsSection.tsx` — current unicode stars, plain cards, no accentColor prop",
+        "`src/app/[slug]/page.tsx` — T01 output: updated page with SocialLinks styling, needs accentColor wiring to ReviewsSection",
+        "`src/__tests__/dashboard-reviews.test.ts` — existing tests that must continue to pass (checks '4.7', '\" review\"', 'Review 0'..'Review 4', firstNameFromEmail)"
+      ],
+      "expected_output": [
+        "`src/components/profile/ReviewsSection.tsx` — SVG stars, elevated cards, reviewer avatars, accentColor prop",
+        "`src/app/[slug]/page.tsx` — accentColor wired to ReviewsSection"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -5456,6 +5750,18 @@
       "rationale": "M010/S05 delivered: (admin) route group layout reads ADMIN_USER_IDS env var (comma-separated user UUIDs), trims and filters whitespace. If allowlist is empty or user ID not in list, calls notFound() (404, not redirect — prevents route existence leakage). Unit tests confirm all four gating scenarios: unauthenticated → redirect /login, non-admin → 404, empty env → 404, undefined env → 404, admin → renders. 9 unit tests passing.",
       "revisable": "Yes",
       "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 59,
+      "id": "D042",
+      "when_context": "M011 planning",
+      "scope": "scope",
+      "decision": "Scope fence for M011 — visual only vs. structural refactors",
+      "choice": "Include structural refactors — BookingCalendar decomposition and booking flow rework allowed",
+      "rationale": "Visual polish alone would leave the 935-line BookingCalendar monolith in place. User wants both the look and the feel improved, which requires structural changes to the booking flow.",
+      "revisable": "No",
+      "made_by": "human",
       "superseded_by": null
     }
   ],
@@ -6669,6 +6975,28 @@
       "verdict": "✅ pass",
       "duration_ms": 10900,
       "created_at": "2026-04-01T14:33:52.746Z"
+    },
+    {
+      "id": 111,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3400,
+      "created_at": "2026-04-03T15:44:07.268Z"
+    },
+    {
+      "id": 112,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx vitest run --reporter=dot",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9200,
+      "created_at": "2026-04-03T15:44:07.268Z"
     }
   ]
 }
