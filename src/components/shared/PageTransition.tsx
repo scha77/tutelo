@@ -1,8 +1,6 @@
 'use client'
 
 import * as m from 'motion/react-client'
-import { AnimatePresence } from 'motion/react'
-import { pageFade } from '@/lib/animation'
 
 interface PageTransitionProps {
   children: React.ReactNode
@@ -12,15 +10,19 @@ interface PageTransitionProps {
 /**
  * Reusable page transition wrapper.
  *
- * Pair with template.tsx (which remounts on every navigation) to get
- * AnimatePresence-driven fade transitions between routes.
+ * Uses a simple fade-in on mount. No exit animation — the incoming page
+ * renders immediately without waiting for the outgoing page to animate out.
+ * This eliminates the perceived "lag" that mode="wait" AnimatePresence caused.
  */
 export function PageTransition({ children, transitionKey }: PageTransitionProps) {
   return (
-    <AnimatePresence mode="wait">
-      <m.div key={transitionKey} {...pageFade}>
-        {children}
-      </m.div>
-    </AnimatePresence>
+    <m.div
+      key={transitionKey}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+    >
+      {children}
+    </m.div>
   )
 }

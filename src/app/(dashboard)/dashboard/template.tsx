@@ -7,7 +7,8 @@ import { PageTransition } from '@/components/shared/PageTransition'
  * Dashboard page transition template.
  *
  * template.tsx remounts on every navigation (unlike layout.tsx), giving
- * AnimatePresence the key change it needs for exit → enter animations.
+ * the PageTransition component a key change for enter animations.
+ * Uses a simple fade-in (no exit animation) to keep nav transitions snappy.
  * The Sidebar lives in layout.tsx and is unaffected.
  */
 export default function DashboardTemplate({

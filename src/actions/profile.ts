@@ -124,3 +124,41 @@ export async function uploadBannerImage(
 
   return { url: publicUrl }
 }
+
+export async function uploadProfilePhoto(
+  formData: FormData
+): Promise<{ error?: string; url?: string }> {
+  const userId = await getAuthUserId()
+  if (!userId) return { error: 'Not authenticated' }
+
+  const file = formData.get('file') as File | null
+  if (!file) return { error: 'No file provided' }
+
+  if (!file.type.startsWith('image/')) {
+    return { error: 'File must be an image' }
+  }
+
+  // Max 2MB for profile photos
+  if (file.size > 2 * 1024 * 1024) {
+    return { error: 'File size must be under 2MB' }
+  }
+
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `profile-images/${userId}/photo-${Date.now()}.${ext}`
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.storage
+    .from('profile-images')
+    .upload(path, file, { upsert: true })
+
+  if (error) return { error: error.message }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('profile-images')
+    .getPublicUrl(data.path)
+
+  const updateResult = await updateProfile({ photo_url: publicUrl })
+  if (updateResult.error) return { error: updateResult.error }
+
+  return { url: publicUrl }
+}

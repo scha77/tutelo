@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { updateProfile, updatePublishStatus, uploadBannerImage } from '@/actions/profile'
+import { updateProfile, updatePublishStatus, uploadBannerImage, uploadProfilePhoto } from '@/actions/profile'
 
 const ACCENT_COLORS = [
   { value: '#3B82F6', label: 'Blue' },
@@ -20,6 +20,7 @@ interface Teacher {
   is_published: boolean
   accent_color: string
   headline: string | null
+  photo_url: string | null
   banner_url: string | null
   social_instagram: string | null
   social_email: string | null
@@ -37,8 +38,10 @@ export function PageSettings({ teacher }: PageSettingsProps) {
   const [instagram, setInstagram] = useState(teacher.social_instagram ?? '')
   const [email, setEmail] = useState(teacher.social_email ?? '')
   const [website, setWebsite] = useState(teacher.social_website ?? '')
+  const [photoPreview, setPhotoPreview] = useState(teacher.photo_url ?? '')
   const [bannerPreview, setBannerPreview] = useState(teacher.banner_url ?? '')
   const [isPending, startTransition] = useTransition()
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
   async function handlePublishToggle() {
@@ -87,6 +90,30 @@ export function PageSettings({ teacher }: PageSettingsProps) {
         toast.error('Failed to save social links: ' + result.error)
       }
     })
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const localUrl = URL.createObjectURL(file)
+    setPhotoPreview(localUrl)
+
+    setIsUploadingPhoto(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const result = await uploadProfilePhoto(formData)
+      if (result.error) {
+        toast.error('Upload failed: ' + result.error)
+        setPhotoPreview(teacher.photo_url ?? '')
+      } else if (result.url) {
+        setPhotoPreview(result.url)
+        toast.success('Profile photo updated')
+      }
+    } finally {
+      setIsUploadingPhoto(false)
+    }
   }
 
   async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -206,6 +233,54 @@ export function PageSettings({ teacher }: PageSettingsProps) {
         </p>
       </section>
 
+      {/* Profile photo — CUSTOM-05 */}
+      <section className="space-y-3">
+        <Label className="text-base font-medium">Profile Photo</Label>
+        <p className="text-sm text-muted-foreground">
+          This appears as your avatar on your public page and in search results.
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-muted bg-muted">
+            {photoPreview ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={photoPreview}
+                alt="Profile photo preview"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                ?
+              </div>
+            )}
+            {isUploadingPhoto && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="photo-upload"
+              className="cursor-pointer inline-block rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              {isUploadingPhoto ? 'Uploading...' : photoPreview ? 'Change Photo' : 'Upload Photo'}
+            </label>
+            <input
+              id="photo-upload"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoUpload}
+              disabled={isUploadingPhoto}
+              className="hidden"
+            />
+            <p className="text-xs text-muted-foreground">
+              Max 2MB · JPG, PNG, WebP · 400×400px recommended for best clarity
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Banner image — CUSTOM-04 */}
       <section className="space-y-3">
         <Label className="text-base font-medium">Banner Image</Label>
@@ -232,12 +307,12 @@ export function PageSettings({ teacher }: PageSettingsProps) {
           <input
             id="banner-upload"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleBannerUpload}
             disabled={isUploading}
             className="hidden"
           />
-          <span className="text-xs text-muted-foreground">Max 5MB · JPG, PNG, WebP</span>
+          <span className="text-xs text-muted-foreground">Max 5MB · JPG, PNG, WebP · 1200×400px recommended</span>
         </div>
       </section>
 
