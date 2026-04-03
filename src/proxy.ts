@@ -21,11 +21,11 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Refresh auth token — getUser() makes a verified API call to Supabase Auth.
-  // The supabaseResponse carries updated Set-Cookie headers downstream.
-  // Auth protection is handled by individual layouts/pages (not here) to avoid
-  // server-action POST re-render issues where getClaims() can fail.
-  await supabase.auth.getUser()
+  // Refresh auth token if expired — getSession() refreshes the access token
+  // when needed but skips the server verification round-trip that getUser()
+  // makes on EVERY request (~200ms). Auth protection is handled by individual
+  // layouts/pages via getClaims(); the proxy just keeps cookies fresh.
+  await supabase.auth.getSession()
 
   return supabaseResponse
 }
