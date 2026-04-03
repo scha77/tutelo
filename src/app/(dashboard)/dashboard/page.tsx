@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { CalendarDays } from 'lucide-react'
 import { StatsBar } from '@/components/dashboard/StatsBar'
 import { ReviewPreviewCard } from '@/components/dashboard/ReviewPreviewCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
@@ -80,7 +81,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-6 max-w-3xl space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Overview</h1>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Your dashboard at a glance — sessions, earnings, and reviews.</p>
+      </div>
 
       {/* Stats bar */}
       <StatsBar
@@ -93,11 +97,14 @@ export default async function DashboardPage() {
       <section>
         <h2 className="text-lg font-semibold text-foreground mb-3">Upcoming Sessions</h2>
         {upcomingPreview.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No upcoming sessions.</p>
+          <p className="text-muted-foreground text-sm flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-muted-foreground/60" />
+            No upcoming sessions.
+          </p>
         ) : (
           <AnimatedList className="space-y-2">
             {upcomingPreview.map((booking) => (
-              <AnimatedListItem key={booking.id} className="rounded-lg border bg-card p-3 flex items-center gap-3">
+              <AnimatedListItem key={booking.id} className="rounded-xl border bg-card p-3 flex items-center gap-3 shadow-sm">
                 <div>
                   <span className="font-medium text-foreground">{booking.student_name}</span>
                   <span className="text-sm text-muted-foreground ml-2">{booking.subject}</span>

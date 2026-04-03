@@ -95,9 +95,12 @@ export default async function ParentMessagesPage() {
               href={`/parent/messages/${conv.id}`}
               className="block"
             >
-              <Card className="transition-colors hover:bg-muted/50">
+              <Card className="rounded-xl shadow-sm hover:shadow-md transition-all hover:bg-muted/50">
                 <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-primary shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+                      {conv.otherParticipantName.charAt(0).toUpperCase()}
+                    </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <h3 className="font-semibold truncate">
                         {conv.otherParticipantName}

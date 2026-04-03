@@ -51,8 +51,11 @@ export default async function StudentsPage() {
     .sort((a, b) => b.count - a.count)
 
   return (
-    <div className="p-6 max-w-3xl">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Students</h1>
+    <div className="p-6 max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Students</h1>
+        <p className="mt-1 text-sm text-muted-foreground">All students you&apos;ve tutored, grouped by completed sessions.</p>
+      </div>
 
       {students.length === 0 ? (
         <p className="text-sm text-muted-foreground">
@@ -63,8 +66,11 @@ export default async function StudentsPage() {
           {students.map((student) => (
             <div
               key={`${student.name}|${student.email}`}
-              className="rounded-lg border bg-card px-4 py-3 flex items-center gap-4"
+              className="rounded-xl border bg-card px-4 py-3 flex items-center gap-4 shadow-sm"
             >
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary shrink-0">
+                {student.name.charAt(0).toUpperCase()}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground">{student.name}</p>
                 <p className="text-sm text-muted-foreground truncate">

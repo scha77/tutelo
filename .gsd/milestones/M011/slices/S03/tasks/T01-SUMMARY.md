@@ -2,35 +2,12 @@
 id: T01
 parent: S03
 milestone: M011
-provides: []
-requires: []
-affects: []
-key_files: ["src/lib/nav.ts", "src/components/dashboard/MobileBottomNav.tsx"]
-key_decisions: ["Selected primary tabs by explicit index reference since Availability is at index 6 in navItems array"]
-patterns_established: []
-drill_down_paths: []
-observability_surfaces: []
-duration: ""
-verification_result: "npx tsc --noEmit passed clean (0 errors). npx vitest run passed with 474 tests passing across 49 test files."
-completed_at: 2026-04-03T16:17:27.064Z
-blocker_discovered: false
----
-
-# T01: Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel
-
-> Added description field to NavItem, split nav items into primary/more exports, and rewrote MobileBottomNav with 5 visible-label tabs and an AnimatePresence bottom-sheet More panel
-
-## What Happened
----
-id: T01
-parent: S03
-milestone: M011
 key_files:
   - src/lib/nav.ts
   - src/components/dashboard/MobileBottomNav.tsx
 key_decisions:
   - Selected primary tabs by explicit index reference since Availability is at index 6 in navItems array
-duration: ""
+duration: 
 verification_result: passed
 completed_at: 2026-04-03T16:17:27.064Z
 blocker_discovered: false
@@ -55,7 +32,6 @@ npx tsc --noEmit passed clean (0 errors). npx vitest run passed with 474 tests p
 | 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3500ms |
 | 2 | `npx vitest run` | 0 | ✅ pass | 13300ms |
 
-
 ## Deviations
 
 Defined primaryNavItems by explicit index reference instead of slicing first 4 items, since Availability is at navItems index 6 not index 3.
@@ -68,10 +44,3 @@ None.
 
 - `src/lib/nav.ts`
 - `src/components/dashboard/MobileBottomNav.tsx`
-
-
-## Deviations
-Defined primaryNavItems by explicit index reference instead of slicing first 4 items, since Availability is at navItems index 6 not index 3.
-
-## Known Issues
-None.

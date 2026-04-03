@@ -144,7 +144,7 @@ function BookingCard({
           : 'destructive'
 
   return (
-    <Card>
+    <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="pt-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">

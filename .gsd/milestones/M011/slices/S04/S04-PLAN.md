@@ -21,7 +21,7 @@
   - Estimate: 45m
   - Files: src/components/dashboard/StatsBar.tsx, src/components/dashboard/RequestCard.tsx, src/components/dashboard/ConfirmedSessionCard.tsx, src/components/dashboard/ReviewPreviewCard.tsx, src/components/dashboard/WaitlistEntryRow.tsx
   - Verify: npx tsc --noEmit && npx vitest run
-- [ ] **T02: Polish all 11 teacher dashboard page shells with headers, card elevation, and consistent containers** — Add the premium page header pattern and upgrade inline card styling across all 11 teacher dashboard pages. The shared components (StatsBar, RequestCard, etc.) were already polished in T01 — this task focuses on page-level layout: headers with subtitles, inline card elevation, page container consistency, and empty state improvements.
+- [x] **T02: Polish all 11 teacher dashboard page shells with headers, card elevation, and consistent containers** — Add the premium page header pattern and upgrade inline card styling across all 11 teacher dashboard pages. The shared components (StatsBar, RequestCard, etc.) were already polished in T01 — this task focuses on page-level layout: headers with subtitles, inline card elevation, page container consistency, and empty state improvements.
 
 **Page header pattern (from Analytics — the gold standard):**
 ```
@@ -55,7 +55,7 @@
   - Estimate: 1h30m
   - Files: src/app/(dashboard)/dashboard/page.tsx, src/app/(dashboard)/dashboard/requests/page.tsx, src/app/(dashboard)/dashboard/sessions/page.tsx, src/app/(dashboard)/dashboard/students/page.tsx, src/app/(dashboard)/dashboard/waitlist/page.tsx, src/app/(dashboard)/dashboard/settings/page.tsx, src/app/(dashboard)/dashboard/availability/page.tsx, src/app/(dashboard)/dashboard/page/page.tsx, src/app/(dashboard)/dashboard/promote/page.tsx, src/app/(dashboard)/dashboard/analytics/page.tsx, src/app/(dashboard)/dashboard/connect-stripe/page.tsx, src/app/(dashboard)/dashboard/messages/page.tsx
   - Verify: npx tsc --noEmit && npx vitest run
-- [ ] **T03: Polish all 5 parent dashboard pages and run full verification suite** — Upgrade all 5 parent dashboard pages to match the premium treatment applied to teacher pages in T01/T02, then run the complete verification suite (tsc + vitest + next build) to confirm zero regressions.
+- [x] **T03: Polished all 5 parent dashboard pages with tinted icon pills, avatar initial circles, rounded-xl card elevation, and shadow treatments** — Upgrade all 5 parent dashboard pages to match the premium treatment applied to teacher pages in T01/T02, then run the complete verification suite (tsc + vitest + next build) to confirm zero regressions.
 
 **Pages to polish:**
 1. `parent/page.tsx` (Overview) — Already has good header with `tracking-tight`. Upgrade stat `<Card>` components: add icon in tinted pill container (`rounded-lg p-2` with `style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}`). The icons (Users, CalendarCheck, History) are already imported — wrap each in a tinted pill.

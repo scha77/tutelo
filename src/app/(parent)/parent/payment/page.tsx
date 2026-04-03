@@ -103,12 +103,12 @@ export default function PaymentPage() {
 
       {/* Card on file */}
       {!loading && card && (
-        <Card>
+        <Card className="rounded-xl shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-muted p-3">
-                  <CreditCard className="h-6 w-6 text-muted-foreground" />
+                <div className="rounded-xl p-3" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+                  <CreditCard className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-semibold">{brandDisplayName(card.brand)}</p>

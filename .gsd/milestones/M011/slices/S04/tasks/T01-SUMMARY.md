@@ -2,29 +2,6 @@
 id: T01
 parent: S04
 milestone: M011
-provides: []
-requires: []
-affects: []
-key_files: ["src/components/dashboard/StatsBar.tsx", "src/components/dashboard/RequestCard.tsx", "src/components/dashboard/ConfirmedSessionCard.tsx", "src/components/dashboard/ReviewPreviewCard.tsx", "src/components/dashboard/WaitlistEntryRow.tsx"]
-key_decisions: ["Used color-mix(in srgb, var(--primary) 12%, transparent) for tinted pill and chip backgrounds instead of var(--accent) or fixed Tailwind colors", "Replaced Unicode star characters with inline SVG star paths matching S01 ReviewsSection pattern", "Used -50 color variants instead of -100 for semantic status chips (subtler look)"]
-patterns_established: []
-drill_down_paths: []
-observability_surfaces: []
-duration: ""
-verification_result: "TypeScript type-checking (npx tsc --noEmit) passed with 0 errors. Full test suite (npx vitest run) passed with 474 tests across 49 test files."
-completed_at: 2026-04-03T16:35:01.102Z
-blocker_discovered: false
----
-
-# T01: Upgraded 5 shared dashboard components to premium card standard with rounded-xl elevation, tinted icon pills, SVG star icons, and color-mix subject/status chips
-
-> Upgraded 5 shared dashboard components to premium card standard with rounded-xl elevation, tinted icon pills, SVG star icons, and color-mix subject/status chips
-
-## What Happened
----
-id: T01
-parent: S04
-milestone: M011
 key_files:
   - src/components/dashboard/StatsBar.tsx
   - src/components/dashboard/RequestCard.tsx
@@ -35,9 +12,9 @@ key_decisions:
   - Used color-mix(in srgb, var(--primary) 12%, transparent) for tinted pill and chip backgrounds instead of var(--accent) or fixed Tailwind colors
   - Replaced Unicode star characters with inline SVG star paths matching S01 ReviewsSection pattern
   - Used -50 color variants instead of -100 for semantic status chips (subtler look)
-duration: ""
+duration: 
 verification_result: passed
-completed_at: 2026-04-03T16:35:01.103Z
+completed_at: 2026-04-03T16:35:01.102Z
 blocker_discovered: false
 ---
 
@@ -60,7 +37,6 @@ TypeScript type-checking (npx tsc --noEmit) passed with 0 errors. Full test suit
 | 1 | `npx tsc --noEmit` | 0 | ✅ pass | 20500ms |
 | 2 | `npx vitest run` | 0 | ✅ pass | 27600ms |
 
-
 ## Deviations
 
 Used bg-green-50/bg-blue-50/bg-amber-50 instead of -100 variants for status chips — subtler and more premium-feeling.
@@ -76,10 +52,3 @@ None.
 - `src/components/dashboard/ConfirmedSessionCard.tsx`
 - `src/components/dashboard/ReviewPreviewCard.tsx`
 - `src/components/dashboard/WaitlistEntryRow.tsx`
-
-
-## Deviations
-Used bg-green-50/bg-blue-50/bg-amber-50 instead of -100 variants for status chips — subtler and more premium-feeling.
-
-## Known Issues
-None.

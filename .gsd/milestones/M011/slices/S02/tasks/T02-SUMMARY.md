@@ -2,29 +2,6 @@
 id: T02
 parent: S02
 milestone: M011
-provides: []
-requires: []
-affects: []
-key_files: ["src/components/profile/SessionTypeSelector.tsx", "src/components/profile/CalendarGrid.tsx", "src/components/profile/TimeSlotsPanel.tsx", "src/components/profile/BookingCalendar.tsx"]
-key_decisions: ["SessionTypeSelector cards upgraded to rounded-xl shadow-sm hover:shadow-md for elevated design", "CalendarGrid takes isAvailable callback to keep availability logic centralized in orchestrator", "BookingCalendar at 617 lines because success/error/recurring/auth/payment steps remain inline as planned"]
-patterns_established: []
-drill_down_paths: []
-observability_surfaces: []
-duration: ""
-verification_result: "npx tsc --noEmit exits 0 (clean). npx vitest run --reporter=dot: 474 tests pass across 49 test files."
-completed_at: 2026-04-03T16:03:15.816Z
-blocker_discovered: false
----
-
-# T02: Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design
-
-> Extracted 3 presentational sub-components (SessionTypeSelector, CalendarGrid, TimeSlotsPanel) from BookingCalendar completing the monolith decomposition with elevated card design
-
-## What Happened
----
-id: T02
-parent: S02
-milestone: M011
 key_files:
   - src/components/profile/SessionTypeSelector.tsx
   - src/components/profile/CalendarGrid.tsx
@@ -34,9 +11,9 @@ key_decisions:
   - SessionTypeSelector cards upgraded to rounded-xl shadow-sm hover:shadow-md for elevated design
   - CalendarGrid takes isAvailable callback to keep availability logic centralized in orchestrator
   - BookingCalendar at 617 lines because success/error/recurring/auth/payment steps remain inline as planned
-duration: ""
+duration: 
 verification_result: passed
-completed_at: 2026-04-03T16:03:15.817Z
+completed_at: 2026-04-03T16:03:15.816Z
 blocker_discovered: false
 ---
 
@@ -59,7 +36,6 @@ npx tsc --noEmit exits 0 (clean). npx vitest run --reporter=dot: 474 tests pass 
 | 1 | `npx tsc --noEmit` | 0 | ✅ pass | 13300ms |
 | 2 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 23800ms |
 
-
 ## Deviations
 
 CalendarGrid takes isAvailable callback instead of raw slot data — keeps availability logic in orchestrator. BookingCalendar is 617 lines rather than ~250 target due to inline success/error/recurring/auth/payment steps and handler functions staying in orchestrator as planned.
@@ -74,10 +50,3 @@ None.
 - `src/components/profile/CalendarGrid.tsx`
 - `src/components/profile/TimeSlotsPanel.tsx`
 - `src/components/profile/BookingCalendar.tsx`
-
-
-## Deviations
-CalendarGrid takes isAvailable callback instead of raw slot data — keeps availability logic in orchestrator. BookingCalendar is 617 lines rather than ~250 target due to inline success/error/recurring/auth/payment steps and handler functions staying in orchestrator as planned.
-
-## Known Issues
-None.

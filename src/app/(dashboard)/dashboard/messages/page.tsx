@@ -34,8 +34,11 @@ export default async function TeacherMessagesPage() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-2xl">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Messages</h1>
+      <div className="p-6 max-w-2xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Conversations with parents about sessions and scheduling.</p>
+        </div>
         <p className="text-muted-foreground">
           Unable to load your messages. Please try again later.
         </p>
@@ -86,8 +89,11 @@ export default async function TeacherMessagesPage() {
   )
 
   return (
-    <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Messages</h1>
+    <div className="p-6 max-w-2xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Conversations with parents about sessions and scheduling.</p>
+      </div>
 
       {enriched.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -108,6 +114,9 @@ export default async function TeacherMessagesPage() {
               <Card className="transition-colors hover:bg-muted/50">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary shrink-0 mt-0.5">
+                      {conv.otherParticipantName.charAt(0).toUpperCase()}
+                    </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <h3 className="font-semibold truncate">
                         {conv.otherParticipantName}

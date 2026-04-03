@@ -74,8 +74,11 @@ export function HeroSection() {
                 </svg>
               </Link>
             </AnimatedButton>
-            <span className="text-sm text-[#3b4d3e]/40">
-              Free forever • No hidden fees
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3b4d3e]/8 px-3.5 py-1 text-sm text-[#3b4d3e]/45">
+              <svg className="h-3.5 w-3.5 text-[#3b4d3e]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Free forever · No hidden fees
             </span>
           </div>
         </div>

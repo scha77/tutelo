@@ -45,7 +45,10 @@ export default async function SessionsPage() {
 
   return (
     <div className="p-6 max-w-3xl space-y-10">
-      <h1 className="text-2xl font-bold text-foreground">Sessions</h1>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Sessions</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage upcoming sessions and review past completions.</p>
+      </div>
 
       {/* Upcoming section */}
       <section>
@@ -93,7 +96,7 @@ export default async function SessionsPage() {
               return (
                 <div
                   key={booking.id}
-                  className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 rounded-lg border bg-card px-4 py-3"
+                  className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 rounded-xl border bg-card px-4 py-3 shadow-sm"
                 >
                   <div>
                     <span className="font-medium text-foreground">{booking.student_name}</span>

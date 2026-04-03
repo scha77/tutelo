@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TeacherCard } from '@/components/directory/TeacherCard'
 import { DirectoryFilters } from '@/components/directory/DirectoryFilters'
 import { PRICE_RANGES } from '@/lib/constants/directory'
+import { Search } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Find a Tutor | Tutelo',
@@ -155,8 +156,9 @@ function FilterSkeleton() {
 function EmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
+      <Search className="h-10 w-10 text-muted-foreground/50 mb-4" />
       <p className="text-lg font-medium text-foreground">No tutors found</p>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-muted-foreground max-w-sm">
         {hasFilters
           ? 'Try adjusting or clearing your filters.'
           : 'No tutors have published their pages yet. Check back soon.'}

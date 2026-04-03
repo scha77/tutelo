@@ -22,7 +22,10 @@ export default async function PromotePage() {
 
   return (
     <div className="p-6 max-w-3xl space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Promote Your Page</h1>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Promote Your Page</h1>
+        <p className="mt-1 text-sm text-muted-foreground">QR codes, printable flyers, and ready-to-send messages to share with parents.</p>
+      </div>
 
       <QRCodeCard slug={teacher.slug} />
 

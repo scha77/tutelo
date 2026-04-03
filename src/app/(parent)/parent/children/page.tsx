@@ -164,7 +164,7 @@ export default function ChildrenPage() {
 
       {/* Add/Edit form */}
       {showForm && (
-        <Card>
+        <Card className="rounded-xl shadow-sm">
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <h2 className="text-lg font-semibold">
@@ -234,10 +234,14 @@ export default function ChildrenPage() {
       {!loading && children.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {children.map((child) => (
-            <Card key={child.id}>
+            <Card key={child.id} className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-primary shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+                      {child.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
                     <h3 className="font-semibold">{child.name}</h3>
                     {child.grade && (
                       <p className="text-sm text-muted-foreground mt-0.5">
@@ -247,6 +251,7 @@ export default function ChildrenPage() {
                     <p className="text-xs text-muted-foreground mt-2">
                       Added {new Date(child.created_at).toLocaleDateString()}
                     </p>
+                    </div>
                   </div>
                   <div className="flex gap-1">
                     <Button

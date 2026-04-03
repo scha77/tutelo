@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T16:35:01.146Z",
+  "exported_at": "2026-04-03T18:08:09.988Z",
   "milestones": [
     {
       "id": "M001",
@@ -458,10 +458,10 @@
     {
       "id": "M011",
       "title": "",
-      "status": "queued",
+      "status": "complete",
       "depends_on": [],
       "created_at": "2026-04-03T15:27:35.947Z",
-      "completed_at": null,
+      "completed_at": "2026-04-03T18:08:09.937Z",
       "vision": "Raise every user-facing surface from functional MVP to modern SaaS premium. The teacher profile page (conversion surface), booking flow, mobile navigation, both dashboards, and landing page all get intentional design treatment. No surface should look like a generic template or feel clunky to use.",
       "success_criteria": [
         "Teacher /[slug] profile page looks polished and premium — hero, credentials, about, reviews all have intentional design",
@@ -1378,16 +1378,16 @@
       "milestone_id": "M011",
       "id": "S04",
       "title": "Dashboard Polish",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [
         "S03"
       ],
       "demo": "After this: all 11 teacher dashboard pages and 5 parent dashboard pages feel premium — better card treatments, visual hierarchy, stats presentation, empty states, and spacing. The dashboards feel like a cohesive, intentionally designed product.",
       "created_at": "2026-04-03T15:32:15.905Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-03T18:02:09.409Z",
+      "full_summary_md": "---\nid: S04\nparent: M011\nmilestone: M011\nprovides:\n  - Premium dashboard treatment pattern for both teacher and parent pages\n  - Consistent visual language across all 16 dashboard pages\nrequires:\n  []\naffects:\n  - S05\nkey_files:\n  - src/components/dashboard/StatsBar.tsx\n  - src/components/dashboard/RequestCard.tsx\n  - src/components/dashboard/ConfirmedSessionCard.tsx\n  - src/components/dashboard/ReviewPreviewCard.tsx\n  - src/components/dashboard/WaitlistEntryRow.tsx\n  - src/app/(dashboard)/dashboard/page.tsx\n  - src/app/(dashboard)/dashboard/requests/page.tsx\n  - src/app/(dashboard)/dashboard/sessions/page.tsx\n  - src/app/(dashboard)/dashboard/students/page.tsx\n  - src/app/(dashboard)/dashboard/waitlist/page.tsx\n  - src/app/(dashboard)/dashboard/settings/page.tsx\n  - src/app/(dashboard)/dashboard/availability/page.tsx\n  - src/app/(dashboard)/dashboard/page/page.tsx\n  - src/app/(dashboard)/dashboard/promote/page.tsx\n  - src/app/(dashboard)/dashboard/connect-stripe/page.tsx\n  - src/app/(dashboard)/dashboard/messages/page.tsx\n  - src/app/(parent)/parent/page.tsx\n  - src/app/(parent)/parent/children/page.tsx\n  - src/app/(parent)/parent/bookings/page.tsx\n  - src/app/(parent)/parent/payment/page.tsx\n  - src/app/(parent)/parent/messages/page.tsx\nkey_decisions:\n  - color-mix(in srgb, var(--primary) 12%, transparent) used for all tinted backgrounds across both dashboards — NOT var(--accent) which is near-white in dashboard context\n  - Premium page header pattern standardized: h1.text-2xl.font-bold.tracking-tight + p.mt-1.text-sm.text-muted-foreground\n  - Avatar initial circles use h-9 w-9 with tinted primary background — consistent across teacher and parent pages\n  - SVG star paths replace Unicode star characters in ReviewPreviewCard\npatterns_established:\n  - Premium page header: div > h1.text-2xl.font-bold.tracking-tight + p.mt-1.text-sm.text-muted-foreground\n  - Tinted icon pill: rounded-lg p-2 with color-mix(in srgb, var(--primary) 12%, transparent) background\n  - Avatar initial circle: h-9 w-9 rounded-full with tinted primary background and first letter\n  - Empty state: centered flex-col with lucide icon (h-10/h-12 w-10/w-12 text-muted-foreground/50) + heading + description\n  - Card elevation: rounded-xl shadow-sm hover:shadow-md transition-shadow on all interactive cards\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  - .gsd/milestones/M011/slices/S04/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M011/slices/S04/tasks/T02-SUMMARY.md\n  - .gsd/milestones/M011/slices/S04/tasks/T03-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T18:02:09.412Z\nblocker_discovered: false\n---\n\n# S04: Dashboard Polish\n\n**All 11 teacher dashboard pages and 5 parent dashboard pages upgraded to premium visual standard with consistent headers, card elevation, tinted icon pills, avatar circles, and empty state icons.**\n\n## What Happened\n\nS04 delivered a comprehensive visual polish pass across all 16 dashboard pages (11 teacher + 5 parent).\n\nT01 upgraded 5 shared components (StatsBar, RequestCard, ConfirmedSessionCard, ReviewPreviewCard, WaitlistEntryRow) to the premium card standard — rounded-xl elevation, tinted icon pills with color-mix primary background, SVG star icons replacing Unicode, and consistent chip styling. These improvements propagated automatically to every teacher page that renders these components.\n\nT02 polished all 11 teacher dashboard page shells with a consistent page header pattern (tracking-tight h1 + descriptive subtitle), upgraded inline card styling from rounded-lg to rounded-xl with shadow-sm, added avatar initial circles on Students and Messages pages, restructured Connect Stripe with an elevated card and Shield trust signal, and improved empty states with centered icon layouts.\n\nT03 completed the parent side — 5 pages received tinted icon pills on stat cards, avatar initial circles on children and messages cards, rounded-xl shadow treatments on all Card components, and consistent use of the color-mix tinting convention established in T01.\n\nAll changes were CSS/layout only — no functional logic, data fetching, auth, or API routes were modified.\n\n## Verification\n\nFull verification suite passed on T03 completion: `npx tsc --noEmit` (0 errors), `npx vitest run` (474 tests across 49 files), `npx next build` (67 pages generated successfully).\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nSettings page uses px-6 pt-6 on header div only (not p-6 on wrapper) to avoid double-padding with AccountSettings internal padding. Analytics page confirmed already premium — no changes needed.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/dashboard/StatsBar.tsx` — Tinted icon pills, rounded-xl card elevation\n- `src/components/dashboard/RequestCard.tsx` — SVG stars, tinted subject chips, rounded-xl elevation\n- `src/components/dashboard/ConfirmedSessionCard.tsx` — Tinted subject chips, rounded-xl elevation\n- `src/components/dashboard/ReviewPreviewCard.tsx` — SVG star paths, rounded-xl elevation\n- `src/components/dashboard/WaitlistEntryRow.tsx` — Tinted icon pill, rounded-xl elevation\n- `src/app/(dashboard)/dashboard/page.tsx` — Premium header, rounded-xl cards, empty state icon\n- `src/app/(dashboard)/dashboard/requests/page.tsx` — Premium header, empty state icon\n- `src/app/(dashboard)/dashboard/sessions/page.tsx` — Premium header, rounded-xl rows\n- `src/app/(dashboard)/dashboard/students/page.tsx` — Premium header, avatar circles, rounded-xl rows\n- `src/app/(dashboard)/dashboard/waitlist/page.tsx` — Premium header, empty state icon\n- `src/app/(dashboard)/dashboard/settings/page.tsx` — max-w-3xl wrapper, premium header\n- `src/app/(dashboard)/dashboard/availability/page.tsx` — p-6 wrapper, premium header\n- `src/app/(dashboard)/dashboard/page/page.tsx` — p-6 max-w-3xl wrapper, premium header\n- `src/app/(dashboard)/dashboard/promote/page.tsx` — Subtitle added\n- `src/app/(dashboard)/dashboard/connect-stripe/page.tsx` — Elevated card, Shield trust signal\n- `src/app/(dashboard)/dashboard/messages/page.tsx` — Premium header, avatar circles\n- `src/app/(parent)/parent/page.tsx` — Tinted icon pills on stat cards, rounded-xl shadow-sm\n- `src/app/(parent)/parent/children/page.tsx` — Avatar initial circles, rounded-xl shadow cards\n- `src/app/(parent)/parent/bookings/page.tsx` — rounded-xl shadow-sm hover:shadow-md on BookingCard\n- `src/app/(parent)/parent/payment/page.tsx` — Tinted primary icon container, rounded-xl card\n- `src/app/(parent)/parent/messages/page.tsx` — Avatar initial circles, enhanced card hover\n",
+      "full_uat_md": "# S04: Dashboard Polish — UAT\n\n**Milestone:** M011\n**Written:** 2026-04-03T18:02:09.412Z\n\n## UAT: S04 — Dashboard Polish\n\n### Test 1: Teacher Dashboard — Page Headers\n1. Log in as a teacher\n2. Visit each of the 11 dashboard pages\n3. **Verify:** Every page has a bold heading with a descriptive subtitle below it\n4. **Verify:** Typography is consistent (2xl bold tracking-tight heading, sm muted subtitle)\n\n### Test 2: Teacher Dashboard — Card Elevation\n1. Visit Overview, Sessions, Students, Waitlist pages\n2. **Verify:** List item cards have rounded corners (rounded-xl) and subtle shadow\n3. **Verify:** Hovering over cards shows a slightly stronger shadow\n\n### Test 3: Teacher Dashboard — StatsBar Icons\n1. Visit Overview page\n2. **Verify:** Each stat card has an icon inside a tinted colored pill (light primary background)\n3. **Verify:** Star ratings use clean SVG stars (not Unicode text characters)\n\n### Test 4: Teacher Dashboard — Empty States\n1. Visit Requests, Waitlist, or Overview with no data\n2. **Verify:** Empty states show a centered icon above the \"no data\" message\n\n### Test 5: Parent Dashboard — Stat Cards\n1. Log in as a parent, visit /parent\n2. **Verify:** Each stat card (Children, Upcoming Sessions, Past Sessions) has the icon inside a tinted pill container\n\n### Test 6: Parent Dashboard — Children\n1. Visit /parent/children with at least one child\n2. **Verify:** Each child card shows an avatar circle with the child's initial letter\n3. **Verify:** Cards have rounded corners and shadow treatment\n\n### Test 7: Parent Dashboard — Messages\n1. Visit /parent/messages with at least one conversation\n2. **Verify:** Each conversation row shows an avatar circle with the teacher's initial\n3. **Verify:** Hovering shows enhanced shadow effect\n\n### Test 8: Parent Dashboard — Payment\n1. Visit /parent/payment with a saved card\n2. **Verify:** Credit card icon is inside a tinted primary-colored container (not grey muted)\n3. **Verify:** Card display has rounded-xl corners\n",
       "goal": "All 11 teacher dashboard pages and 5 parent dashboard pages feel premium — better card treatments, visual hierarchy, page headers, stats presentation, empty states, and spacing. The dashboards feel like a cohesive, intentionally designed product — not a generic template.",
       "success_criteria": "## Must-Haves\n\n- All dashboard card surfaces upgraded from `rounded-lg` to `rounded-xl` with consistent `border bg-card shadow-sm hover:shadow-md transition-shadow` treatment\n- Every teacher dashboard page has a page header with `text-2xl font-bold tracking-tight` h1 and `text-sm text-muted-foreground` subtitle (matching the Analytics page pattern)\n- StatsBar stat items upgraded to `rounded-xl bg-card border shadow-sm` with icon in a tinted pill container using `color-mix(in srgb, var(--primary) 12%, transparent)`\n- ReviewPreviewCard uses SVG star icons (not Unicode text characters) matching the S01 ReviewsSection pattern\n- RequestCard and ConfirmedSessionCard have `rounded-xl` elevation and subject/status chips using `color-mix(in srgb, var(--primary) 12%, transparent)` for dashboard context\n- Parent dashboard stat cards have icon in a tinted `rounded-lg` pill container (matching teacher StatsBar pattern)\n- Parent messages page has avatar initial circles for conversation partners\n- Settings page has `max-w-3xl mx-auto` wrapper (no `p-6` to avoid double-padding with AccountSettings)\n- Availability and Page pages have `p-6` wrapper containers for consistent page rhythm\n- Connect Stripe page has elevated card wrapper with Stripe shield trust signal\n- `npx tsc --noEmit` passes with 0 errors\n- `npx vitest run` passes (474+ tests)\n- `npx next build` succeeds\n\n## Requirement Impact\n\n- **Requirements touched**: UI-04, UI-05, UI-08, UI-09\n- **Re-verify**: Full test suite (tsc + vitest + next build) — no functional changes, CSS/layout only\n- **Decisions revisited**: None — this slice applies patterns established in D043, D044, D047",
       "proof_level": "contract — all changes are CSS/layout only, verified by tsc + vitest + next build",
@@ -1400,7 +1400,7 @@
       "milestone_id": "M011",
       "id": "S05",
       "title": "Landing Page & Global Consistency Pass",
-      "status": "pending",
+      "status": "complete",
       "risk": "low",
       "depends": [
         "S01",
@@ -1408,14 +1408,14 @@
       ],
       "demo": "After this: the landing page is tightened. Typography, spacing, and component patterns are consistent across every surface. The whole app feels like one product, not 10 milestones of accumulated features.",
       "created_at": "2026-04-03T15:32:15.905Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Tighten the landing page and perform a global consistency audit across all surfaces.",
-      "success_criteria": "- Landing page: sharper typography, more intentional spacing, refined micro-interactions\n- Typography scale consistent across landing, profile, dashboards, booking flow\n- Spacing rhythm (4pt grid) applied consistently\n- Card treatments, border radii, and shadow usage unified\n- Login page and onboarding wizard visually consistent with the rest of the app\n- Directory page (/tutors) and teacher cards consistent with profile page treatment\n- No visual outliers — the whole app reads as one product\n- All 474+ tests pass, tsc clean, next build succeeds",
-      "proof_level": "Full test suite + browser verification across all major surfaces",
-      "integration_closure": "Final integration slice — verifies visual consistency across all surfaces touched by S01-S04",
-      "observability_impact": "None — visual only",
+      "completed_at": "2026-04-03T18:07:23.240Z",
+      "full_summary_md": "---\nid: S05\nparent: M011\nmilestone: M011\nprovides:\n  - Consistent visual language across every user-facing surface\nrequires:\n  - slice: S01\n    provides: Design language and card patterns\n  - slice: S04\n    provides: Dashboard premium treatment patterns\naffects:\n  []\nkey_files:\n  - src/components/landing/CTASection.tsx\n  - src/components/landing/HeroSection.tsx\n  - src/components/landing/NavBar.tsx\n  - src/app/booking-confirmed/page.tsx\n  - src/app/tutors/page.tsx\n  - src/app/(auth)/layout.tsx\nkey_decisions:\n  - Footer uses text logo + nav links (not image logo) for lightweight consistency\n  - Auth layout wraps children in card — all form-based pages now have visual containment\n  - Booking-confirmed uses emerald (semantic success color) not brand primary\npatterns_established:\n  - Landing page footer: border-t separator + logo/tagline + nav links + copyright\n  - Global card containment: all standalone content pages (auth, booking-confirmed) use rounded-xl border bg-card shadow-sm\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  - .gsd/milestones/M011/slices/S05/tasks/T01-SUMMARY.md\n  - .gsd/milestones/M011/slices/S05/tasks/T02-SUMMARY.md\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T18:07:23.241Z\nblocker_discovered: false\n---\n\n# S05: Landing Page & Global Consistency Pass\n\n**Tightened the landing page with a proper footer and pill badge, then applied global consistency to booking-confirmed, tutors directory, and auth layout.**\n\n## What Happened\n\nS05 closed the gap between the polished dashboard/profile surfaces and the remaining global pages.\\n\\nT01 tightened the landing page: the footer now has Tutelo branding, nav links (Find a Tutor, Sign In), and a clean separator instead of a bare copyright line. The hero's 'Free forever' text became a pill badge with a checkmark icon matching the eyebrow style. The NavBar hides the Sign In text link on mobile to prevent cramping.\\n\\nT02 applied the premium card treatment to three non-dashboard surfaces: booking-confirmed got an elevated card with a tinted success icon and Back to Home button; the tutors directory empty state gained a Search icon; the auth layout wrapped its content in a bordered card with shadow.\\n\\nThe whole app now shares consistent visual language: rounded-xl cards with shadow-sm, tinted icon pills, tracking-tight headings, and centered empty states with icons.\n\n## Verification\n\nFull verification suite passed on T02 completion: npx tsc --noEmit (0 errors), npx vitest run (474 tests), npx next build (67 pages).\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/landing/CTASection.tsx` — Proper footer with nav links, logo, copyright\n- `src/components/landing/HeroSection.tsx` — Free-forever pill badge with checkmark icon\n- `src/components/landing/NavBar.tsx` — Mobile-responsive sign-in link (hidden sm:inline-flex)\n- `src/app/booking-confirmed/page.tsx` — Elevated card, CheckCircle2 success icon, Back to Home link\n- `src/app/tutors/page.tsx` — Search icon on empty state\n- `src/app/(auth)/layout.tsx` — Card wrapper on auth content\n",
+      "full_uat_md": "# S05: Landing Page & Global Consistency Pass — UAT\n\n**Milestone:** M011\n**Written:** 2026-04-03T18:07:23.241Z\n\n## UAT: S05 — Landing Page & Global Consistency Pass\\n\\n### Test 1: Landing Page Footer\\n1. Navigate to tutelo.app\\n2. Scroll to the bottom of the page\\n3. **Verify:** Footer shows Tutelo branding, 'Find a Tutor' and 'Sign In' links, and copyright\\n4. **Verify:** 'Find a Tutor' links to /tutors, 'Sign In' links to /login\\n\\n### Test 2: Hero Free Badge\\n1. View the landing page hero section\\n2. **Verify:** 'Free forever · No hidden fees' appears as a pill with a checkmark icon and subtle border\\n\\n### Test 3: Mobile NavBar\\n1. View the landing page on a narrow mobile viewport (~375px)\\n2. **Verify:** Only the 'Start your page' button is visible in the nav (Sign In text is hidden)\\n3. Widen to tablet/desktop\\n4. **Verify:** 'Sign in' text link reappears\\n\\n### Test 4: Booking Confirmed\\n1. Complete a test booking (or navigate directly to /booking-confirmed?session=test)\\n2. **Verify:** Confirmation appears in a bordered card with rounded corners and shadow\\n3. **Verify:** Green checkmark icon in a tinted circle above the heading\\n4. **Verify:** 'Back to Home' button visible at bottom\\n\\n### Test 5: Tutors Directory Empty State\\n1. Navigate to /tutors with filters that match no results\\n2. **Verify:** Empty state shows a Search icon above 'No tutors found'\\n\\n### Test 6: Login Page Card\\n1. Navigate to /login\\n2. **Verify:** The login form is contained within a bordered card with rounded corners and shadow\n",
+      "goal": "Tighten the landing page and apply a global consistency pass so the entire app feels like one product — consistent card treatments, spacing, typography, and visual patterns across all surfaces.",
+      "success_criteria": "- Landing page footer has navigation links (Find a Tutor, Sign In, Privacy) and looks intentional\\n- Booking-confirmed page uses elevated card treatment matching dashboard conventions\\n- Tutors directory page header matches the premium pattern from S04\\n- All surfaces use consistent rounded-xl card elevation where Cards appear\\n- npx tsc --noEmit passes with 0 errors\\n- npx vitest run passes all tests\\n- npx next build succeeds",
+      "proof_level": "build-pass + visual inspection",
+      "integration_closure": "Landing page footer links verified. Global card/spacing patterns consistent across landing, directory, auth, dashboard, and profile surfaces.",
+      "observability_impact": "None — visual-only changes.",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -5551,7 +5551,7 @@
       "slice_id": "S04",
       "id": "T02",
       "title": "Polish all 11 teacher dashboard page shells with headers, card elevation, and consistent containers",
-      "status": "pending",
+      "status": "complete",
       "one_liner": "",
       "narrative": "",
       "verification_result": "",
@@ -5621,19 +5621,28 @@
       "milestone_id": "M011",
       "slice_id": "S04",
       "id": "T03",
-      "title": "Polish all 5 parent dashboard pages and run full verification suite",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Polished all 5 parent dashboard pages with tinted icon pills, avatar initial circles, rounded-xl card elevation, and shadow treatments",
+      "status": "complete",
+      "one_liner": "Polished all 5 parent dashboard pages with tinted icon pills, avatar initial circles, rounded-xl card elevation, and shadow treatments",
+      "narrative": "Applied premium polish to all 5 parent dashboard pages:\n\n1. **Parent Overview** — Wrapped stat card icons (Users, CalendarCheck, History) in tinted pill containers using `color-mix(in srgb, var(--primary) 12%, transparent)` background with `rounded-lg p-2`. Added `rounded-xl shadow-sm` to all three stat Cards.\n\n2. **Children** — Added avatar initial circles (`h-9 w-9 rounded-full` with tinted primary background) showing the child's first letter. Upgraded child cards to `rounded-xl shadow-sm hover:shadow-md transition-shadow`. Add/edit form card upgraded to `rounded-xl shadow-sm`.\n\n3. **Bookings** — Upgraded BookingCard to `rounded-xl shadow-sm hover:shadow-md transition-shadow`. No other changes needed — the header, empty state, and badge styling were already good.\n\n4. **Payment** — Upgraded saved card display from `rounded-lg bg-muted` icon container to `rounded-xl` with tinted primary background (`color-mix`). Card icon color upgraded from `text-muted-foreground` to `text-primary`. Card wrapper upgraded to `rounded-xl shadow-sm`.\n\n5. **Messages** — Added avatar initial circles for conversation partners (same pattern as teacher messages in T02). Upgraded conversation cards to `rounded-xl shadow-sm hover:shadow-md transition-all hover:bg-muted/50`.",
+      "verification_result": "Full verification suite passed: `npx tsc --noEmit` (0 errors), `npx vitest run` (474 tests pass across 49 test files), `npx next build` (compiled successfully, 67 pages generated).",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-03T18:01:22.627Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None. All changes matched the plan exactly.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/(parent)/parent/page.tsx",
+        "src/app/(parent)/parent/children/page.tsx",
+        "src/app/(parent)/parent/bookings/page.tsx",
+        "src/app/(parent)/parent/payment/page.tsx",
+        "src/app/(parent)/parent/messages/page.tsx"
+      ],
+      "key_decisions": [
+        "Used color-mix(in srgb, var(--primary) 12%, transparent) consistently for all tinted backgrounds — matches T01/T02 convention",
+        "Avatar initial circles use h-9 w-9 (matching teacher messages pattern from T02) rather than h-8 w-8"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M011\nkey_files:\n  - src/app/(parent)/parent/page.tsx\n  - src/app/(parent)/parent/children/page.tsx\n  - src/app/(parent)/parent/bookings/page.tsx\n  - src/app/(parent)/parent/payment/page.tsx\n  - src/app/(parent)/parent/messages/page.tsx\nkey_decisions:\n  - Used color-mix(in srgb, var(--primary) 12%, transparent) consistently for all tinted backgrounds — matches T01/T02 convention\n  - Avatar initial circles use h-9 w-9 (matching teacher messages pattern from T02) rather than h-8 w-8\nduration: \nverification_result: passed\ncompleted_at: 2026-04-03T18:01:22.625Z\nblocker_discovered: false\n---\n\n# T03: Polished all 5 parent dashboard pages with tinted icon pills, avatar initial circles, rounded-xl card elevation, and shadow treatments\n\n**Polished all 5 parent dashboard pages with tinted icon pills, avatar initial circles, rounded-xl card elevation, and shadow treatments**\n\n## What Happened\n\nApplied premium polish to all 5 parent dashboard pages:\n\n1. **Parent Overview** — Wrapped stat card icons (Users, CalendarCheck, History) in tinted pill containers using `color-mix(in srgb, var(--primary) 12%, transparent)` background with `rounded-lg p-2`. Added `rounded-xl shadow-sm` to all three stat Cards.\n\n2. **Children** — Added avatar initial circles (`h-9 w-9 rounded-full` with tinted primary background) showing the child's first letter. Upgraded child cards to `rounded-xl shadow-sm hover:shadow-md transition-shadow`. Add/edit form card upgraded to `rounded-xl shadow-sm`.\n\n3. **Bookings** — Upgraded BookingCard to `rounded-xl shadow-sm hover:shadow-md transition-shadow`. No other changes needed — the header, empty state, and badge styling were already good.\n\n4. **Payment** — Upgraded saved card display from `rounded-lg bg-muted` icon container to `rounded-xl` with tinted primary background (`color-mix`). Card icon color upgraded from `text-muted-foreground` to `text-primary`. Card wrapper upgraded to `rounded-xl shadow-sm`.\n\n5. **Messages** — Added avatar initial circles for conversation partners (same pattern as teacher messages in T02). Upgraded conversation cards to `rounded-xl shadow-sm hover:shadow-md transition-all hover:bg-muted/50`.\n\n## Verification\n\nFull verification suite passed: `npx tsc --noEmit` (0 errors), `npx vitest run` (474 tests pass across 49 test files), `npx next build` (compiled successfully, 67 pages generated).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 13600ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 17690ms |\n| 3 | `npx next build` | 0 | ✅ pass | 29000ms |\n\n## Deviations\n\nNone. All changes matched the plan exactly.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/(parent)/parent/page.tsx`\n- `src/app/(parent)/parent/children/page.tsx`\n- `src/app/(parent)/parent/bookings/page.tsx`\n- `src/app/(parent)/parent/payment/page.tsx`\n- `src/app/(parent)/parent/messages/page.tsx`\n",
       "description": "Upgrade all 5 parent dashboard pages to match the premium treatment applied to teacher pages in T01/T02, then run the complete verification suite (tsc + vitest + next build) to confirm zero regressions.\n\n**Pages to polish:**\n1. `parent/page.tsx` (Overview) — Already has good header with `tracking-tight`. Upgrade stat `<Card>` components: add icon in tinted pill container (`rounded-lg p-2` with `style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}`). The icons (Users, CalendarCheck, History) are already imported — wrap each in a tinted pill.\n2. `parent/children/page.tsx` (308 lines) — Add avatar initial circles on child cards. Upgrade any `rounded-lg` cards. The add-child form Card can be elevated with `shadow-sm`.\n3. `parent/bookings/page.tsx` — Refine status `<Badge>` styling. Upgrade booking `<Card>` components with `shadow-sm hover:shadow-md transition-shadow`. Add `rounded-xl` to Card className.\n4. `parent/payment/page.tsx` — Already has `rounded-lg bg-muted p-3` icon container. Upgrade to `rounded-xl`. The CreditCard icon container is already good — just round up.\n5. `parent/messages/page.tsx` — Add avatar initial circles for conversation partners (same pattern as teacher messages in T02). Upgrade Card hover state.\n\n**Important constraints:**\n- Parent pages use shadcn `<Card>` component — add className overrides (e.g., `<Card className=\"rounded-xl shadow-sm hover:shadow-md transition-shadow\">`) rather than replacing Card with raw divs\n- Do NOT modify data fetching, auth, or redirects\n- Children page (308 lines): only touch the JSX/className layer, not the add-child form logic or delete dialog\n- The parent overview page already has a good header pattern — preserve it\n- Use `color-mix(in srgb, var(--primary) 12%, transparent)` for tinted pill backgrounds (NOT var(--accent))\n\n**Final verification (must all pass):**\n```bash\nnpx tsc --noEmit          # 0 errors\nnpx vitest run            # 474+ tests pass\nnpx next build            # build succeeds\n```",
       "estimate": "1h",
       "files": [
@@ -5659,6 +5668,100 @@
         "`src/app/(parent)/parent/bookings/page.tsx` — rounded-xl Cards with shadow treatment, refined badges",
         "`src/app/(parent)/parent/payment/page.tsx` — rounded-xl icon container upgrade",
         "`src/app/(parent)/parent/messages/page.tsx` — avatar initial circles, upgraded hover state"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S05",
+      "id": "T01",
+      "title": "Tightened the landing page with a proper footer, pill treatment on the free-forever badge, and mobile-responsive NavBar",
+      "status": "complete",
+      "one_liner": "Tightened the landing page with a proper footer, pill treatment on the free-forever badge, and mobile-responsive NavBar",
+      "narrative": "Three targeted improvements to the landing page:\\n\\n1. **CTASection footer**: Replaced the minimal single-line copyright with a structured footer — top row has Tutelo branding + nav links (Find a Tutor, Sign In), bottom row has copyright. Uses border-t separator and responsive flex layout (stacked on mobile, row on desktop).\\n\\n2. **HeroSection free-forever badge**: Upgraded from plain text to a pill with a subtle border, checkmark icon, and consistent styling matching the eyebrow pill above the headline. Uses the same border-[#3b4d3e]/8 treatment.\\n\\n3. **NavBar mobile**: Hid the 'Sign in' text link on small screens (hidden sm:inline-flex) — only the 'Start your page' CTA button shows on mobile, preventing horizontal cramping.",
+      "verification_result": "npx tsc --noEmit passed with 0 errors.",
+      "duration": "",
+      "completed_at": "2026-04-03T18:05:16.322Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/landing/CTASection.tsx",
+        "src/components/landing/HeroSection.tsx",
+        "src/components/landing/NavBar.tsx"
+      ],
+      "key_decisions": [
+        "Footer uses logo text + tagline rather than an image logo to keep the footer lightweight and consistent with the NavBar text treatment"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S05\nmilestone: M011\nkey_files:\n  - src/components/landing/CTASection.tsx\n  - src/components/landing/HeroSection.tsx\n  - src/components/landing/NavBar.tsx\nkey_decisions:\n  - Footer uses logo text + tagline rather than an image logo to keep the footer lightweight and consistent with the NavBar text treatment\nduration: \nverification_result: passed\ncompleted_at: 2026-04-03T18:05:16.322Z\nblocker_discovered: false\n---\n\n# T01: Tightened the landing page with a proper footer, pill treatment on the free-forever badge, and mobile-responsive NavBar\n\n**Tightened the landing page with a proper footer, pill treatment on the free-forever badge, and mobile-responsive NavBar**\n\n## What Happened\n\nThree targeted improvements to the landing page:\\n\\n1. **CTASection footer**: Replaced the minimal single-line copyright with a structured footer — top row has Tutelo branding + nav links (Find a Tutor, Sign In), bottom row has copyright. Uses border-t separator and responsive flex layout (stacked on mobile, row on desktop).\\n\\n2. **HeroSection free-forever badge**: Upgraded from plain text to a pill with a subtle border, checkmark icon, and consistent styling matching the eyebrow pill above the headline. Uses the same border-[#3b4d3e]/8 treatment.\\n\\n3. **NavBar mobile**: Hid the 'Sign in' text link on small screens (hidden sm:inline-flex) — only the 'Start your page' CTA button shows on mobile, preventing horizontal cramping.\n\n## Verification\n\nnpx tsc --noEmit passed with 0 errors.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 4500ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/landing/CTASection.tsx`\n- `src/components/landing/HeroSection.tsx`\n- `src/components/landing/NavBar.tsx`\n",
+      "description": "Polish the landing page with:\n\n1. **CTASection footer upgrade**: Replace the minimal copyright line with a proper footer that includes navigation links (Find a Tutor → /tutors, Sign In → /login, Privacy → #), the Tutelo logo, and the copyright. Use a clean two-row layout: top row with logo + nav links, bottom row with copyright.\n\n2. **Hero section refinements**: Tighten the 'Free forever • No hidden fees' text — make it slightly more prominent with a subtle border pill treatment matching the eyebrow style.\n\n3. **Section spacing consistency**: Verify all sections use consistent py-24 md:py-32 padding. Verify all section headers use the same pattern (uppercase eyebrow + bold heading + optional subtext).\n\n4. **NavBar mobile responsiveness**: The current NavBar hides nothing on mobile — both 'Sign in' and 'Start your page' show. On very narrow screens the 'Sign in' text link can be hidden (md:inline-flex) to save space, keeping only the CTA button.\n\nConstraints:\n- Do NOT restructure sections or change copy beyond the footer\n- Keep all existing animations (AnimatedSection, AnimatedButton)\n- Preserve the #3b4d3e / #f6f5f0 color system",
+      "estimate": "30m",
+      "files": [
+        "src/components/landing/CTASection.tsx",
+        "src/components/landing/HeroSection.tsx",
+        "src/components/landing/NavBar.tsx"
+      ],
+      "verify": "npx tsc --noEmit",
+      "inputs": [
+        "src/components/landing/CTASection.tsx",
+        "src/components/landing/HeroSection.tsx",
+        "src/components/landing/NavBar.tsx"
+      ],
+      "expected_output": [
+        "Updated CTASection.tsx with proper footer",
+        "Updated HeroSection.tsx with pill treatment on free line",
+        "Updated NavBar.tsx with mobile-responsive sign-in link"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S05",
+      "id": "T02",
+      "title": "Applied global consistency pass — elevated booking-confirmed card, Search icon on tutors empty state, card wrapper on auth layout",
+      "status": "complete",
+      "one_liner": "Applied global consistency pass — elevated booking-confirmed card, Search icon on tutors empty state, card wrapper on auth layout",
+      "narrative": "Three non-dashboard surfaces brought into visual consistency with the premium patterns established in S01–S04:\\n\\n1. **Booking-confirmed page**: Replaced plain text checkmark with a CheckCircle2 icon inside an emerald tinted pill (bg-emerald-100 + text-emerald-600). Wrapped content in an elevated card (rounded-xl border bg-card shadow-sm). Added tracking-tight to heading. Added a 'Back to Home' link button.\\n\\n2. **Tutors directory page**: Added a Search icon (h-10 w-10 text-muted-foreground/50) to the empty state, matching the dashboard empty state pattern from S04. Added max-w-sm to the description text.\\n\\n3. **Auth layout**: Wrapped the child content in a rounded-xl card with border, bg-card, p-8, and shadow-sm. This gives the login/signup form visual containment matching every other card-based surface in the app.",
+      "verification_result": "Full verification suite passed: npx tsc --noEmit (0 errors), npx vitest run (474 tests, 49 files), npx next build (67 pages generated).",
+      "duration": "",
+      "completed_at": "2026-04-03T18:06:52.000Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/booking-confirmed/page.tsx",
+        "src/app/tutors/page.tsx",
+        "src/app/(auth)/layout.tsx"
+      ],
+      "key_decisions": [
+        "Used emerald (not primary) for the booking-confirmed success icon to maintain semantic color meaning (green = success)",
+        "Auth layout card uses p-8 not p-6 to give the login form more breathing room inside the card"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S05\nmilestone: M011\nkey_files:\n  - src/app/booking-confirmed/page.tsx\n  - src/app/tutors/page.tsx\n  - src/app/(auth)/layout.tsx\nkey_decisions:\n  - Used emerald (not primary) for the booking-confirmed success icon to maintain semantic color meaning (green = success)\n  - Auth layout card uses p-8 not p-6 to give the login form more breathing room inside the card\nduration: \nverification_result: passed\ncompleted_at: 2026-04-03T18:06:52.000Z\nblocker_discovered: false\n---\n\n# T02: Applied global consistency pass — elevated booking-confirmed card, Search icon on tutors empty state, card wrapper on auth layout\n\n**Applied global consistency pass — elevated booking-confirmed card, Search icon on tutors empty state, card wrapper on auth layout**\n\n## What Happened\n\nThree non-dashboard surfaces brought into visual consistency with the premium patterns established in S01–S04:\\n\\n1. **Booking-confirmed page**: Replaced plain text checkmark with a CheckCircle2 icon inside an emerald tinted pill (bg-emerald-100 + text-emerald-600). Wrapped content in an elevated card (rounded-xl border bg-card shadow-sm). Added tracking-tight to heading. Added a 'Back to Home' link button.\\n\\n2. **Tutors directory page**: Added a Search icon (h-10 w-10 text-muted-foreground/50) to the empty state, matching the dashboard empty state pattern from S04. Added max-w-sm to the description text.\\n\\n3. **Auth layout**: Wrapped the child content in a rounded-xl card with border, bg-card, p-8, and shadow-sm. This gives the login/signup form visual containment matching every other card-based surface in the app.\n\n## Verification\n\nFull verification suite passed: npx tsc --noEmit (0 errors), npx vitest run (474 tests, 49 files), npx next build (67 pages generated).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 3900ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 7870ms |\n| 3 | `npx next build` | 0 | ✅ pass | 14500ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/booking-confirmed/page.tsx`\n- `src/app/tutors/page.tsx`\n- `src/app/(auth)/layout.tsx`\n",
+      "description": "Apply consistent card elevation and typography patterns across non-dashboard surfaces:\n\n1. **Booking-confirmed page**: Wrap the confirmation content in an elevated card (rounded-xl border bg-card shadow-sm p-8). Replace the text checkmark with a proper CheckCircle2 lucide icon in a tinted success pill (green). Add a 'Back to Home' link button below.\n\n2. **Tutors directory page**: Add the premium page header pattern (tracking-tight on h1 — already close, verify). The TeacherCard already uses rounded-xl shadow-sm hover:shadow-md — confirmed good. Upgrade the empty state to match the dashboard pattern (centered icon + heading + description).\n\n3. **Auth layout/login page**: The auth layout is minimal (centered, max-w-md). Add a subtle Card wrapper around the LoginForm content for visual containment — rounded-xl border bg-card shadow-sm. Verify the login page header uses tracking-tight.\n\n4. **Run full verification suite**: npx tsc --noEmit + npx vitest run + npx next build\n\nConstraints:\n- Do NOT modify any auth logic, data fetching, or API routes\n- Keep the tutors page Suspense boundary unchanged\n- Booking-confirmed page: keep the Stripe session retrieval logic unchanged",
+      "estimate": "45m",
+      "files": [
+        "src/app/booking-confirmed/page.tsx",
+        "src/app/tutors/page.tsx",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/(auth)/layout.tsx"
+      ],
+      "verify": "npx tsc --noEmit && npx vitest run && npx next build",
+      "inputs": [
+        "src/app/booking-confirmed/page.tsx",
+        "src/app/tutors/page.tsx",
+        "src/app/(auth)/login/page.tsx",
+        "src/app/(auth)/layout.tsx"
+      ],
+      "expected_output": [
+        "Updated booking-confirmed with elevated card and icon",
+        "Updated tutors empty state",
+        "Updated auth layout with card wrapper",
+        "All verification passes"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -7732,6 +7835,83 @@
       "verdict": "✅ pass",
       "duration_ms": 27600,
       "created_at": "2026-04-03T16:35:01.102Z"
+    },
+    {
+      "id": 132,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13600,
+      "created_at": "2026-04-03T18:01:22.627Z"
+    },
+    {
+      "id": 133,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M011",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 17690,
+      "created_at": "2026-04-03T18:01:22.628Z"
+    },
+    {
+      "id": 134,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M011",
+      "command": "npx next build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 29000,
+      "created_at": "2026-04-03T18:01:22.628Z"
+    },
+    {
+      "id": 135,
+      "task_id": "T01",
+      "slice_id": "S05",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 4500,
+      "created_at": "2026-04-03T18:05:16.322Z"
+    },
+    {
+      "id": 136,
+      "task_id": "T02",
+      "slice_id": "S05",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3900,
+      "created_at": "2026-04-03T18:06:52.000Z"
+    },
+    {
+      "id": 137,
+      "task_id": "T02",
+      "slice_id": "S05",
+      "milestone_id": "M011",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 7870,
+      "created_at": "2026-04-03T18:06:52.000Z"
+    },
+    {
+      "id": 138,
+      "task_id": "T02",
+      "slice_id": "S05",
+      "milestone_id": "M011",
+      "command": "npx next build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14500,
+      "created_at": "2026-04-03T18:06:52.000Z"
     }
   ]
 }

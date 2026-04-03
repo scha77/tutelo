@@ -48,36 +48,42 @@ export default async function ParentOverviewPage() {
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="rounded-xl shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Children
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{childrenCount}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Upcoming Sessions
             </CardTitle>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+              <CalendarCheck className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{upcomingCount}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Past Sessions
             </CardTitle>
-            <History className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-lg p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
+              <History className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{pastCount}</p>

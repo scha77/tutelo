@@ -76,12 +76,40 @@ export function CTASection() {
         </div>
 
         {/* Footer */}
-        <div className="mt-16 flex flex-col items-center gap-4 text-center">
-          <p className="text-sm text-[#3b4d3e]/40">
-            © {new Date().getFullYear()} Tutelo. Built for teachers, by people
-            who get it.
+        <footer className="mt-20 border-t border-[#3b4d3e]/8 pt-10">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            {/* Logo + tagline */}
+            <div className="flex items-center gap-2.5">
+              <span className="text-base font-semibold tracking-tight text-[#3b4d3e]">
+                Tutelo
+              </span>
+              <span className="text-sm text-[#3b4d3e]/35">·</span>
+              <span className="text-sm text-[#3b4d3e]/40">
+                Built for teachers
+              </span>
+            </div>
+
+            {/* Nav links */}
+            <nav className="flex items-center gap-6">
+              <Link
+                href="/tutors"
+                className="text-sm text-[#3b4d3e]/50 transition-colors hover:text-[#3b4d3e]"
+              >
+                Find a Tutor
+              </Link>
+              <Link
+                href="/login"
+                className="text-sm text-[#3b4d3e]/50 transition-colors hover:text-[#3b4d3e]"
+              >
+                Sign In
+              </Link>
+            </nav>
+          </div>
+
+          <p className="mt-8 text-center text-xs text-[#3b4d3e]/30">
+            © {new Date().getFullYear()} Tutelo. All rights reserved.
           </p>
-        </div>
+        </footer>
       </div>
     </section>
   )

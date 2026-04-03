@@ -23,7 +23,7 @@ export function NavBar() {
         <div className="flex items-center gap-6">
           <Link
             href="/login"
-            className="text-sm font-medium text-[#3b4d3e]/70 transition-colors hover:text-[#3b4d3e]"
+            className="hidden text-sm font-medium text-[#3b4d3e]/70 transition-colors hover:text-[#3b4d3e] sm:inline-flex"
           >
             Sign in
           </Link>
