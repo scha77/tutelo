@@ -55,7 +55,7 @@ export default async function DashboardLayout({
         teacherSlug={teacher.slug}
       />
 
-      <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
+      <main className="flex-1 overflow-auto pt-14 pb-safe-nav md:pt-0 md:pb-0">
         {!teacher.stripe_charges_enabled && (
           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
             <p className="text-sm text-amber-800 font-medium">

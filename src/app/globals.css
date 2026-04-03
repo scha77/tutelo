@@ -128,3 +128,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Safe area bottom padding for content behind fixed bottom nav bars on iOS */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 767px) {
+    .pb-safe-nav {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}

@@ -10,7 +10,14 @@ export function BookNowCTA() {
   return (
     <>
       {/* Mobile: sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background p-3 md:hidden">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background p-3 md:hidden"
+        style={{
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+          paddingLeft: 'max(0.75rem, env(safe-area-inset-left))',
+          paddingRight: 'max(0.75rem, env(safe-area-inset-right))',
+        }}
+      >
         <Button
           onClick={handleClick}
           className="w-full font-semibold"
@@ -32,8 +39,8 @@ export function BookNowCTA() {
         </Button>
       </div>
 
-      {/* Bottom spacer for mobile sticky bar */}
-      <div className="h-16 md:hidden" />
+      {/* Bottom spacer for mobile sticky bar — accounts for safe area on iOS */}
+      <div className="md:hidden" style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }} />
     </>
   )
 }

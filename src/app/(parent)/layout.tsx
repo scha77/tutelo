@@ -39,7 +39,7 @@ export default async function ParentLayout({
         hasTeacherRole={!!teacher}
       />
 
-      <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
+      <main className="flex-1 overflow-auto pt-14 pb-safe-nav md:pt-0 md:pb-0">
         {children}
       </main>
 

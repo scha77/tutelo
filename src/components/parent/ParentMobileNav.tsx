@@ -17,7 +17,7 @@ export function ParentMobileNav() {
       {...slideFromBottom}
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden"
       style={{
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left)',
         paddingRight: 'env(safe-area-inset-right)',
       }}
