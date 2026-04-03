@@ -1,20 +1,19 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { AvailabilityEditor } from '@/components/dashboard/AvailabilityEditor'
 
 export default async function DashboardAvailabilityPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const userId = user.id
+  const { teacher, supabase, userId } = await getTeacher()
+  if (!teacher || !userId) redirect('/login')
 
-  const { data: teacher } = await supabase
+  // Availability needs relation joins — re-query with the cached supabase client
+  const { data: teacherWithAvailability } = await supabase
     .from('teachers')
     .select('id, availability(*), availability_overrides(*)')
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (!teacher) redirect('/onboarding')
+  if (!teacherWithAvailability) redirect('/onboarding')
 
   return (
     <div className="p-6">
@@ -23,8 +22,8 @@ export default async function DashboardAvailabilityPage() {
         <p className="mt-1 text-sm text-muted-foreground">Set your weekly schedule and add date-specific overrides.</p>
       </div>
       <AvailabilityEditor
-        initialSlots={teacher.availability ?? []}
-        initialOverrides={teacher.availability_overrides ?? []}
+        initialSlots={teacherWithAvailability.availability ?? []}
+        initialOverrides={teacherWithAvailability.availability_overrides ?? []}
       />
     </div>
   )

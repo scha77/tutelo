@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { Inbox } from 'lucide-react'
 import { RequestCard } from '@/components/dashboard/RequestCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
@@ -7,26 +7,8 @@ import { acceptBooking, declineBooking } from '@/actions/bookings'
 import { CopyLinkButton } from './CopyLinkButton'
 
 export default async function RequestsPage() {
-  const supabase = await createClient()
-
-  // Auth check
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
-
-  const userId = user.id
-
-  // Fetch teacher row
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, slug, timezone, stripe_charges_enabled')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!teacher) {
-    redirect('/onboarding')
-  }
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   // Fetch pending booking requests
   const { data: requests } = await supabase

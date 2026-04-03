@@ -1,23 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { WaitlistEntryRow } from '@/components/dashboard/WaitlistEntryRow'
 import { removeWaitlistEntry } from '@/actions/waitlist'
 import { ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function WaitlistPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, capacity_limit')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   const { data: entries } = await supabase
     .from('waitlist')

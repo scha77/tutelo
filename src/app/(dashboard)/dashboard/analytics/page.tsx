@@ -1,22 +1,10 @@
 import { redirect } from 'next/navigation'
 import { TrendingUp, Eye, BookOpen, CheckCircle2, BarChart3 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, full_name, slug')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   // ── Analytics queries ──────────────────────────────────────────────────────
   // All queries use the authenticated client — the page_views RLS SELECT policy

@@ -30,19 +30,11 @@ export async function generateMetadata({ params }: Props) {
 export default async function TeacherChatPage({ params }: Props) {
   const { conversationId } = await params
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { getAuthUser, getTeacher } = await import('@/lib/supabase/auth-cache')
+  const { user } = await getAuthUser()
   if (!user) redirect('/login')
 
-  // Resolve teacher row for the current user
-  const { data: teacher } = await supabaseAdmin
-    .from('teachers')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
+  const { teacher } = await getTeacher()
   if (!teacher) redirect('/onboarding')
 
   // Fetch conversation and verify the teacher is a participant

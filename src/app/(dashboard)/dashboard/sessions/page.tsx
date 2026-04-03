@@ -1,25 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { format } from 'date-fns'
 import { ConfirmedSessionCard } from '@/components/dashboard/ConfirmedSessionCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 import { markSessionComplete, cancelSession, cancelSingleRecurringSession, cancelRecurringSeries } from '@/actions/bookings'
 
 export default async function SessionsPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const userId = user.id
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, timezone, slug, full_name')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   const teacherTimezone = teacher.timezone ?? 'America/New_York'
 

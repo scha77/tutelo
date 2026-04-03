@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { Card, CardContent } from '@/components/ui/card'
 import { MessageSquare } from 'lucide-react'
@@ -9,21 +9,8 @@ import { formatDistanceToNow } from 'date-fns'
 export const metadata = { title: 'Messages — Tutelo' }
 
 export default async function TeacherMessagesPage() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  // Resolve teacher row
-  const { data: teacher } = await supabaseAdmin
-    .from('teachers')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, userId } = await getTeacher()
+  if (!teacher || !userId) redirect('/login')
 
   // Fetch conversations where user is the teacher
   const { data: conversations, error } = await supabaseAdmin
@@ -123,7 +110,7 @@ export default async function TeacherMessagesPage() {
                       </h3>
                       {conv.lastMessage ? (
                         <p className="text-sm text-muted-foreground truncate">
-                          {conv.lastMessage.senderId === user.id
+                          {conv.lastMessage.senderId === userId
                             ? 'You: '
                             : ''}
                           {conv.lastMessage.body}

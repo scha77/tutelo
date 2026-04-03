@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser, getTeacher } from '@/lib/supabase/auth-cache'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { MobileHeader } from '@/components/dashboard/MobileHeader'
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
@@ -9,23 +9,13 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-
-  // Auth check — use getUser() for verified identity (makes API call to Supabase Auth).
-  // getClaims() reads only from cookies and can fail on server-action POST re-renders.
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData?.user) {
+  // Cached — child pages calling getAuthUser()/getTeacher() reuse this result.
+  const { user, error: userError } = await getAuthUser()
+  if (userError || !user) {
     redirect('/login')
   }
 
-  const userId = userData.user.id
-
-  // Fetch teacher row for the logged-in user (includes stripe_charges_enabled for banner)
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, full_name, slug, is_published, stripe_charges_enabled')
-    .eq('user_id', userId)
-    .maybeSingle()
+  const { teacher, supabase } = await getTeacher()
 
   // If no teacher row, send to onboarding
   if (!teacher) {

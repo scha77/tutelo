@@ -1,21 +1,20 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { QRCodeCard } from '@/components/dashboard/QRCodeCard'
 import { FlyerPreview } from '@/components/dashboard/FlyerPreview'
 import { SwipeFileSection } from './SwipeFileSection'
 
 export default async function PromotePage() {
-  const supabase = await createClient()
+  const { teacher: baseTeacher, supabase, userId } = await getTeacher()
+  if (!baseTeacher || !userId) redirect('/login')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
+  // Promote needs extra columns not in the cached teacher
   const { data: teacher } = await supabase
     .from('teachers')
     .select(
       'slug, full_name, subjects, hourly_rate, school, bio, headline, grade_levels, city, state'
     )
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (!teacher) redirect('/onboarding')

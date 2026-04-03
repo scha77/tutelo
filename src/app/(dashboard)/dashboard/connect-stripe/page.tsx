@@ -1,24 +1,14 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { Shield } from 'lucide-react'
 import { ConnectStripeButton } from './ConnectStripeButton'
 
 export default async function ConnectStripePage() {
-  const supabase = await createClient()
-
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData?.user) redirect('/login')
-
-  const userId = userData.user.id
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('stripe_charges_enabled')
-    .eq('user_id', userId)
-    .maybeSingle()
+  const { teacher } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   // Guard: already connected
-  if (teacher?.stripe_charges_enabled) redirect('/dashboard')
+  if (teacher.stripe_charges_enabled) redirect('/dashboard')
 
   return (
     <div className="p-6 max-w-md mx-auto space-y-6">

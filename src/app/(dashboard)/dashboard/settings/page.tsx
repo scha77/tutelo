@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { AccountSettings } from '@/components/dashboard/AccountSettings'
 import { CapacitySettings } from '@/components/dashboard/CapacitySettings'
 import { SessionTypeManager } from '@/components/dashboard/SessionTypeManager'
@@ -10,11 +10,10 @@ export default async function DashboardSettingsPage({
 }: {
   searchParams: Promise<{ verified?: string; error?: string }>
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const userId = user.id
+  const { teacher: baseTeacher, supabase, userId } = await getTeacher()
+  if (!baseTeacher || !userId) redirect('/login')
 
+  // Settings needs extra columns not in the cached teacher
   const { data: teacher } = await supabase
     .from('teachers')
     .select('id, full_name, school, city, state, years_experience, photo_url, subjects, grade_levels, timezone, phone_number, sms_opt_in, verified_at, capacity_limit')

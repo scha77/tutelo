@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { CalendarDays } from 'lucide-react'
@@ -8,20 +8,8 @@ import { ReviewPreviewCard } from '@/components/dashboard/ReviewPreviewCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const userId = user.id
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, timezone, slug, full_name')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   // Four parallel queries
   const [

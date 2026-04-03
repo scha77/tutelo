@@ -1,21 +1,9 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 
 export default async function StudentsPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const userId = user.id
-
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, timezone, slug, full_name')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
+  const { teacher, supabase } = await getTeacher()
+  if (!teacher) redirect('/login')
 
   // Fetch all completed bookings for student grouping
   const { data: completedBookings } = await supabase

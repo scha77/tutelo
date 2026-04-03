@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getTeacher } from '@/lib/supabase/auth-cache'
 import { PageSettings } from '@/components/dashboard/PageSettings'
 
 export default async function DashboardPageSection() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const userId = user.id
+  const { teacher: baseTeacher, supabase, userId } = await getTeacher()
+  if (!baseTeacher || !userId) redirect('/login')
 
+  // Page settings needs extra columns not in the cached teacher
   const { data: teacher } = await supabase
     .from('teachers')
     .select('is_published, accent_color, headline, photo_url, banner_url, social_instagram, social_email, social_website')
