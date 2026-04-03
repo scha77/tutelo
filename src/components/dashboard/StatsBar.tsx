@@ -23,28 +23,43 @@ export function StatsBar({ totalEarnedCents, upcomingCount, studentCount }: Stat
       initial="hidden"
       animate="visible"
     >
-      <m.div variants={staggerItem} className="rounded-lg bg-muted/30 p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-          <DollarSign className="h-4 w-4" />
-          <span className="text-sm font-medium">Total Earned</span>
+      <m.div variants={staggerItem} className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-3 mb-1">
+          <div
+            className="rounded-lg p-2"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+          >
+            <DollarSign className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">Total Earned</span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{totalEarned}</p>
+        <p className="text-2xl font-bold text-foreground mt-2">{totalEarned}</p>
       </m.div>
 
-      <m.div variants={staggerItem} className="rounded-lg bg-muted/30 p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-          <CalendarCheck className="h-4 w-4" />
-          <span className="text-sm font-medium">Upcoming Sessions</span>
+      <m.div variants={staggerItem} className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-3 mb-1">
+          <div
+            className="rounded-lg p-2"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+          >
+            <CalendarCheck className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">Upcoming Sessions</span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{upcomingCount}</p>
+        <p className="text-2xl font-bold text-foreground mt-2">{upcomingCount}</p>
       </m.div>
 
-      <m.div variants={staggerItem} className="rounded-lg bg-muted/30 p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-          <Users className="h-4 w-4" />
-          <span className="text-sm font-medium">Students</span>
+      <m.div variants={staggerItem} className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-3 mb-1">
+          <div
+            className="rounded-lg p-2"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+          >
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">Students</span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{studentCount}</p>
+        <p className="text-2xl font-bold text-foreground mt-2">{studentCount}</p>
       </m.div>
     </m.div>
   )

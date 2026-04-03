@@ -63,11 +63,14 @@ export function RequestCard({
   }
 
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm">
+    <div className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow">
       {/* Header: student name + subject badge */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-semibold text-foreground">{booking.student_name}</span>
-        <span className="text-sm rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+        <span
+          className="rounded-full px-2 py-0.5 text-xs font-medium text-primary"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+        >
           {booking.subject}
         </span>
       </div>

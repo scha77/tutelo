@@ -31,7 +31,7 @@ export function WaitlistEntryRow({ entry, removeAction }: WaitlistEntryRowProps)
   }
 
   return (
-    <div className="rounded-lg border bg-card px-4 py-3 flex items-center gap-4">
+    <div className="rounded-xl border bg-card px-4 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-foreground truncate">{entry.parent_email}</p>
         <p className="text-sm text-muted-foreground">
@@ -40,11 +40,14 @@ export function WaitlistEntryRow({ entry, removeAction }: WaitlistEntryRowProps)
       </div>
 
       {entry.notified_at ? (
-        <span className="text-xs rounded-full bg-green-100 px-2 py-0.5 text-green-700 shrink-0">
+        <span className="rounded-full px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 shrink-0">
           Notified
         </span>
       ) : (
-        <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground shrink-0">
+        <span
+          className="rounded-full px-2 py-0.5 text-xs font-medium text-primary shrink-0"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+        >
           Pending
         </span>
       )}

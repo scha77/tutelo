@@ -765,3 +765,22 @@ All step headers in the booking flow (BookingForm, auth step, payment step) use 
 ```
 The flex-wrap + gap-2 layout is required to prevent the chip from overflowing on narrow booking panel widths. Do not use inline-block or fixed-width approaches.
 
+
+---
+
+## Mobile Nav Item Count: navItems Array Is Not Sequential by Visual Order
+
+`navItems` in `src/lib/nav.ts` is ordered by dashboard importance, not by the 0-based array index you'd expect if you wanted specific items. Availability is at index **6** (not index 3). When splitting `navItems` into `primaryNavItems` and `moreNavItems`, use explicit index references (`navItems[0]`, `navItems[6]`, etc.) rather than `.slice(0, 4)`. Slicing by index would pick up Students/Waitlist/Page as primary items instead of the intended Overview/Requests/Sessions/Availability.
+
+---
+
+## MobileBottomNav More Panel: Panel Positioned Above Nav Bar Height
+
+The More panel uses `bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))` to sit flush above the nav bar. This value (`3.5rem`) must match the nav bar height. If the nav bar height changes (e.g., taller for larger touch targets), update the panel's `bottom` value to match, or the panel will overlap the bar or leave a gap.
+
+---
+
+## ParentMobileNav Was Already Correct Before S03
+
+When T02 was planned, the expectation was that `ParentMobileNav.tsx` needed sr-only label removal. In reality, it already had visible `text-[10px]` labels on all 5 tabs and Sign Out. Always read the actual component before planning label-visibility changes — the component may have already been updated as part of a previous slice or task.
+

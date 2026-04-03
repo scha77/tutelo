@@ -89,24 +89,27 @@ export function ConfirmedSessionCard({
   }
 
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm">
+    <div className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow">
       {/* Header: student name + subject badge */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-semibold text-foreground">{booking.student_name}</span>
-        <span className="text-sm rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+        <span
+          className="rounded-full px-2 py-0.5 text-xs font-medium text-primary"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}
+        >
           {booking.subject}
         </span>
         {recurringScheduleId && (
-          <span className="text-sm rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">
+          <span className="rounded-full px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-50">
             Recurring
           </span>
         )}
         {bookingStatus === 'payment_failed' ? (
-          <span className="text-sm rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+          <span className="rounded-full px-2 py-0.5 text-xs font-medium text-amber-700 bg-amber-50">
             Payment Failed
           </span>
         ) : (
-          <span className="text-sm rounded-full bg-green-100 px-2 py-0.5 text-green-700">
+          <span className="rounded-full px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50">
             Confirmed
           </span>
         )}
