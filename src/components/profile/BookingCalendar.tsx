@@ -498,15 +498,28 @@ export function BookingCalendar({
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <div className="text-sm text-muted-foreground leading-tight">
+              <div className="text-sm text-muted-foreground leading-tight flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-foreground">
                   {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
                 </span>
                 {selectedSlot && (
                   <span>
-                    {' '}
                     &middot; {selectedSlot.startDisplay} – {selectedSlot.endDisplay}
                   </span>
+                )}
+                {selectedSessionType && (
+                  <>
+                    <span>&middot; ${Number(selectedSessionType.price).toFixed(0)}</span>
+                    <span
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+                        color: 'var(--accent)',
+                      }}
+                    >
+                      {selectedSessionType.label}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
@@ -516,15 +529,28 @@ export function BookingCalendar({
           /* ── Payment step (direct booking only) ── */
           <div>
             <div className="flex items-center gap-3 border-b px-6 py-4">
-              <div className="text-sm text-muted-foreground leading-tight">
+              <div className="text-sm text-muted-foreground leading-tight flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-foreground">
                   {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
                 </span>
                 {selectedSlot && (
                   <span>
-                    {' '}
                     &middot; {selectedSlot.startDisplay} – {selectedSlot.endDisplay}
                   </span>
+                )}
+                {selectedSessionType && (
+                  <>
+                    <span>&middot; ${Number(selectedSessionType.price).toFixed(0)}</span>
+                    <span
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+                        color: 'var(--accent)',
+                      }}
+                    >
+                      {selectedSessionType.label}
+                    </span>
+                  </>
                 )}
               </div>
             </div>

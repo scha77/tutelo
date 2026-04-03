@@ -139,7 +139,10 @@ export function RecurringOptions({
       <div className="p-6 space-y-6 max-w-md">
         {/* Frequency toggle */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Schedule type</label>
+          <label className="text-sm font-medium flex items-center gap-1.5">
+            <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+            Schedule type
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {(['one-time', 'weekly', 'biweekly'] as const).map((f) => {
               const labels: Record<RecurringFrequency, string> = {
@@ -153,7 +156,7 @@ export function RecurringOptions({
                   key={f}
                   onClick={() => setFrequency(f)}
                   className={[
-                    'rounded-lg border-2 px-3 py-2.5 text-sm font-semibold transition-colors',
+                    'rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-colors',
                     isActive ? 'text-white' : 'hover:bg-muted/50',
                   ].join(' ')}
                   style={{
@@ -205,7 +208,7 @@ export function RecurringOptions({
               <p className="text-xs text-amber-600">{error}</p>
             )}
 
-            <div className="max-h-60 overflow-y-auto rounded-lg border divide-y">
+            <div className="max-h-60 overflow-y-auto rounded-xl border divide-y shadow-sm">
               {projectedDates.map((date, i) => {
                 const isSkipped = skippedSet.has(date)
                 const skipInfo = skippedDates.find((s) => s.date === date)

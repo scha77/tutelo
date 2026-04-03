@@ -29,7 +29,7 @@ Steps:
   - Estimate: 45m
   - Files: src/components/profile/SessionTypeSelector.tsx, src/components/profile/CalendarGrid.tsx, src/components/profile/TimeSlotsPanel.tsx, src/components/profile/BookingCalendar.tsx
   - Verify: npx vitest run --reporter=dot && npx tsc --noEmit
-- [ ] **T03: Visual polish pass — RecurringOptions, PaymentStep, and step header refinements** — Apply premium visual treatment to the remaining booking flow surfaces: RecurringOptions projected dates, PaymentStep trust signal, and step headers in auth/payment panels. This completes the visual cohesion between the booking flow and the S01 profile page.
+- [x] **T03: Applied premium visual treatment to RecurringOptions (rounded-xl projected dates, Repeat icon, refined toggles), PaymentStep (Shield trust signal, heading), and auth/payment step headers (accent chip for session type) completing booking flow visual cohesion** — Apply premium visual treatment to the remaining booking flow surfaces: RecurringOptions projected dates, PaymentStep trust signal, and step headers in auth/payment panels. This completes the visual cohesion between the booking flow and the S01 profile page.
 
 Steps:
 1. In `RecurringOptions.tsx`: upgrade projected dates list from `rounded-lg border divide-y` to `rounded-xl border divide-y shadow-sm`. Add `Repeat` icon paired with 'Schedule type' label (matching S01 icon-paired meta pattern). Refine frequency toggle button corners to `rounded-xl` for consistency.

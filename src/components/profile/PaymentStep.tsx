@@ -3,6 +3,7 @@
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useState } from 'react'
+import { Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 // Destination charge (no on_behalf_of) — PI is on the platform account, use platform key only
@@ -55,6 +56,11 @@ function CheckoutForm({ accentColor, onSuccess, onError, onBookAnother }: Checko
 
   return (
     <form onSubmit={handleSubmit} className="p-6 space-y-4 max-w-md mx-auto">
+      <h3 className="text-lg font-semibold">Complete your booking</h3>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Shield className="h-3.5 w-3.5" />
+        <span>Secure payment via Stripe</span>
+      </div>
       <PaymentElement />
       <Button
         type="submit"
