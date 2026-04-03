@@ -12,7 +12,7 @@
   - Estimate: 30m
   - Files: src/components/profile/CredentialsBar.tsx
   - Verify: npx tsc --noEmit && npx vitest run --reporter=dot 2>&1 | tail -3
-- [ ] **T03: Upgrade ReviewsSection with SVG stars, elevated cards, and reviewer avatars — wire accentColor and verify all tests** — The ReviewsSection has the most constraints: 3 unit tests in src/__tests__/dashboard-reviews.test.ts that call ReviewsSection({ reviews }) directly and check JSON.stringify output for '4.7', '" review"', 'Review 0'...'Review 4'. The tests check serialized JSX structure, not rendered HTML.
+- [x] **T03: Replaced unicode stars with inline SVG star icons, elevated review cards with shadow/rounded-xl, added accent-colored reviewer initial avatars, applied text-wrap pretty, and wired accentColor prop — all 474 tests pass** — The ReviewsSection has the most constraints: 3 unit tests in src/__tests__/dashboard-reviews.test.ts that call ReviewsSection({ reviews }) directly and check JSON.stringify output for '4.7', '" review"', 'Review 0'...'Review 4'. The tests check serialized JSX structure, not rendered HTML.
 
 Changes:
 1. Replace unicode ★ with inline SVG stars in renderStars() — use <svg viewBox='0 0 20 20'> with <path> for a star shape, filled yellow-400 or gray-200. The tests don't directly assert on star characters (they check '4.7' and review text), so SVG replacement is safe.

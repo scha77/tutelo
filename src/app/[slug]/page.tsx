@@ -260,7 +260,7 @@ export default async function TeacherProfilePage({
       )}
       {!atCapacity && <BookNowCTA />}
       <AnimatedProfile delay={0.2}>
-        <ReviewsSection reviews={reviews ?? []} />
+        <ReviewsSection reviews={reviews ?? []} accentColor={teacher.accent_color} />
       </AnimatedProfile>
       <SocialLinks
         instagram={teacher.social_instagram}

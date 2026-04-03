@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T15:45:22.973Z",
+  "exported_at": "2026-04-03T15:47:51.612Z",
   "milestones": [
     {
       "id": "M001",
@@ -5230,19 +5230,26 @@
       "milestone_id": "M011",
       "slice_id": "S01",
       "id": "T03",
-      "title": "Upgrade ReviewsSection with SVG stars, elevated cards, and reviewer avatars — wire accentColor and verify all tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Replaced unicode stars with inline SVG star icons, elevated review cards with shadow/rounded-xl, added accent-colored reviewer initial avatars, applied text-wrap pretty, and wired accentColor prop — all 474 tests pass",
+      "status": "complete",
+      "one_liner": "Replaced unicode stars with inline SVG star icons, elevated review cards with shadow/rounded-xl, added accent-colored reviewer initial avatars, applied text-wrap pretty, and wired accentColor prop — all 474 tests pass",
+      "narrative": "Rewrote ReviewsSection.tsx: (1) StarIcon SVG component replacing unicode ★, (2) elevated cards with rounded-xl/bg-card/shadow-sm/hover:shadow-md, (3) ReviewerAvatar component with accent-colored circle showing first initial, (4) text-wrap pretty on review text, (5) upgraded aggregate rating header with SVG stars + bold rating + muted count with aria-label, (6) optional accentColor prop wired from teacher.accent_color in page.tsx. All existing test assertions preserved — firstNameFromEmail export unchanged, null-return for empty reviews intact, slice-to-5 behavior identical.",
+      "verification_result": "npx vitest run (474 passed, 49 files), npx tsc --noEmit (clean), npx next build (success)",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-03T15:47:51.595Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/profile/ReviewsSection.tsx",
+        "src/app/[slug]/page.tsx"
+      ],
+      "key_decisions": [
+        "Used inline SVG star path for crisp rendering at any size instead of unicode ★",
+        "accentColor prop is optional to preserve backward compatibility with existing tests",
+        "ReviewerAvatar falls back to var(--accent, #6366f1) when no accentColor provided"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M011\nkey_files:\n  - src/components/profile/ReviewsSection.tsx\n  - src/app/[slug]/page.tsx\nkey_decisions:\n  - Used inline SVG star path for crisp rendering at any size instead of unicode ★\n  - accentColor prop is optional to preserve backward compatibility with existing tests\n  - ReviewerAvatar falls back to var(--accent, #6366f1) when no accentColor provided\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-03T15:47:51.595Z\nblocker_discovered: false\n---\n\n# T03: Replaced unicode stars with inline SVG star icons, elevated review cards with shadow/rounded-xl, added accent-colored reviewer initial avatars, applied text-wrap pretty, and wired accentColor prop — all 474 tests pass\n\n**Replaced unicode stars with inline SVG star icons, elevated review cards with shadow/rounded-xl, added accent-colored reviewer initial avatars, applied text-wrap pretty, and wired accentColor prop — all 474 tests pass**\n\n## What Happened\n\nRewrote ReviewsSection.tsx: (1) StarIcon SVG component replacing unicode ★, (2) elevated cards with rounded-xl/bg-card/shadow-sm/hover:shadow-md, (3) ReviewerAvatar component with accent-colored circle showing first initial, (4) text-wrap pretty on review text, (5) upgraded aggregate rating header with SVG stars + bold rating + muted count with aria-label, (6) optional accentColor prop wired from teacher.accent_color in page.tsx. All existing test assertions preserved — firstNameFromEmail export unchanged, null-return for empty reviews intact, slice-to-5 behavior identical.\n\n## Verification\n\nnpx vitest run (474 passed, 49 files), npx tsc --noEmit (clean), npx next build (success)\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run --reporter=dot` | 0 | ✅ pass | 9300ms |\n| 2 | `npx tsc --noEmit` | 0 | ✅ pass | 3000ms |\n| 3 | `npx next build` | 0 | ✅ pass | 23000ms |\n\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/profile/ReviewsSection.tsx`\n- `src/app/[slug]/page.tsx`\n",
       "description": "The ReviewsSection has the most constraints: 3 unit tests in src/__tests__/dashboard-reviews.test.ts that call ReviewsSection({ reviews }) directly and check JSON.stringify output for '4.7', '\" review\"', 'Review 0'...'Review 4'. The tests check serialized JSX structure, not rendered HTML.\n\nChanges:\n1. Replace unicode ★ with inline SVG stars in renderStars() — use <svg viewBox='0 0 20 20'> with <path> for a star shape, filled yellow-400 or gray-200. The tests don't directly assert on star characters (they check '4.7' and review text), so SVG replacement is safe.\n2. Upgrade review cards from 'rounded-lg border p-4' to 'rounded-xl border bg-card shadow-sm p-5' for elevation.\n3. Add reviewer initial avatar: small div with rounded-full, accent-colored background showing first letter of reviewer_name (or 'A' for Anonymous). This requires an accentColor prop.\n4. Add text-wrap: pretty on review_text.\n5. Upgrade aggregate rating header: SVG stars + rating number + count with better typography.\n6. Add accentColor prop to ReviewsSection interface.\n7. Wire accentColor in page.tsx: pass `accentColor={teacher.accent_color}` to the ReviewsSection component.\n8. Run full verification: vitest (474 pass), tsc --noEmit (clean), next build (success).\n\nCRITICAL: Do NOT rename or remove the `firstNameFromEmail` export — it is tested. Do NOT change the component's behavior of returning null for empty reviews or slicing to 5. The avg rating calculation and count display logic must produce identical string values.",
       "estimate": "45m",
       "files": [
@@ -7025,6 +7032,39 @@
       "verdict": "✅ pass",
       "duration_ms": 9900,
       "created_at": "2026-04-03T15:45:22.943Z"
+    },
+    {
+      "id": 115,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx vitest run --reporter=dot",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9300,
+      "created_at": "2026-04-03T15:47:51.595Z"
+    },
+    {
+      "id": 116,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-04-03T15:47:51.595Z"
+    },
+    {
+      "id": 117,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M011",
+      "command": "npx next build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 23000,
+      "created_at": "2026-04-03T15:47:51.595Z"
     }
   ]
 }
