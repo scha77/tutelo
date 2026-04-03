@@ -24,9 +24,9 @@ SET search_vector = (
   setweight(to_tsvector('english', coalesce(bio, '')), 'C')
 );
 
--- 3. Create GIN index CONCURRENTLY (no table lock)
+-- 3. Create GIN index (no table lock issue with small tables)
 --    IF NOT EXISTS makes this safe to re-run
-CREATE INDEX CONCURRENTLY IF NOT EXISTS teachers_search_vector_gin
+CREATE INDEX IF NOT EXISTS teachers_search_vector_gin
   ON teachers USING GIN(search_vector);
 
 -- 4. Trigger function: keep search_vector up to date on INSERT/UPDATE

@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS conversations (
   CONSTRAINT conversations_teacher_parent_unique UNIQUE (teacher_id, parent_id)
 );
 
-CREATE INDEX idx_conversations_teacher_id ON conversations (teacher_id);
-CREATE INDEX idx_conversations_parent_id  ON conversations (parent_id);
-CREATE INDEX idx_conversations_last_message_at ON conversations (last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversations_teacher_id ON conversations (teacher_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_parent_id  ON conversations (parent_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_last_message_at ON conversations (last_message_at DESC);
 
 -- ===== messages =====
 CREATE TABLE IF NOT EXISTS messages (
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS messages (
   CONSTRAINT messages_body_max_length CHECK (char_length(body) <= 2000)
 );
 
-CREATE INDEX idx_messages_conversation_id ON messages (conversation_id, created_at);
-CREATE INDEX idx_messages_sender_id       ON messages (sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id       ON messages (sender_id);
 
 -- ===== RLS =====
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
@@ -39,6 +39,7 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
 -- Conversations: participants can read their own conversations.
 -- A user is a participant if they are the parent_id OR own the teacher row.
+DROP POLICY IF EXISTS "participant_select" ON conversations;
 CREATE POLICY "participant_select" ON conversations
   FOR SELECT
   USING (
@@ -50,6 +51,7 @@ CREATE POLICY "participant_select" ON conversations
 -- No INSERT policy for authenticated users — upserts go through supabaseAdmin.
 
 -- Messages: participants can read messages in their conversations.
+DROP POLICY IF EXISTS "participant_select" ON messages;
 CREATE POLICY "participant_select" ON messages
   FOR SELECT
   USING (
@@ -61,6 +63,7 @@ CREATE POLICY "participant_select" ON messages
   );
 
 -- Messages: participants can insert messages into their conversations.
+DROP POLICY IF EXISTS "participant_insert" ON messages;
 CREATE POLICY "participant_insert" ON messages
   FOR INSERT
   WITH CHECK (
@@ -74,4 +77,9 @@ CREATE POLICY "participant_insert" ON messages
 
 -- ===== Realtime =====
 -- Publish messages table to Supabase Realtime so clients can subscribe.
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+-- Use DO block to handle case where table is already in publication
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;

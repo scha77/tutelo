@@ -20,6 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_children_parent_id ON children (parent_id);
 ALTER TABLE children ENABLE ROW LEVEL SECURITY;
 
 -- Parents can only see/manage their own children
+DROP POLICY IF EXISTS children_owner_all ON children;
 CREATE POLICY children_owner_all ON children
   FOR ALL
   USING (parent_id = auth.uid())

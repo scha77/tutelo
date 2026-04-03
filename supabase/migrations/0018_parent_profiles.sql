@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
 -- RLS: parents can read/update only their own row
 ALTER TABLE parent_profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "owner_all" ON parent_profiles;
 CREATE POLICY "owner_all" ON parent_profiles
   FOR ALL
   USING (user_id = auth.uid())
