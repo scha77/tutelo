@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mock next/cache
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  updateTag: vi.fn(),
 }))
 
 // Mock supabase server client
@@ -86,7 +87,7 @@ describe('cancelSingleRecurringSession', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
-    vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+    vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }))
     vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: mockAdminFrom } }))
     vi.mock('@/lib/email', () => ({
@@ -220,7 +221,7 @@ describe('cancelRecurringSeries', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
-    vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+    vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }))
     vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: mockAdminFrom } }))
     vi.mock('@/lib/email', () => ({

@@ -1,26 +1,14 @@
-'use client'
-
-import * as m from 'motion/react-client'
-import { staggerContainer, staggerItem } from '@/lib/animation'
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 interface AnimatedListProps {
   children: ReactNode
   className?: string
 }
 
-/** Staggered list container — wraps items in a motion.ul with stagger timing. */
+/** Staggered list — children fade+slide in via CSS with nth-child delays. */
 export function AnimatedList({ children, className }: AnimatedListProps) {
-  return (
-    <m.ul
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className={className}
-    >
-      {children}
-    </m.ul>
-  )
+  return <ul className={cn('animate-list', className)}>{children}</ul>
 }
 
 interface AnimatedListItemProps {
@@ -28,11 +16,7 @@ interface AnimatedListItemProps {
   className?: string
 }
 
-/** Single item inside an AnimatedList — fades + slides up with stagger delay. */
+/** Single item inside an AnimatedList. */
 export function AnimatedListItem({ children, className }: AnimatedListItemProps) {
-  return (
-    <m.li variants={staggerItem} className={className}>
-      {children}
-    </m.li>
-  )
+  return <li className={cn('animate-list-item', className)}>{children}</li>
 }

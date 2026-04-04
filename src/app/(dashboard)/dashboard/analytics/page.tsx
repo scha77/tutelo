@@ -6,39 +6,37 @@ export default async function AnalyticsPage() {
   const { teacher, supabase } = await getTeacher()
   if (!teacher) redirect('/login')
 
-  // ── Analytics queries ──────────────────────────────────────────────────────
-  // All queries use the authenticated client — the page_views RLS SELECT policy
-  // allows teachers to read their own rows.
-
-  // Total views (all time, bots excluded)
-  const { count: totalViews } = await supabase
-    .from('page_views')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacher.id)
-    .eq('is_bot', false)
-
-  // Views last 30 days
+  // ── Analytics queries (all parallel) ────────────────────────────────────
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  const { count: recentViews } = await supabase
-    .from('page_views')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacher.id)
-    .eq('is_bot', false)
-    .gte('viewed_at', thirtyDaysAgo)
 
-  // Completed bookings (all time)
-  const { count: completedBookings } = await supabase
-    .from('bookings')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacher.id)
-    .eq('status', 'completed')
-
-  // Active bookings (requested + pending + confirmed — engaged parents)
-  const { count: activeBookings } = await supabase
-    .from('bookings')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacher.id)
-    .in('status', ['requested', 'pending', 'confirmed'])
+  const [
+    { count: totalViews },
+    { count: recentViews },
+    { count: completedBookings },
+    { count: activeBookings },
+  ] = await Promise.all([
+    supabase
+      .from('page_views')
+      .select('id', { count: 'exact', head: true })
+      .eq('teacher_id', teacher.id)
+      .eq('is_bot', false),
+    supabase
+      .from('page_views')
+      .select('id', { count: 'exact', head: true })
+      .eq('teacher_id', teacher.id)
+      .eq('is_bot', false)
+      .gte('viewed_at', thirtyDaysAgo),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('teacher_id', teacher.id)
+      .eq('status', 'completed'),
+    supabase
+      .from('bookings')
+      .select('id', { count: 'exact', head: true })
+      .eq('teacher_id', teacher.id)
+      .in('status', ['requested', 'pending', 'confirmed']),
+  ])
 
   // Conversion rate: completed bookings / total views
   const conversionRate =

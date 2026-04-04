@@ -17,6 +17,7 @@ vi.mock('@/lib/supabase/service', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  updateTag: vi.fn(),
 }))
 
 vi.mock('@/lib/email', () => ({
@@ -66,7 +67,7 @@ describe('submitBookingRequest — phone storage', () => {
     // Re-register mocks after resetModules
     vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: vi.fn() } }))
-    vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+    vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }))
     vi.mock('@/lib/email', () => ({ sendBookingEmail: vi.fn().mockResolvedValue(undefined) }))
   })
 

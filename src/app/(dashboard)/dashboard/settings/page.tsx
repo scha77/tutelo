@@ -13,37 +13,37 @@ export default async function DashboardSettingsPage({
   const { teacher: baseTeacher, supabase, userId } = await getTeacher()
   if (!baseTeacher || !userId) redirect('/login')
 
-  // Settings needs extra columns not in the cached teacher
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, full_name, school, city, state, years_experience, photo_url, subjects, grade_levels, timezone, phone_number, sms_opt_in, verified_at, capacity_limit')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!teacher) redirect('/onboarding')
-
-  // Count distinct active students (confirmed/completed bookings in last 90 days)
+  // Settings needs extra columns not in the cached teacher — run all 3 queries in parallel
   const ninetyDaysAgo = new Date()
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
   const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0]
 
-  const { data: bookings } = await supabase
-    .from('bookings')
-    .select('student_name')
-    .eq('teacher_id', userId)
-    .in('status', ['confirmed', 'completed'])
-    .gte('booking_date', ninetyDaysAgoStr)
+  const [teacherResult, bookingsResult, sessionTypesResult] = await Promise.all([
+    supabase
+      .from('teachers')
+      .select('id, full_name, school, city, state, years_experience, photo_url, subjects, grade_levels, timezone, phone_number, sms_opt_in, verified_at, capacity_limit')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('bookings')
+      .select('student_name')
+      .eq('teacher_id', userId)
+      .in('status', ['confirmed', 'completed'])
+      .gte('booking_date', ninetyDaysAgoStr),
+    supabase
+      .from('session_types')
+      .select('id, label, price, duration_minutes, sort_order')
+      .eq('teacher_id', baseTeacher.id)
+      .order('sort_order'),
+  ])
 
-  const activeStudentCount = bookings
-    ? new Set(bookings.map((b: { student_name: string }) => b.student_name)).size
+  const teacher = teacherResult.data
+  if (!teacher) redirect('/onboarding')
+
+  const activeStudentCount = bookingsResult.data
+    ? new Set(bookingsResult.data.map((b: { student_name: string }) => b.student_name)).size
     : 0
-
-  // Fetch session types for this teacher (uses teacher.id PK, not auth UID)
-  const { data: sessionTypes } = await supabase
-    .from('session_types')
-    .select('id, label, price, duration_minutes, sort_order')
-    .eq('teacher_id', teacher.id)
-    .order('sort_order')
+  const sessionTypes = sessionTypesResult.data
 
   const params = await searchParams
 

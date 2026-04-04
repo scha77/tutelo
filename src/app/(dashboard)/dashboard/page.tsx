@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { getTeacher } from '@/lib/supabase/auth-cache'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { CalendarDays } from 'lucide-react'
@@ -7,65 +9,74 @@ import { StatsBar } from '@/components/dashboard/StatsBar'
 import { ReviewPreviewCard } from '@/components/dashboard/ReviewPreviewCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 
+/** Overview stats cached for 30 s — avoids refetching on every nav back. */
+function getCachedOverviewData(teacherId: string) {
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient()
+
+      const [
+        upcomingResult,
+        completedResult,
+        recentReviewsResult,
+        upcomingPreviewResult,
+      ] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id', { count: 'exact', head: true })
+          .eq('teacher_id', teacherId)
+          .eq('status', 'confirmed'),
+        supabase
+          .from('bookings')
+          .select('id, amount_cents, student_name, parent_email')
+          .eq('teacher_id', teacherId)
+          .eq('status', 'completed'),
+        supabase
+          .from('reviews')
+          .select('rating, review_text, reviewer_name, created_at')
+          .eq('teacher_id', teacherId)
+          .not('rating', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(2),
+        supabase
+          .from('bookings')
+          .select('id, student_name, subject, booking_date')
+          .eq('teacher_id', teacherId)
+          .eq('status', 'confirmed')
+          .order('booking_date', { ascending: true })
+          .limit(3),
+      ])
+
+      const completedBookings = completedResult.data ?? []
+      return {
+        upcomingCount: upcomingResult.count ?? 0,
+        recentReviews: recentReviewsResult.data ?? [],
+        upcomingPreview: upcomingPreviewResult.data ?? [],
+        totalEarnedCents: completedBookings.reduce(
+          (sum, b) => sum + (b.amount_cents ?? 0),
+          0,
+        ),
+        studentCount: new Set(
+          completedBookings.map((b) => `${b.student_name}|${b.parent_email}`),
+        ).size,
+      }
+    },
+    [`overview-${teacherId}`],
+    { revalidate: 30, tags: [`overview-${teacherId}`] },
+  )()
+}
+
 export default async function DashboardPage() {
-  const { teacher, supabase } = await getTeacher()
+  const { teacher } = await getTeacher()
   if (!teacher) redirect('/login')
 
-  // Four parallel queries
-  const [
-    upcomingResult,
-    completedResult,
-    recentReviewsResult,
-    upcomingPreviewResult,
-  ] = await Promise.all([
-    // Count only — no rows needed
-    supabase
-      .from('bookings')
-      .select('id', { count: 'exact', head: true })
-      .eq('teacher_id', teacher.id)
-      .eq('status', 'confirmed'),
-
-    // Completed bookings for earnings + student count
-    supabase
-      .from('bookings')
-      .select('id, amount_cents, student_name, parent_email')
-      .eq('teacher_id', teacher.id)
-      .eq('status', 'completed'),
-
-    // Last 2 reviews with ratings
-    supabase
-      .from('reviews')
-      .select('rating, review_text, reviewer_name, created_at')
-      .eq('teacher_id', teacher.id)
-      .not('rating', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(2),
-
-    // 3 upcoming sessions for preview
-    supabase
-      .from('bookings')
-      .select('id, student_name, subject, booking_date')
-      .eq('teacher_id', teacher.id)
-      .eq('status', 'confirmed')
-      .order('booking_date', { ascending: true })
-      .limit(3),
-  ])
-
-  const upcomingCount = upcomingResult.count ?? 0
-  const completedBookings = completedResult.data ?? []
-  const recentReviews = recentReviewsResult.data ?? []
-  const upcomingPreview = upcomingPreviewResult.data ?? []
-
-  // Compute earnings
-  const totalEarnedCents = completedBookings.reduce(
-    (sum, b) => sum + (b.amount_cents ?? 0),
-    0
-  )
-
-  // Compute unique student count
-  const studentCount = new Set(
-    completedBookings.map((b) => `${b.student_name}|${b.parent_email}`)
-  ).size
+  const {
+    upcomingCount,
+    recentReviews,
+    upcomingPreview,
+    totalEarnedCents,
+    studentCount,
+  } = await getCachedOverviewData(teacher.id)
 
   return (
     <div className="p-6 max-w-3xl space-y-8">

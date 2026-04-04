@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mock next/cache
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  updateTag: vi.fn(),
 }))
 
 // Mock supabase server client
@@ -96,7 +97,7 @@ describe('cancelSession', () => {
     vi.clearAllMocks()
     vi.resetModules()
     // Re-apply mocks after resetModules
-    vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+    vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }))
     vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }))
     vi.mock('@/lib/supabase/service', () => ({ supabaseAdmin: { from: vi.fn() } }))
     vi.mock('@/lib/email', () => ({ sendCancellationEmail: vi.fn().mockResolvedValue(undefined) }))

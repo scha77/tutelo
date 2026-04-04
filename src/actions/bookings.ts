@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { BookingRequestSchema } from '@/lib/schemas/booking'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
 
@@ -94,6 +94,7 @@ export async function acceptBooking(
   if (error) return { error: error.message }
   if (count === 0) return { error: 'Not found or already actioned' }
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -164,6 +165,7 @@ export async function markSessionComplete(
   const { sendSessionCompleteEmail } = await import('@/lib/email')
   sendSessionCompleteEmail(bookingId, reviewToken).catch(console.error)
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   revalidatePath('/dashboard/sessions')
@@ -228,6 +230,7 @@ export async function cancelSession(
   const { checkAndNotifyWaitlist } = await import('@/lib/utils/waitlist')
   checkAndNotifyWaitlist(teacher.id).catch(console.error)
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -260,6 +263,7 @@ export async function declineBooking(
   if (error) return { error: error.message }
   if (count === 0) return { error: 'Not found or already actioned' }
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -313,6 +317,7 @@ export async function cancelSingleRecurringSession(
   const { sendCancellationEmail } = await import('@/lib/email')
   sendCancellationEmail(bookingId).catch(console.error)
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -384,6 +389,7 @@ export async function cancelRecurringSeries(
   const { sendRecurringCancellationEmail } = await import('@/lib/email')
   sendRecurringCancellationEmail({ scheduleId }).catch(console.error)
 
+  updateTag(`overview-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }

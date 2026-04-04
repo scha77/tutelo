@@ -129,6 +129,28 @@
   }
 }
 
+/* ── Staggered list animation (CSS-only, replaces motion library) ─────── */
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-list-item {
+  animation: fade-slide-up 0.35s ease-out both;
+}
+/* nth-child stagger delays (covers up to 12 items) */
+.animate-list > :nth-child(1)  { animation-delay: 0ms;   }
+.animate-list > :nth-child(2)  { animation-delay: 60ms;  }
+.animate-list > :nth-child(3)  { animation-delay: 120ms; }
+.animate-list > :nth-child(4)  { animation-delay: 180ms; }
+.animate-list > :nth-child(5)  { animation-delay: 240ms; }
+.animate-list > :nth-child(6)  { animation-delay: 300ms; }
+.animate-list > :nth-child(7)  { animation-delay: 360ms; }
+.animate-list > :nth-child(8)  { animation-delay: 420ms; }
+.animate-list > :nth-child(9)  { animation-delay: 480ms; }
+.animate-list > :nth-child(10) { animation-delay: 540ms; }
+.animate-list > :nth-child(11) { animation-delay: 600ms; }
+.animate-list > :nth-child(12) { animation-delay: 660ms; }
+
 /* Safe area bottom padding for content behind fixed bottom nav bars on iOS */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   @media (max-width: 767px) {
