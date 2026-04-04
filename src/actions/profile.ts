@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { z } from 'zod'
 import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js/min'
 
@@ -56,6 +56,7 @@ export async function updateProfile(
 
   if (error) return { error: error.message }
 
+  updateTag(`teacher-${userId}`)
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/page')
   // Revalidate public profile (slug is unknown here, revalidate all /[slug] paths)
@@ -78,6 +79,7 @@ export async function updatePublishStatus(
 
   if (error) return { error: error.message }
 
+  updateTag(`teacher-${userId}`)
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/page')
   revalidatePath('/[slug]', 'page')

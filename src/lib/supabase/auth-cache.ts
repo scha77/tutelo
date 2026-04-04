@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { createClient } from './server'
 
 /**
@@ -17,23 +18,43 @@ export const getAuthUser = cache(async () => {
   return { user, error, supabase }
 })
 
+/** Teacher columns fetched by getTeacher — keep in sync with the select. */
+const TEACHER_SELECT =
+  'id, full_name, slug, timezone, is_published, stripe_charges_enabled, capacity_limit' as const
+
 /**
- * Cached teacher row — deduplicated per request via React.cache.
+ * Cross-request cache for the teacher row.
+ * Keyed by user_id so each teacher gets their own entry.
+ * Revalidates every 60 s or when a `teacher-<uid>` tag is invalidated.
+ */
+function getCachedTeacherData(userId: string) {
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient()
+      const { data } = await supabase
+        .from('teachers')
+        .select(TEACHER_SELECT)
+        .eq('user_id', userId)
+        .maybeSingle()
+      return data
+    },
+    [`teacher-${userId}`],
+    { revalidate: 60, tags: [`teacher-${userId}`] },
+  )()
+}
+
+/**
+ * Cached teacher row — deduplicated per request via React.cache,
+ * AND across requests via unstable_cache (60 s TTL).
  *
- * Returns the teacher row for the authenticated user. The first call
- * fetches from Supabase; subsequent calls within the same request
- * return the cached result.
+ * Returns { teacher, supabase, userId }.  The Supabase client
+ * is always fresh (cookie-based RLS), only the teacher row is cached.
  */
 export const getTeacher = cache(async () => {
   const { user, supabase } = await getAuthUser()
   if (!user) return { teacher: null, supabase }
 
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('id, full_name, slug, timezone, is_published, stripe_charges_enabled, capacity_limit')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
+  const teacher = await getCachedTeacherData(user.id)
   return { teacher, supabase, userId: user.id }
 })
 
