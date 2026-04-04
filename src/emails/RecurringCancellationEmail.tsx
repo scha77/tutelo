@@ -17,6 +17,7 @@ interface RecurringCancellationEmailProps {
   cancelledDates: string[] // YYYY-MM-DD[]
   startTime: string // HH:MM or HH:MM:SS
   isTeacher: boolean
+  appUrl: string
 }
 
 export function RecurringCancellationEmail({
@@ -27,6 +28,7 @@ export function RecurringCancellationEmail({
   cancelledDates,
   startTime,
   isTeacher,
+  appUrl,
 }: RecurringCancellationEmailProps) {
   const timeDisplay = startTime.slice(0, 5)
 
@@ -116,7 +118,7 @@ export function RecurringCancellationEmail({
               Any payment authorizations for these sessions have been released. You can find
               another tutor at{' '}
               <a
-                href="https://tutelo.app"
+                href={appUrl}
                 style={{ color: '#2563eb', textDecoration: 'underline' }}
               >
                 tutelo.app
@@ -127,7 +129,11 @@ export function RecurringCancellationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because a recurring series through your Tutelo page was cancelled."
               : "You're receiving this because a recurring tutoring series you booked through Tutelo was cancelled."}

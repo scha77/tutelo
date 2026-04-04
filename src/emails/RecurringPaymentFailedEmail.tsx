@@ -18,6 +18,7 @@ interface RecurringPaymentFailedEmailProps {
   teacherName: string
   isTeacher: boolean
   accountUrl?: string // parent-only — link to update payment method
+  appUrl: string
 }
 
 export function RecurringPaymentFailedEmail({
@@ -28,6 +29,7 @@ export function RecurringPaymentFailedEmail({
   teacherName,
   isTeacher,
   accountUrl,
+  appUrl,
 }: RecurringPaymentFailedEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing (same as CancellationEmail)
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -125,7 +127,11 @@ export function RecurringPaymentFailedEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because an automatic payment for a recurring session through your Tutelo page failed."
               : "You're receiving this because an automatic payment for a recurring tutoring session you booked through Tutelo failed."}

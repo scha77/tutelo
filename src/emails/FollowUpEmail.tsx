@@ -16,6 +16,7 @@ interface FollowUpEmailProps {
   parentEmail: string
   bookingDate: string // YYYY-MM-DD
   connectStripeUrl: string
+  appUrl: string
 }
 
 export function FollowUpEmail({
@@ -24,6 +25,7 @@ export function FollowUpEmail({
   parentEmail,
   bookingDate,
   connectStripeUrl,
+  appUrl,
 }: FollowUpEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -83,8 +85,15 @@ export function FollowUpEmail({
           </Section>
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot; You&apos;re receiving this because a parent is
-            waiting to confirm a booking through your Tutelo page.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because a parent is waiting to confirm a booking
+            through your Tutelo page.{' '}
+            <a href={`${appUrl}/account`} style={{ color: '#9ca3af' }}>
+              Manage preferences
+            </a>
           </Text>
         </Container>
       </Body>

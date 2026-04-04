@@ -17,21 +17,29 @@ import { sendSmsReminder } from '@/lib/sms'
  * Auth: Requires Authorization: Bearer {CRON_SECRET} header (set by Vercel cron).
  */
 export async function GET(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    console.error('[cron/session-reminders] CRON_SECRET is not configured')
+    return new Response('Server misconfiguration', { status: 500 })
+  }
+
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Tomorrow's date in UTC (YYYY-MM-DD)
-  const tomorrowUtc = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10)
+  // Use a 12–36 hour window from now to cover all timezones (UTC-12 to UTC+14).
+  // A PST teacher with a 9 AM session on April 5 won't be missed when the cron
+  // runs at 9 AM UTC on April 4 (still April 4 in PST).
+  const now = new Date()
+  const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const windowEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-  // Find confirmed sessions tomorrow that have not yet received a reminder
+  // Find confirmed sessions within the reminder window that haven't been notified
   const { data: sessions } = await supabaseAdmin
     .from('bookings')
     .select('id, parent_email, booking_date, start_time, teachers(full_name, social_email)')
-    .eq('booking_date', tomorrowUtc)
+    .gte('booking_date', windowStart)
+    .lte('booking_date', windowEnd)
     .eq('status', 'confirmed')
     .is('reminder_sent_at', null)
 

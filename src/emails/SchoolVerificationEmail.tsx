@@ -12,10 +12,12 @@ import {
 
 interface SchoolVerificationEmailProps {
   verificationUrl: string
+  appUrl: string
 }
 
 export function SchoolVerificationEmail({
   verificationUrl,
+  appUrl,
 }: SchoolVerificationEmailProps) {
   return (
     <Html>
@@ -72,8 +74,12 @@ export function SchoolVerificationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot; You&apos;re receiving this because someone
-            requested to verify a school email on Tutelo.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because someone requested to verify a school email
+            on Tutelo.
           </Text>
         </Container>
       </Body>

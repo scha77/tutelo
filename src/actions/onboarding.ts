@@ -97,51 +97,20 @@ export async function publishProfile(
 
   const supabase = await createClient()
 
-  // Upsert teacher row with is_published=true
-  const { data: teacher, error: teacherError } = await supabase
-    .from('teachers')
-    .upsert(
-      {
-        user_id: userId,
-        ...teacherFields,
-        is_published: true,
-        wizard_step: 3,
-      },
-      { onConflict: 'user_id' }
-    )
-    .select('id')
-    .single()
+  // Atomic publish: upsert teacher + replace availability in a single transaction
+  const { data: result, error: rpcError } = await supabase.rpc('publish_profile', {
+    p_user_id: userId,
+    p_teacher_data: teacherFields,
+    p_availability: availability,
+  })
 
-  if (teacherError || !teacher) {
-    return { error: teacherError?.message ?? 'Failed to save profile' }
+  if (rpcError) {
+    return { error: rpcError.message }
   }
 
-  const teacherId = teacher.id
-
-  // Delete existing availability rows for this teacher
-  const { error: deleteError } = await supabase
-    .from('availability')
-    .delete()
-    .eq('teacher_id', teacherId)
-
-  if (deleteError) {
-    return { error: deleteError.message }
-  }
-
-  // Insert new availability rows
-  const availabilityRows = availability.map((slot) => ({
-    teacher_id: teacherId,
-    day_of_week: slot.day_of_week,
-    start_time: slot.start_time,
-    end_time: slot.end_time,
-  }))
-
-  const { error: insertError } = await supabase
-    .from('availability')
-    .insert(availabilityRows)
-
-  if (insertError) {
-    return { error: insertError.message }
+  const rpcResult = result as { success: boolean; teacher_id?: string; error?: string }
+  if (!rpcResult.success) {
+    return { error: rpcResult.error ?? 'Failed to save profile' }
   }
 
   redirect('/dashboard?welcome=true')

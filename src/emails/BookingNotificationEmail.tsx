@@ -18,6 +18,7 @@ interface BookingNotificationEmailProps {
   startTime: string // HH:MM
   parentEmail: string
   dashboardUrl: string
+  appUrl: string
 }
 
 export function BookingNotificationEmail({
@@ -28,6 +29,7 @@ export function BookingNotificationEmail({
   startTime,
   parentEmail,
   dashboardUrl,
+  appUrl,
 }: BookingNotificationEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -104,8 +106,11 @@ export function BookingNotificationEmail({
           </Section>
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo · tutelo.app · You&apos;re receiving this because a parent booked through your
-            Tutelo page.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because a parent booked through your Tutelo page.
           </Text>
         </Container>
       </Body>

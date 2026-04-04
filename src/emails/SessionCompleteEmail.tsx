@@ -15,6 +15,7 @@ interface SessionCompleteEmailProps {
   studentName: string
   teacherName: string
   reviewUrl: string
+  appUrl: string
 }
 
 export function SessionCompleteEmail({
@@ -22,6 +23,7 @@ export function SessionCompleteEmail({
   studentName,
   teacherName,
   reviewUrl,
+  appUrl,
 }: SessionCompleteEmailProps) {
   return (
     <Html>
@@ -81,8 +83,12 @@ export function SessionCompleteEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot; You&apos;re receiving this because your tutoring
-            session through Tutelo has been completed.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because your tutoring session through Tutelo has
+            been completed.
           </Text>
         </Container>
       </Body>

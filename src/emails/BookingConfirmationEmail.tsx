@@ -19,6 +19,7 @@ interface BookingConfirmationEmailProps {
   teacherName: string
   isTeacher: boolean
   accountUrl?: string // When provided, render a "View your sessions" link for parent recipients
+  appUrl: string
 }
 
 export function BookingConfirmationEmail({
@@ -30,6 +31,7 @@ export function BookingConfirmationEmail({
   teacherName,
   isTeacher,
   accountUrl,
+  appUrl,
 }: BookingConfirmationEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -127,7 +129,11 @@ export function BookingConfirmationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because a booking was confirmed through your Tutelo page."
               : "You're receiving this because you booked a tutoring session through Tutelo."}

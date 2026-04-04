@@ -20,23 +20,29 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
  * - .eq('status', 'requested') prevents double DB update if already confirmed
  */
 export async function GET(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    console.error('[cron/recurring-charges] CRON_SECRET is not configured')
+    return new Response('Server misconfiguration', { status: 500 })
+  }
+
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Tomorrow's date in UTC (YYYY-MM-DD)
-  const tomorrowUtc = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10)
+  // Use a 12–36 hour window from now to cover all timezones (UTC-12 to UTC+14).
+  const now = new Date()
+  const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const windowEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-  // Find non-first recurring sessions for tomorrow that haven't been charged yet
+  // Find non-first recurring sessions within the charge window that haven't been charged yet
   const { data: sessions, error: queryError } = await supabaseAdmin
     .from('bookings')
     .select(
-      'id, teacher_id, start_time, end_time, recurring_schedule_id, recurring_schedules!inner(stripe_customer_id, stripe_payment_method_id, teachers!inner(stripe_account_id, hourly_rate, full_name, social_email))'
+      'id, teacher_id, start_time, end_time, booking_date, recurring_schedule_id, recurring_schedules!inner(stripe_customer_id, stripe_payment_method_id, teachers!inner(stripe_account_id, hourly_rate, full_name, social_email))'
     )
-    .eq('booking_date', tomorrowUtc)
+    .gte('booking_date', windowStart)
+    .lte('booking_date', windowEnd)
     .eq('status', 'requested')
     .eq('is_recurring_first', false)
     .not('recurring_schedule_id', 'is', null)
@@ -96,7 +102,7 @@ export async function GET(request: NextRequest) {
             recurring_schedule_id: session.recurring_schedule_id!,
           },
         },
-        { idempotencyKey: `recurring-charge-${bookingId}-${tomorrowUtc}` }
+        { idempotencyKey: `recurring-charge-${bookingId}` }
       )
 
       // Success — update booking to confirmed with PI ID

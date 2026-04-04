@@ -49,59 +49,90 @@ export async function GET() {
     )
   }
 
-  // For each conversation, fetch the last message and the other participant's name
-  const enriched = await Promise.all(
-    (conversations ?? []).map(async (conv) => {
-      // Fetch last message
-      const { data: lastMsg } = await supabaseAdmin
-        .from('messages')
-        .select('body, sender_id, created_at')
-        .eq('conversation_id', conv.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+  const convList = conversations ?? []
+  if (convList.length === 0) return NextResponse.json([])
 
-      // Resolve the other participant's display name
-      let otherParticipantName = 'Unknown'
-      if (isTeacher) {
-        // Other participant is the parent — get email or name from auth
-        const {
-          data: { user: parentUser },
-        } = await supabaseAdmin.auth.admin.getUserById(conv.parent_id)
-        otherParticipantName =
-          parentUser?.user_metadata?.full_name ??
+  // --- Batch-fetch last messages (1 query instead of N) ---
+  // Use each conversation's last_message_at to pinpoint the exact message row
+  const convsWithMessages = convList.filter((c) => c.last_message_at)
+  const lastMessageMap = new Map<
+    string,
+    { body: string; sender_id: string; created_at: string }
+  >()
+
+  if (convsWithMessages.length > 0) {
+    const orFilter = convsWithMessages
+      .map(
+        (c) =>
+          `and(conversation_id.eq.${c.id},created_at.eq.${c.last_message_at})`
+      )
+      .join(',')
+
+    const { data: messages } = await supabaseAdmin
+      .from('messages')
+      .select('conversation_id, body, sender_id, created_at')
+      .or(orFilter)
+
+    for (const msg of messages ?? []) {
+      lastMessageMap.set(msg.conversation_id, msg)
+    }
+  }
+
+  // --- Batch-fetch parent names (1 call per unique parent instead of per conversation) ---
+  const parentNameMap = new Map<string, string>()
+  if (isTeacher) {
+    const uniqueParentIds = [...new Set(convList.map((c) => c.parent_id))]
+    const parentResults = await Promise.all(
+      uniqueParentIds.map((pid) =>
+        supabaseAdmin.auth.admin.getUserById(pid)
+      )
+    )
+    for (let i = 0; i < uniqueParentIds.length; i++) {
+      const parentUser = parentResults[i].data?.user
+      parentNameMap.set(
+        uniqueParentIds[i],
+        parentUser?.user_metadata?.full_name ??
           parentUser?.email ??
           'Parent'
-      } else {
-        // Other participant is the teacher
-        const teacherData = conv.teachers as unknown as {
-          id: string
-          full_name: string
-          photo_url: string | null
-        }
-        otherParticipantName = teacherData?.full_name ?? 'Teacher'
-      }
+      )
+    }
+  }
 
-      return {
-        id: conv.id,
-        teacherId: conv.teacher_id,
-        parentId: conv.parent_id,
-        otherParticipantName,
-        lastMessage: lastMsg
-          ? {
-              body:
-                lastMsg.body.length > 100
-                  ? lastMsg.body.slice(0, 97) + '...'
-                  : lastMsg.body,
-              senderId: lastMsg.sender_id,
-              createdAt: lastMsg.created_at,
-            }
-          : null,
-        lastMessageAt: conv.last_message_at,
-        createdAt: conv.created_at,
+  // --- Assemble response (no additional queries) ---
+  const enriched = convList.map((conv) => {
+    const lastMsg = lastMessageMap.get(conv.id) ?? null
+
+    let otherParticipantName: string
+    if (isTeacher) {
+      otherParticipantName = parentNameMap.get(conv.parent_id) ?? 'Parent'
+    } else {
+      const teacherData = conv.teachers as unknown as {
+        id: string
+        full_name: string
+        photo_url: string | null
       }
-    })
-  )
+      otherParticipantName = teacherData?.full_name ?? 'Teacher'
+    }
+
+    return {
+      id: conv.id,
+      teacherId: conv.teacher_id,
+      parentId: conv.parent_id,
+      otherParticipantName,
+      lastMessage: lastMsg
+        ? {
+            body:
+              lastMsg.body.length > 100
+                ? lastMsg.body.slice(0, 97) + '...'
+                : lastMsg.body,
+            senderId: lastMsg.sender_id,
+            createdAt: lastMsg.created_at,
+          }
+        : null,
+      lastMessageAt: conv.last_message_at,
+      createdAt: conv.created_at,
+    }
+  })
 
   return NextResponse.json(enriched)
 }

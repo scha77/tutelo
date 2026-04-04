@@ -53,6 +53,7 @@ export async function sendBookingEmail(
         startTime: bookingData.startTime,
         parentEmail: bookingData.email,
         connectStripeUrl: `${appUrl}/dashboard/connect-stripe`,
+        appUrl,
       }),
     })
   } else {
@@ -69,6 +70,7 @@ export async function sendBookingEmail(
         startTime: bookingData.startTime,
         parentEmail: bookingData.email,
         dashboardUrl: `${appUrl}/dashboard/requests`,
+        appUrl,
       }),
     })
   }
@@ -79,11 +81,12 @@ export async function sendCheckoutLinkEmail(
   studentName: string,
   checkoutUrl: string
 ): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   await resend.emails.send({
     from: 'Tutelo <noreply@tutelo.app>',
     to: parentEmail,
     subject: `You're booked! Complete payment to confirm your session`,
-    text: `Hi! Your tutoring session for ${studentName} is almost confirmed. Click the link below to complete your payment:\n\n${checkoutUrl}\n\nThis link is unique to your booking — do not share it. Once payment is complete your session is locked in.\n\nTutelo · tutelo.app`,
+    text: `Hi! Your tutoring session for ${studentName} is almost confirmed. Click the link below to complete your payment:\n\n${checkoutUrl}\n\nThis link is unique to your booking — do not share it. Once payment is complete your session is locked in.\n\nTutelo · ${appUrl}`,
   })
 }
 
@@ -95,11 +98,12 @@ export async function sendFollowUpEmail(
   bookingDate: string,
   connectStripeUrl: string
 ): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   await resend.emails.send({
     from: 'Tutelo <noreply@tutelo.app>',
     to: teacherEmail,
     subject: `Reminder: ${parentEmail} is still waiting for you`,
-    react: FollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, connectStripeUrl }),
+    react: FollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, connectStripeUrl, appUrl }),
   })
 }
 
@@ -112,11 +116,12 @@ export async function sendUrgentFollowUpEmail(
   cancelDeadline: string,
   connectStripeUrl: string
 ): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   await resend.emails.send({
     from: 'Tutelo <noreply@tutelo.app>',
     to: teacherEmail,
     subject: `Last chance — this booking cancels at ${cancelDeadline}`,
-    react: UrgentFollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, cancelDeadline, connectStripeUrl }),
+    react: UrgentFollowUpEmail({ teacherFirstName, studentName, parentEmail, bookingDate, cancelDeadline, connectStripeUrl, appUrl }),
   })
 }
 
@@ -124,6 +129,7 @@ export async function sendBookingConfirmationEmail(
   bookingId: string,
   options?: { accountUrl?: string }
 ): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const { data } = await supabaseAdmin
     .from('bookings')
     .select('parent_email, student_name, subject, booking_date, start_time, teachers(full_name, social_email)')
@@ -149,6 +155,7 @@ export async function sendBookingConfirmationEmail(
       teacherName: teacher.full_name,
       isTeacher: false,
       accountUrl: options?.accountUrl, // Only passed for parent-facing email
+      appUrl,
     }),
   })
 
@@ -166,12 +173,14 @@ export async function sendBookingConfirmationEmail(
         startTime: data.start_time,
         teacherName: teacher.full_name,
         isTeacher: true,
+        appUrl,
       }),
     })
   }
 }
 
 export async function sendCancellationEmail(bookingId: string): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const { data } = await supabaseAdmin
     .from('bookings')
     .select('parent_email, student_name, booking_date, start_time, teachers(full_name, social_email)')
@@ -193,6 +202,7 @@ export async function sendCancellationEmail(bookingId: string): Promise<void> {
       bookingDate: data.booking_date,
       startTime: data.start_time,
       isTeacher: false,
+      appUrl,
     }),
   })
 
@@ -207,12 +217,14 @@ export async function sendCancellationEmail(bookingId: string): Promise<void> {
         bookingDate: data.booking_date,
         startTime: data.start_time,
         isTeacher: true,
+        appUrl,
       }),
     })
   }
 }
 
 export async function sendSessionReminderEmail(bookingId: string): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const { data } = await supabaseAdmin
     .from('bookings')
     .select('parent_email, student_name, subject, booking_date, start_time, teachers(full_name, social_email)')
@@ -237,6 +249,7 @@ export async function sendSessionReminderEmail(bookingId: string): Promise<void>
       startTime: data.start_time.slice(0, 5),
       teacherName: teacher.full_name,
       isTeacher: false,
+      appUrl,
     }),
   })
 
@@ -254,6 +267,7 @@ export async function sendSessionReminderEmail(bookingId: string): Promise<void>
         startTime: data.start_time.slice(0, 5),
         teacherName: teacher.full_name,
         isTeacher: true,
+        appUrl,
       }),
     })
   }
@@ -280,6 +294,7 @@ export async function sendSessionCompleteEmail(bookingId: string, reviewToken: s
       studentName: data.student_name,
       teacherName: teacher.full_name,
       reviewUrl,
+      appUrl,
     }),
   })
 }
@@ -289,13 +304,14 @@ export async function sendWaitlistNotificationEmail(
   teacherName: string,
   teacherSlug: string
 ): Promise<void> {
-  const bookingLink = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'}/${teacherSlug}`
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
+  const bookingLink = `${appUrl}/${teacherSlug}`
 
   await resend.emails.send({
     from: 'Tutelo <noreply@tutelo.app>',
     to: parentEmail,
     subject: `A spot just opened up — book with ${teacherName}`,
-    react: WaitlistNotificationEmail({ teacherName, bookingLink }),
+    react: WaitlistNotificationEmail({ teacherName, bookingLink, appUrl }),
   })
 }
 
@@ -326,6 +342,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
     manageUrl,
   } = params
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const from = 'Tutelo <noreply@tutelo.app>'
   const teacherFirstName = teacherName.split(' ')[0]
   const count = sessionDates.length
@@ -347,6 +364,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
       isTeacher: false,
       accountUrl,
       manageUrl,
+      appUrl,
     }),
   })
 
@@ -366,6 +384,7 @@ export async function sendRecurringBookingConfirmationEmail(params: {
         skippedDates,
         startTime,
         isTeacher: true,
+        appUrl,
       }),
     })
   }
@@ -401,6 +420,7 @@ export async function sendRecurringPaymentFailedEmail(params: {
       teacherName: teacher.full_name,
       isTeacher: false,
       accountUrl,
+      appUrl,
     }),
   })
 
@@ -417,6 +437,7 @@ export async function sendRecurringPaymentFailedEmail(params: {
         startTime: data.start_time,
         teacherName: teacher.full_name,
         isTeacher: true,
+        appUrl,
       }),
     })
   }
@@ -454,6 +475,7 @@ export async function sendRecurringCancellationEmail(params: {
     .single()
   if (!teacher) return
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tutelo.app'
   const teacherFirstName = teacher.full_name.split(' ')[0]
   const from = 'Tutelo <noreply@tutelo.app>'
 
@@ -479,6 +501,7 @@ export async function sendRecurringCancellationEmail(params: {
       cancelledDates,
       startTime: schedule.start_time,
       isTeacher: false,
+      appUrl,
     }),
   })
 
@@ -496,6 +519,7 @@ export async function sendRecurringCancellationEmail(params: {
         cancelledDates,
         startTime: schedule.start_time,
         isTeacher: true,
+        appUrl,
       }),
     })
   }

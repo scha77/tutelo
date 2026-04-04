@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /tutors
+Allow: /sitemap.xml
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /parent
+Disallow: /api/
+Disallow: /onboarding
+Disallow: /callback

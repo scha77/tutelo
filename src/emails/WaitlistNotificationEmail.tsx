@@ -13,11 +13,13 @@ import {
 interface WaitlistNotificationEmailProps {
   teacherName: string
   bookingLink: string
+  appUrl: string
 }
 
 export function WaitlistNotificationEmail({
   teacherName,
   bookingLink,
+  appUrl,
 }: WaitlistNotificationEmailProps) {
   return (
     <Html>
@@ -72,8 +74,14 @@ export function WaitlistNotificationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot; You&apos;re receiving this because you joined the
-            waitlist for {teacherName}.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because you joined the waitlist for {teacherName}.{' '}
+            <a href={`${appUrl}/account`} style={{ color: '#9ca3af' }}>
+              Manage preferences
+            </a>
           </Text>
         </Container>
       </Body>

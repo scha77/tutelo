@@ -15,6 +15,7 @@ interface CancellationEmailProps {
   bookingDate: string // YYYY-MM-DD
   startTime: string // HH:MM or HH:MM:SS
   isTeacher: boolean
+  appUrl: string
 }
 
 export function CancellationEmail({
@@ -23,6 +24,7 @@ export function CancellationEmail({
   bookingDate,
   startTime,
   isTeacher,
+  appUrl,
 }: CancellationEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -92,7 +94,7 @@ export function CancellationEmail({
             <Text style={{ fontSize: '15px', color: '#111827' }}>
               We&apos;re sorry this session didn&apos;t work out. You can find another tutor at{' '}
               <a
-                href="https://tutelo.app"
+                href={appUrl}
                 style={{ color: '#2563eb', textDecoration: 'underline' }}
               >
                 tutelo.app
@@ -103,7 +105,11 @@ export function CancellationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because a booking through your Tutelo page was cancelled."
               : "You're receiving this because a tutoring session you booked through Tutelo was cancelled."}

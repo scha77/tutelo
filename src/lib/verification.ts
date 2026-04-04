@@ -34,6 +34,6 @@ export async function sendVerificationEmail(
     from: 'Tutelo <noreply@tutelo.app>',
     to: toEmail,
     subject: 'Verify your school email on Tutelo',
-    react: SchoolVerificationEmail({ verificationUrl }),
+    react: SchoolVerificationEmail({ verificationUrl, appUrl }),
   })
 }

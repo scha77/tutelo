@@ -19,6 +19,11 @@ import { sendFollowUpEmail, sendUrgentFollowUpEmail } from '@/lib/email'
  * Auth: Requires Authorization: Bearer {CRON_SECRET} header (set by Vercel cron).
  */
 export async function GET(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    console.error('[cron/stripe-reminders] CRON_SECRET is not configured')
+    return new Response('Server misconfiguration', { status: 500 })
+  }
+
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response('Unauthorized', { status: 401 })

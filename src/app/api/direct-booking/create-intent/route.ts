@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { computeSessionAmount } from '@/lib/utils/booking'
+import { DirectBookingIntentSchema } from '@/lib/schemas/booking'
 
 /**
  * POST /api/direct-booking/create-intent
@@ -20,9 +21,23 @@ import { computeSessionAmount } from '@/lib/utils/booking'
  * - Otherwise, fall back to hourly_rate proration via computeSessionAmount.
  */
 export async function POST(req: Request) {
-  // 1. Parse request body (not a webhook — req.json() is correct here)
-  const body = await req.json()
-  const { teacherId, bookingDate, startTime, endTime, studentName, subject, notes, parentPhone, parentSmsOptIn, sessionTypeId, childId } = body
+  // 1. Parse and validate request body
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return new Response('Invalid JSON', { status: 400 })
+  }
+
+  const parsed = DirectBookingIntentSchema.safeParse(body)
+  if (!parsed.success) {
+    return Response.json(
+      { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    )
+  }
+
+  const { teacherId, bookingDate, startTime, endTime, studentName, subject, notes, parentPhone, parentSmsOptIn, sessionTypeId, childId } = parsed.data
 
   // 2. Authenticate the parent
   const supabase = await createClient()

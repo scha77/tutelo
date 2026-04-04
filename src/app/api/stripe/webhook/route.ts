@@ -130,8 +130,9 @@ export async function POST(req: Request) {
         break
       }
 
-      // Idempotent update — eq('status', 'requested') prevents double-confirm on re-delivery
-      const { error } = await supabaseAdmin
+      // Idempotent update — .in('status') prevents double-confirm on Stripe re-delivery
+      // .select('id') returns updated rows so we only email when a row actually changed
+      const { data: updated, error } = await supabaseAdmin
         .from('bookings')
         .update({
           status: 'confirmed',
@@ -142,12 +143,15 @@ export async function POST(req: Request) {
         })
         .eq('id', bookingId)
         .in('status', ['requested', 'pending'])
+        .select('id')
 
       if (error) {
         console.error(`[stripe/webhook] Failed to confirm booking ${bookingId}:`, error)
-      } else {
+      } else if (updated && updated.length > 0) {
         console.log(`[stripe/webhook] Booking ${bookingId} confirmed — payment intent: ${session.payment_intent}`)
         await sendBookingConfirmationEmail(bookingId).catch(console.error)
+      } else {
+        console.log(`[stripe/webhook] Booking ${bookingId} already confirmed — skipping email (re-delivery)`)
       }
       break
     }

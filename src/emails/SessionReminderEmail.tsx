@@ -17,6 +17,7 @@ interface SessionReminderEmailProps {
   startTime: string // HH:MM
   teacherName: string
   isTeacher: boolean
+  appUrl: string
 }
 
 export function SessionReminderEmail({
@@ -27,6 +28,7 @@ export function SessionReminderEmail({
   startTime,
   teacherName,
   isTeacher,
+  appUrl,
 }: SessionReminderEmailProps) {
   // Adding T12:00:00 prevents timezone-shift on date parsing
   const formattedDate = new Date(bookingDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -111,7 +113,11 @@ export function SessionReminderEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because you have an upcoming session through Tutelo."
               : "You're receiving this because you have an upcoming tutoring session booked through Tutelo."}

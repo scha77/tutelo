@@ -15,6 +15,7 @@ interface NewMessageEmailProps {
   senderName: string
   messagePreview: string
   conversationUrl: string
+  appUrl: string
 }
 
 export function NewMessageEmail({
@@ -22,6 +23,7 @@ export function NewMessageEmail({
   senderName,
   messagePreview,
   conversationUrl,
+  appUrl,
 }: NewMessageEmailProps) {
   // Truncate preview to 120 chars for the email body
   const truncated =
@@ -95,8 +97,11 @@ export function NewMessageEmail({
           </Section>
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo · tutelo.app · You&apos;re receiving this because someone sent you a
-            message on Tutelo.
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot; You&apos;re receiving this because someone sent you a message on Tutelo.
           </Text>
         </Container>
       </Body>

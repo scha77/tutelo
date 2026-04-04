@@ -388,6 +388,7 @@ async function sendNotificationEmail(
       senderName,
       messagePreview: messageBody,
       conversationUrl,
+      appUrl,
     }),
   })
 

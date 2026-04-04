@@ -22,6 +22,7 @@ interface RecurringBookingConfirmationEmailProps {
   isTeacher: boolean
   accountUrl?: string
   manageUrl?: string
+  appUrl: string
 }
 
 function formatSessionDate(dateStr: string, time: string): string {
@@ -63,6 +64,7 @@ export function RecurringBookingConfirmationEmail({
   isTeacher,
   accountUrl,
   manageUrl,
+  appUrl,
 }: RecurringBookingConfirmationEmailProps) {
   const count = sessionDates.length
   const firstDateFormatted =
@@ -206,7 +208,11 @@ export function RecurringBookingConfirmationEmail({
 
           <Hr style={{ borderColor: '#e5e7eb', margin: '20px 0' }} />
           <Text style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-            Tutelo &middot; tutelo.app &middot;{' '}
+            Tutelo &middot;{' '}
+            <a href={appUrl} style={{ color: '#9ca3af' }}>
+              tutelo.app
+            </a>{' '}
+            &middot;{' '}
             {isTeacher
               ? "You're receiving this because a recurring booking was created through your Tutelo page."
               : "You're receiving this because you booked a recurring tutoring series through Tutelo."}
