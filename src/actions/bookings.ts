@@ -3,8 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { BookingRequestSchema } from '@/lib/schemas/booking'
 import { revalidatePath, updateTag } from 'next/cache'
-import Stripe from 'stripe'
-import { supabaseAdmin } from '@/lib/supabase/service'
 
 export type BookingResult =
   | { success: true; bookingId: string }
@@ -40,6 +38,7 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
   // Store parent phone (post-insert — create_booking RPC doesn't accept phone params)
   if (parsed.data.parent_phone?.trim()) {
     try {
+      const { supabaseAdmin } = await import('@/lib/supabase/service')
       await supabaseAdmin
         .from('bookings')
         .update({
@@ -129,6 +128,7 @@ export async function markSessionComplete(
   if (!booking.stripe_payment_intent) return { error: 'No payment intent found' }
 
   // Retrieve PaymentIntent to get capturable amount
+  const Stripe = (await import('stripe')).default
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const paymentIntent = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent)
   const amountToCapture = paymentIntent.amount_capturable ?? paymentIntent.amount
@@ -153,6 +153,7 @@ export async function markSessionComplete(
     .eq('id', bookingId)
 
   // Insert review stub — service role bypasses RLS (reviews_insert_token_stub policy)
+  const { supabaseAdmin } = await import('@/lib/supabase/service')
   await supabaseAdmin
     .from('reviews')
     .insert({
@@ -202,6 +203,7 @@ export async function cancelSession(
   // Void the Stripe PaymentIntent if present (releases hold on parent's card)
   if (booking.stripe_payment_intent) {
     try {
+      const Stripe = (await import('stripe')).default
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
       await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
     } catch (err) {
@@ -287,6 +289,7 @@ export async function cancelSingleRecurringSession(
   if (teacherError || !teacher) return { error: 'Teacher not found' }
 
   // Fetch booking — supports confirmed, requested, and payment_failed statuses
+  const { supabaseAdmin } = await import('@/lib/supabase/service')
   const { data: booking } = await supabaseAdmin
     .from('bookings')
     .select('id, stripe_payment_intent, status')
@@ -300,6 +303,7 @@ export async function cancelSingleRecurringSession(
   // Void the Stripe PaymentIntent if present
   if (booking.stripe_payment_intent) {
     try {
+      const Stripe = (await import('stripe')).default
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
       await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
     } catch (err) {
@@ -341,6 +345,7 @@ export async function cancelRecurringSeries(
   if (teacherError || !teacher) return { error: 'Teacher not found' }
 
   // Verify schedule belongs to this teacher
+  const { supabaseAdmin } = await import('@/lib/supabase/service')
   const { data: schedule } = await supabaseAdmin
     .from('recurring_schedules')
     .select('id, teacher_id')
@@ -367,6 +372,7 @@ export async function cancelRecurringSeries(
   }
 
   // Void Stripe PIs for each booking (non-blocking on errors)
+  const Stripe = (await import('stripe')).default
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   for (const booking of bookings) {
     if (booking.stripe_payment_intent) {
