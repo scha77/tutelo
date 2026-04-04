@@ -5,9 +5,6 @@ import { Sidebar } from '@/components/dashboard/Sidebar'
 import { MobileHeader } from '@/components/dashboard/MobileHeader'
 import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
 
-/** Edge runtime eliminates serverless cold starts (~500-1500 ms). */
-export const runtime = 'edge'
-
 /**
  * Async sub-components rendered inside Suspense so the layout shell
  * paints immediately. The pending count query streams in after.
