@@ -26,12 +26,16 @@ const TEACHER_SELECT =
  * Cross-request cache for the teacher row.
  * Keyed by user_id so each teacher gets their own entry.
  * Revalidates every 60 s or when a `teacher-<uid>` tag is invalidated.
+ *
+ * Uses supabaseAdmin (service role) because unstable_cache callbacks
+ * run outside the request context where cookies() is unavailable.
+ * Safe because the query filters by user_id explicitly.
  */
 function getCachedTeacherData(userId: string) {
   return unstable_cache(
     async () => {
-      const supabase = await createClient()
-      const { data } = await supabase
+      const { supabaseAdmin } = await import('./service')
+      const { data } = await supabaseAdmin
         .from('teachers')
         .select(TEACHER_SELECT)
         .eq('user_id', userId)

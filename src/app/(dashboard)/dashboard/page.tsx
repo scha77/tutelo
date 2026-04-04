@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
 import { getTeacher } from '@/lib/supabase/auth-cache'
-import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { CalendarDays } from 'lucide-react'
@@ -13,7 +12,7 @@ import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedL
 function getCachedOverviewData(teacherId: string) {
   return unstable_cache(
     async () => {
-      const supabase = await createClient()
+      const { supabaseAdmin: supabase } = await import('@/lib/supabase/service')
 
       const [
         upcomingResult,
