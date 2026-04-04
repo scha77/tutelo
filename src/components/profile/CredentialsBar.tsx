@@ -1,4 +1,4 @@
-import { CheckCircle, MapPin, Clock, DollarSign } from 'lucide-react'
+import { CheckCircle, MapPin, Clock } from 'lucide-react'
 
 interface CredentialsBarProps {
   teacher: {
@@ -92,7 +92,6 @@ export function CredentialsBar({ teacher, isVerified }: CredentialsBarProps) {
             {/* Hourly rate — prominent with tabular-nums */}
             {teacher.hourly_rate != null && (
               <span className="ml-auto inline-flex items-center gap-1.5 text-base font-semibold tabular-nums">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span>${teacher.hourly_rate}/hr</span>
               </span>
             )}

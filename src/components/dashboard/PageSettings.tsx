@@ -120,6 +120,17 @@ export function PageSettings({ teacher }: PageSettingsProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Client-side validation before upload
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPG, PNG, or WebP image.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5 MB. Please choose a smaller file.')
+      return
+    }
+
     // Show local preview immediately
     const localUrl = URL.createObjectURL(file)
     setBannerPreview(localUrl)
