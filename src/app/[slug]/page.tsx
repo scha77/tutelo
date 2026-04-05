@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Instagram, Mail, Globe } from 'lucide-react'
@@ -16,6 +17,17 @@ import { ReviewsSection } from '@/components/profile/ReviewsSection'
 import { AnimatedProfile } from '@/components/profile/AnimatedProfile'
 import { submitBookingRequest } from '@/actions/bookings'
 
+// Deduplicate teacher query between generateMetadata and page component
+const getTeacherBySlug = cache(async (slug: string) => {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('teachers')
+    .select('*, availability(*)')
+    .eq('slug', slug)
+    .single()
+  return { teacher: data, supabase }
+})
+
 // SEO-01: Dynamic OG metadata for teacher profile pages
 export async function generateMetadata({
   params,
@@ -23,13 +35,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-
-  const supabase = await createClient()
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('full_name, subjects, school, city, state, photo_url')
-    .eq('slug', slug)
-    .single()
+  const { teacher } = await getTeacherBySlug(slug)
 
   if (!teacher) {
     return {
@@ -149,12 +155,7 @@ export default async function TeacherProfilePage({
   const { slug } = await params
   const { preview } = await searchParams
 
-  const supabase = await createClient()
-  const { data: teacher } = await supabase
-    .from('teachers')
-    .select('*, availability(*)')
-    .eq('slug', slug)
-    .single()
+  const { teacher, supabase } = await getTeacherBySlug(slug)
 
   if (!teacher) return notFound()
 
@@ -176,55 +177,66 @@ export default async function TeacherProfilePage({
     return <DraftPage />
   }
 
-  // S02-T03: Fetch override availability for the next 90 days
+  // Parallelize all secondary queries — no dependencies between them
   const today = startOfToday()
-  const { data: overrides } = await supabase
-    .from('availability_overrides')
-    .select('specific_date, start_time, end_time')
-    .eq('teacher_id', teacher.id)
-    .gte('specific_date', format(today, 'yyyy-MM-dd'))
-    .lte('specific_date', format(addDays(today, 90), 'yyyy-MM-dd'))
-    .order('specific_date')
-    .order('start_time')
+  const todayStr = format(today, 'yyyy-MM-dd')
+  const ninetyDaysFromNow = format(addDays(today, 90), 'yyyy-MM-dd')
 
-  // REVIEW-02: Fetch submitted reviews for public profile display
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('rating, review_text, reviewer_name, created_at')
-    .eq('teacher_id', teacher.id)
-    .not('rating', 'is', null) // only submitted reviews (stub rows have rating = null)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const [
+    { data: overrides },
+    { data: reviews },
+    capacityResult,
+    { data: sessionTypes },
+  ] = await Promise.all([
+    // S02-T03: Override availability for the next 90 days
+    supabase
+      .from('availability_overrides')
+      .select('specific_date, start_time, end_time')
+      .eq('teacher_id', teacher.id)
+      .gte('specific_date', todayStr)
+      .lte('specific_date', ninetyDaysFromNow)
+      .order('specific_date')
+      .order('start_time'),
 
-  // M007-S01: Capacity check — only query if teacher has a capacity limit set
+    // REVIEW-02: Submitted reviews for public profile display
+    supabase
+      .from('reviews')
+      .select('rating, review_text, reviewer_name, created_at')
+      .eq('teacher_id', teacher.id)
+      .not('rating', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(5),
+
+    // M007-S01: Capacity check — only query if teacher has a capacity limit set
+    teacher.capacity_limit != null
+      ? supabase
+          .from('bookings')
+          .select('student_name')
+          .eq('teacher_id', teacher.id)
+          .in('status', ['confirmed', 'completed'])
+          .gte('booking_date', format(addDays(today, -90), 'yyyy-MM-dd'))
+      : Promise.resolve({ data: null, error: null }),
+
+    // SESS-02: Session types for session type selector
+    supabase
+      .from('session_types')
+      .select('id, label, price, duration_minutes, sort_order')
+      .eq('teacher_id', teacher.id)
+      .order('sort_order'),
+  ])
+
   let atCapacity = false
   if (teacher.capacity_limit != null) {
-    const ninetyDaysAgo = format(addDays(today, -90), 'yyyy-MM-dd')
-    const { data: bookingRows, error: capacityError } = await supabase
-      .from('bookings')
-      .select('student_name')
-      .eq('teacher_id', teacher.id)
-      .in('status', ['confirmed', 'completed'])
-      .gte('booking_date', ninetyDaysAgo)
-
-    if (capacityError) {
-      // Safe default: show booking calendar on error
+    if (capacityResult.error) {
       console.error('[capacity] Query failed on profile page', {
         teacher_id: teacher.id,
-        error: capacityError.message,
+        error: capacityResult.error.message,
       })
-    } else {
-      const distinctStudents = new Set(bookingRows?.map((r) => r.student_name)).size
+    } else if (capacityResult.data) {
+      const distinctStudents = new Set(capacityResult.data.map((r: { student_name: string }) => r.student_name)).size
       atCapacity = distinctStudents >= teacher.capacity_limit
     }
   }
-
-  // SESS-02: Fetch session types for session type selector on profile page
-  const { data: sessionTypes } = await supabase
-    .from('session_types')
-    .select('id, label, price, duration_minutes, sort_order')
-    .eq('teacher_id', teacher.id)
-    .order('sort_order')
 
   return (
     <main style={{ '--accent': teacher.accent_color } as React.CSSProperties}>
