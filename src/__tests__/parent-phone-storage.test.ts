@@ -77,8 +77,14 @@ describe('submitBookingRequest — phone storage', () => {
       data: { success: true, booking_id: BOOKING_ID },
       error: null,
     })
+    // Chain for supabase.from('teachers').select('slug').eq('id', ...).single()
+    const slugSingleMock = vi.fn().mockResolvedValue({ data: { slug: 'test-teacher' } })
+    const slugEqMock = vi.fn().mockReturnValue({ single: slugSingleMock })
+    const slugSelectMock = vi.fn().mockReturnValue({ eq: slugEqMock })
+    const ssrFromMock = vi.fn().mockReturnValue({ select: slugSelectMock })
     vi.mocked(createClient).mockResolvedValue({
       rpc: rpcMock,
+      from: ssrFromMock,
     } as never)
 
     const { supabaseAdmin } = await import('@/lib/supabase/service')
@@ -136,8 +142,14 @@ describe('submitBookingRequest — phone storage', () => {
       data: { success: true, booking_id: BOOKING_ID },
       error: null,
     })
+    // Chain for supabase.from('teachers').select('slug').eq('id', ...).single()
+    const slugSingleMock = vi.fn().mockResolvedValue({ data: { slug: 'test-teacher' } })
+    const slugEqMock = vi.fn().mockReturnValue({ single: slugSingleMock })
+    const slugSelectMock = vi.fn().mockReturnValue({ eq: slugEqMock })
+    const ssrFromMock = vi.fn().mockReturnValue({ select: slugSelectMock })
     vi.mocked(createClient).mockResolvedValue({
       rpc: rpcMock,
+      from: ssrFromMock,
     } as never)
 
     const { supabaseAdmin } = await import('@/lib/supabase/service')

@@ -163,7 +163,7 @@ describe('GET /api/cron/recurring-charges', () => {
 
     // Verify PI created with correct params
     expect(paymentIntentsCreateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         amount: 5000,
         currency: 'usd',
         customer: 'cus_test_123',
@@ -173,15 +173,15 @@ describe('GET /api/cron/recurring-charges', () => {
         capture_method: 'manual',
         transfer_data: { destination: 'acct_test_teacher' },
         application_fee_amount: Math.round(5000 * 0.07),
-        metadata: expect.objectContaining({
+        metadata: {
           booking_id: 'booking-recurring-1',
           teacher_id: 'teacher-1',
           recurring_schedule_id: 'sched-1',
-        }),
-      }),
-      expect.objectContaining({
-        idempotencyKey: expect.stringContaining('recurring-charge-booking-recurring-1-'),
-      })
+        },
+      },
+      {
+        idempotencyKey: 'recurring-charge-booking-recurring-1',
+      }
     )
   })
 

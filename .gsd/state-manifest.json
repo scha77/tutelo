@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T13:57:37.801Z",
+  "exported_at": "2026-04-07T14:01:42.302Z",
   "milestones": [
     {
       "id": "M001",
@@ -6463,19 +6463,24 @@
       "milestone_id": "M013",
       "slice_id": "S01",
       "id": "T03",
-      "title": "Fix parent-phone-storage and recurring-charges tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Fixed 5 test failures: added .from() chain mock for slug revalidation in parent-phone-storage and corrected idempotencyKey assertion in recurring-charges",
+      "status": "complete",
+      "one_liner": "Fixed 5 test failures: added .from() chain mock for slug revalidation in parent-phone-storage and corrected idempotencyKey assertion in recurring-charges",
+      "narrative": "Two root causes drove the 5 failures: (1) parent-phone-storage tests crashed with 'supabase.from is not a function' because the mock only provided rpc, missing the .from() chain needed for slug-specific revalidation. Added full chain mock returning { slug: 'test-teacher' } to both setupDeferredMocks and the manual mock. (2) recurring-charges 'successful charge' test used expect.stringContaining with a trailing dash implying a date suffix, but the actual code uses a plain booking ID. Changed to exact object match.",
+      "verification_result": "npx vitest run on both files: 14/14 pass. Full suite: 48 files, 470 tests, 0 failures.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T14:01:42.257Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Task plan said to fix 'skips phone UPDATE' assertions — on inspection, the existing assertions were already correct; the tests were crashing before reaching them. No assertion changes needed.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/parent-phone-storage.test.ts",
+        "src/__tests__/recurring-charges.test.ts"
+      ],
+      "key_decisions": [
+        "Use exact object match for Stripe PI assertion — matches actual idempotencyKey format without date suffix"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M013\nkey_files:\n  - src/__tests__/parent-phone-storage.test.ts\n  - src/__tests__/recurring-charges.test.ts\nkey_decisions:\n  - Use exact object match for Stripe PI assertion — matches actual idempotencyKey format without date suffix\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T14:01:42.257Z\nblocker_discovered: false\n---\n\n# T03: Fixed 5 test failures: added .from() chain mock for slug revalidation in parent-phone-storage and corrected idempotencyKey assertion in recurring-charges\n\n**Fixed 5 test failures: added .from() chain mock for slug revalidation in parent-phone-storage and corrected idempotencyKey assertion in recurring-charges**\n\n## What Happened\n\nTwo root causes drove the 5 failures: (1) parent-phone-storage tests crashed with 'supabase.from is not a function' because the mock only provided rpc, missing the .from() chain needed for slug-specific revalidation. Added full chain mock returning { slug: 'test-teacher' } to both setupDeferredMocks and the manual mock. (2) recurring-charges 'successful charge' test used expect.stringContaining with a trailing dash implying a date suffix, but the actual code uses a plain booking ID. Changed to exact object match.\n\n## Verification\n\nnpx vitest run on both files: 14/14 pass. Full suite: 48 files, 470 tests, 0 failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/parent-phone-storage.test.ts src/__tests__/recurring-charges.test.ts` | 0 | ✅ pass | 7200ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 13000ms |\n\n## Deviations\n\nTask plan said to fix 'skips phone UPDATE' assertions — on inspection, the existing assertions were already correct; the tests were crashing before reaching them. No assertion changes needed.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/parent-phone-storage.test.ts`\n- `src/__tests__/recurring-charges.test.ts`\n",
       "description": "(1) In `parent-phone-storage.test.ts`, add `.from()` to the mock supabase returned by `setupDeferredMocks` — it needs to handle `.from('teachers').select('slug').eq('id', teacherId).single()`. Also fix the 2 'skips phone UPDATE' tests that incorrectly assert `supabaseAdmin.from` was not called — the slug revalidation uses the SSR `supabase` client, not `supabaseAdmin`. (2) In `recurring-charges.test.ts`, fix the `idempotencyKey` assertion to exact match `'recurring-charge-booking-recurring-1'` and use plain object match instead of `expect.objectContaining`.",
       "estimate": "20m",
       "files": [
@@ -8945,6 +8950,28 @@
       "verdict": "✅ pass",
       "duration_ms": 3300,
       "created_at": "2026-04-07T13:57:37.775Z"
+    },
+    {
+      "id": 157,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M013",
+      "command": "npx vitest run src/__tests__/parent-phone-storage.test.ts src/__tests__/recurring-charges.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 7200,
+      "created_at": "2026-04-07T14:01:42.258Z"
+    },
+    {
+      "id": 158,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M013",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 13000,
+      "created_at": "2026-04-07T14:01:42.258Z"
     }
   ]
 }
