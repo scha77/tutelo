@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T15:46:53.294Z",
+  "exported_at": "2026-04-07T15:49:58.111Z",
   "milestones": [
     {
       "id": "M001",
@@ -7015,19 +7015,21 @@
       "milestone_id": "M013",
       "slice_id": "S04",
       "id": "T03",
-      "title": "Register M010–M012 requirements, update existing entries, validate R005",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Registered 17 M010/M012 requirements (R126–R142), fixed 9 Untitled UI entries, updated PERF-02, and validated R005 — REQUIREMENTS.md now contains 151 entries with full traceability",
+      "status": "complete",
+      "one_liner": "Registered 17 M010/M012 requirements (R126–R142), fixed 9 Untitled UI entries, updated PERF-02, and validated R005 — REQUIREMENTS.md now contains 151 entries with full traceability",
+      "narrative": "Registered 17 new requirements via gsd_requirement_save: 6 PARENT (R126–R131), 3 MSG (R132–R134), 3 ADMIN (R135–R137), 2 AUTH (R138–R139), 3 PERF (R140–R142). Updated 11 existing entries: UI-01 through UI-09 descriptions replaced from Untitled to proper descriptions with primary_owner set, PERF-02 description and ownership updated, R005 validated with proof text referencing 151 entries.",
+      "verification_result": "Three checks pass: grep -c '^### ' returns 151 (>= 146), grep -c 'Untitled' returns 0, R005 status shows validated in traceability table.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T15:49:58.070Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        ".gsd/REQUIREMENTS.md"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M013\nkey_files:\n  - .gsd/REQUIREMENTS.md\nkey_decisions:\n  - (none)\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T15:49:58.070Z\nblocker_discovered: false\n---\n\n# T03: Registered 17 M010/M012 requirements (R126–R142), fixed 9 Untitled UI entries, updated PERF-02, and validated R005 — REQUIREMENTS.md now contains 151 entries with full traceability\n\n**Registered 17 M010/M012 requirements (R126–R142), fixed 9 Untitled UI entries, updated PERF-02, and validated R005 — REQUIREMENTS.md now contains 151 entries with full traceability**\n\n## What Happened\n\nRegistered 17 new requirements via gsd_requirement_save: 6 PARENT (R126–R131), 3 MSG (R132–R134), 3 ADMIN (R135–R137), 2 AUTH (R138–R139), 3 PERF (R140–R142). Updated 11 existing entries: UI-01 through UI-09 descriptions replaced from Untitled to proper descriptions with primary_owner set, PERF-02 description and ownership updated, R005 validated with proof text referencing 151 entries.\n\n## Verification\n\nThree checks pass: grep -c '^### ' returns 151 (>= 146), grep -c 'Untitled' returns 0, R005 status shows validated in traceability table.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -c '^### ' .gsd/REQUIREMENTS.md` | 0 | ✅ pass (151 >= 146) | 50ms |\n| 2 | `grep -c 'Untitled' .gsd/REQUIREMENTS.md` | 1 | ✅ pass (0 matches) | 50ms |\n| 3 | `grep 'R005' .gsd/REQUIREMENTS.md` | 0 | ✅ pass (status: validated) | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `.gsd/REQUIREMENTS.md`\n",
       "description": "Register 17 new M010/M012 requirements, update 10 existing entries (UI-01–UI-09 descriptions + PERF-02), and validate R005. No code changes — only GSD tool calls.\n\n## Part 1: New Requirements (17 entries)\n\nUse `gsd_requirement_save` for each.\n\n### M010 — Parent Features, Messaging, Admin, Auth (14 entries)\n\n**PARENT (6) — class: functional — why: \"Parent experience drives retention\" — source: M010**\n- PARENT-04: Multi-child management (CRUD) — validation: \"Validated in M010 — multi-child management CRUD\"\n- PARENT-05: Saved payment methods (Stripe Customer per parent) — validation: \"Validated in M010 — saved payment methods via Stripe Customer per parent\"\n- PARENT-06: Real-time teacher-parent messaging — validation: \"Validated in M010 — real-time teacher-parent messaging\"\n- PARENT-07: Auth-guarded parent dashboard — validation: \"Validated in M010 — auth-guarded parent dashboard\"\n- PARENT-08: Child selector in booking calendar — validation: \"Validated in M010 — child selector in booking calendar\"\n- PARENT-09: Parent-level Stripe Customer — validation: \"Validated in M010 — parent-level Stripe Customer\"\n\n**MSG (3) — class: functional — why: \"Communication channel between teacher and parent\" — source: M010**\n- MSG-01: One-thread-per-pair messaging — validation: \"Validated in M010 — one-thread-per-pair messaging\"\n- MSG-02: Real-time messages via Supabase Realtime — validation: \"Validated in M010 — real-time messages via Supabase Realtime\"\n- MSG-03: New message email notification with rate limiting — validation: \"Validated in M010 — new message email notification with rate limiting\"\n\n**ADMIN (3) — class: operability — why: \"Platform operator visibility\" — source: M010**\n- ADMIN-01: Admin metrics dashboard — validation: \"Validated in M010 — admin metrics dashboard\"\n- ADMIN-02: Admin activity feed — validation: \"Validated in M010 — admin activity feed\"\n- ADMIN-04: Admin access gate (notFound for non-admins) — validation: \"Validated in M010 — admin access gate using notFound() for non-admins\"\n\n**AUTH (2) — class: functional — why: \"Authentication completeness\" — source: M010**\n- AUTH-03: Google SSO working end-to-end — validation: \"Validated in M010 — Google SSO working end-to-end\"\n- AUTH-04: School email verification is provider-agnostic — validation: \"Validated in M010 — school email verification is provider-agnostic\"\n\n### M012 — Performance (3 entries)\n\n**PERF (3) — class: non-functional — why: \"Page load performance and caching\" — source: M012 — status: validated**\n- PERF-01: Profile page ISR with on-demand revalidation — validation: \"Validated in M012 — profile page ISR with on-demand revalidation\"\n- PERF-06: ISR within Vercel Hobby plan limits — validation: \"Validated in M012 — ISR within Vercel Hobby plan limits\"\n- PERF-07: On-demand revalidation via revalidatePath — validation: \"Validated in M012 — on-demand revalidation via revalidatePath\"\n\n## Part 2: Update Existing Entries (11 updates)\n\nUse `gsd_requirement_update` for each. Only provide the fields that need changing.\n\n### UI-01 through UI-09 — Add proper descriptions (currently say \"Untitled\")\n\nFor each, call `gsd_requirement_update` with `id` and `description`:\n- UI-01: description=\"Teacher profile page premium visual treatment (hero, credentials, reviews, about)\", class=\"quality-attribute\", primary_owner=\"M011/S01\"\n- UI-02: description=\"BookingCalendar decomposed into sub-components\", class=\"quality-attribute\", primary_owner=\"M011/S02\"\n- UI-03: description=\"Mobile navigation: labeled primary tabs + More panel\", class=\"quality-attribute\", primary_owner=\"M011/S03\"\n- UI-04: description=\"All 11 teacher dashboard pages premium card standard\", class=\"quality-attribute\", primary_owner=\"M011/S04\"\n- UI-05: description=\"All 5 parent dashboard pages premium card standard\", class=\"quality-attribute\", primary_owner=\"M011/S04\"\n- UI-06: description=\"Landing page tightening (footer, hero badge, responsive nav)\", class=\"quality-attribute\", primary_owner=\"M011/S05\"\n- UI-07: description=\"Design patterns documented (card standard, avatar circles, tinting, headers)\", class=\"quality-attribute\", primary_owner=\"M011\"\n- UI-08: description=\"Bespoke Tutelo patterns replace generic shadcn/ui defaults\", class=\"quality-attribute\", primary_owner=\"M011\"\n- UI-09: description=\"Nav lag eliminated, all icons labeled, consistent across surfaces\", class=\"quality-attribute\", primary_owner=\"M011\"\n\n### PERF-02 — Update description and class\n- PERF-02: description=\"Directory pages ISR with on-demand revalidation\", class=\"non-functional\", primary_owner=\"M012\", why=\"Page load performance for directory browsing\"\n\n### R005 — Mark as validated\n- R005: status=\"validated\", validation=\"REQUIREMENTS.md contains 150 entries with stable IDs, ownership traceability, and coverage summary. All M001–M012 capabilities documented.\"\n\n## Steps\n\n1. Call `gsd_requirement_save` for each of the 17 new requirements (M010: 14, M012: 3).\n2. Call `gsd_requirement_update` for each of the 11 existing entries (UI-01–UI-09, PERF-02, R005).\n3. Verify final state:\n   - `grep -c '^### ' .gsd/REQUIREMENTS.md` returns >= 146\n   - `grep -c 'Untitled' .gsd/REQUIREMENTS.md` returns 0\n   - Confirm R005 status shows \"validated\" in REQUIREMENTS.md",
       "estimate": "10m",
       "files": [
@@ -9781,6 +9783,39 @@
       "verdict": "✅ pass (134 >= 133)",
       "duration_ms": 50,
       "created_at": "2026-04-07T15:46:53.247Z"
+    },
+    {
+      "id": 183,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M013",
+      "command": "grep -c '^### ' .gsd/REQUIREMENTS.md",
+      "exit_code": 0,
+      "verdict": "✅ pass (151 >= 146)",
+      "duration_ms": 50,
+      "created_at": "2026-04-07T15:49:58.070Z"
+    },
+    {
+      "id": 184,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M013",
+      "command": "grep -c 'Untitled' .gsd/REQUIREMENTS.md",
+      "exit_code": 1,
+      "verdict": "✅ pass (0 matches)",
+      "duration_ms": 50,
+      "created_at": "2026-04-07T15:49:58.070Z"
+    },
+    {
+      "id": 185,
+      "task_id": "T03",
+      "slice_id": "S04",
+      "milestone_id": "M013",
+      "command": "grep 'R005' .gsd/REQUIREMENTS.md",
+      "exit_code": 0,
+      "verdict": "✅ pass (status: validated)",
+      "duration_ms": 50,
+      "created_at": "2026-04-07T15:49:58.070Z"
     }
   ]
 }

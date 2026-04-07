@@ -2,19 +2,6 @@
 
 This file is the explicit capability and coverage contract for the project.
 
-## Active
-
-### R005 — REQUIREMENTS.md documents all 124+ validated capabilities from M001–M012 with stable IDs, ownership, and traceability table.
-- Class: operability
-- Status: active
-- Description: REQUIREMENTS.md documents all 124+ validated capabilities from M001–M012 with stable IDs, ownership, and traceability table.
-- Why it matters: The capability contract was hollowed out during M011 restructuring. Without it, there's no single source of truth for what the product can do.
-- Source: user
-- Primary owning slice: M013/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Rebuild from milestone summaries in PROJECT.md and .gsd/DECISIONS.md.
-
 ## Validated
 
 ### R001 — All test files pass with 0 failures. No mock drift, no stale assertions.
@@ -60,6 +47,17 @@ This file is the explicit capability and coverage contract for the project.
 - Supporting slices: none
 - Validation: 52 test files, 490 tests pass, 0 it.todo(), 0 it.skip(), 0 failures. Verified by `npx vitest run` and `rg 'it\.(todo|skip)\('` on 2026-04-07. 7 pure-stub files deleted, 6 stubs removed from mixed files, 16 stubs converted to real passing tests, 4 skipped tests fixed.
 - Notes: 11 test files with todo stubs across tests/bookings/, tests/stripe/, tests/auth/, tests/onboarding/, tests/unit/.
+
+### R005 — REQUIREMENTS.md documents all 124+ validated capabilities from M001–M012 with stable IDs, ownership, and traceability table.
+- Class: operability
+- Status: validated
+- Description: REQUIREMENTS.md documents all 124+ validated capabilities from M001–M012 with stable IDs, ownership, and traceability table.
+- Why it matters: The capability contract was hollowed out during M011 restructuring. Without it, there's no single source of truth for what the product can do.
+- Source: user
+- Primary owning slice: M013/S04
+- Supporting slices: none
+- Validation: REQUIREMENTS.md contains 151 entries with stable IDs, ownership traceability, and coverage summary. All M001–M012 capabilities documented.
+- Notes: Rebuild from milestone summaries in PROJECT.md and .gsd/DECISIONS.md.
 
 ### R006 — Sign up with email+password or Google SSO
 - Class: functional
@@ -1261,52 +1259,240 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated in M009 — recurring sessions in dashboard with series badge
 - Notes: Legacy: RECUR-09
 
-### UI-01 — Untitled
+### R126 — Multi-child management (CRUD)
+- Class: functional
 - Status: validated
+- Description: Multi-child management (CRUD)
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — multi-child management CRUD
+- Notes: Legacy: PARENT-04
+
+### R127 — Saved payment methods (Stripe Customer per parent)
+- Class: functional
+- Status: validated
+- Description: Saved payment methods (Stripe Customer per parent)
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — saved payment methods via Stripe Customer per parent
+- Notes: Legacy: PARENT-05
+
+### R128 — Real-time teacher-parent messaging
+- Class: functional
+- Status: validated
+- Description: Real-time teacher-parent messaging
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — real-time teacher-parent messaging
+- Notes: Legacy: PARENT-06
+
+### R129 — Auth-guarded parent dashboard
+- Class: functional
+- Status: validated
+- Description: Auth-guarded parent dashboard
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — auth-guarded parent dashboard
+- Notes: Legacy: PARENT-07
+
+### R130 — Child selector in booking calendar
+- Class: functional
+- Status: validated
+- Description: Child selector in booking calendar
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — child selector in booking calendar
+- Notes: Legacy: PARENT-08
+
+### R131 — Parent-level Stripe Customer
+- Class: functional
+- Status: validated
+- Description: Parent-level Stripe Customer
+- Why it matters: Parent experience drives retention
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — parent-level Stripe Customer
+- Notes: Legacy: PARENT-09
+
+### R132 — One-thread-per-pair messaging
+- Class: functional
+- Status: validated
+- Description: One-thread-per-pair messaging
+- Why it matters: Communication channel between teacher and parent
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — one-thread-per-pair messaging
+- Notes: Legacy: MSG-01
+
+### R133 — Real-time messages via Supabase Realtime
+- Class: functional
+- Status: validated
+- Description: Real-time messages via Supabase Realtime
+- Why it matters: Communication channel between teacher and parent
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — real-time messages via Supabase Realtime
+- Notes: Legacy: MSG-02
+
+### R134 — New message email notification with rate limiting
+- Class: functional
+- Status: validated
+- Description: New message email notification with rate limiting
+- Why it matters: Communication channel between teacher and parent
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — new message email notification with rate limiting
+- Notes: Legacy: MSG-03
+
+### R135 — Admin metrics dashboard
+- Class: operability
+- Status: validated
+- Description: Admin metrics dashboard
+- Why it matters: Platform operator visibility
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — admin metrics dashboard
+- Notes: Legacy: ADMIN-01
+
+### R136 — Admin activity feed
+- Class: operability
+- Status: validated
+- Description: Admin activity feed
+- Why it matters: Platform operator visibility
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — admin activity feed
+- Notes: Legacy: ADMIN-02
+
+### R137 — Admin access gate (notFound for non-admins)
+- Class: operability
+- Status: validated
+- Description: Admin access gate (notFound for non-admins)
+- Why it matters: Platform operator visibility
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — admin access gate using notFound() for non-admins
+- Notes: Legacy: ADMIN-04
+
+### R138 — Google SSO working end-to-end
+- Class: functional
+- Status: validated
+- Description: Google SSO working end-to-end
+- Why it matters: Authentication completeness
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — Google SSO working end-to-end
+- Notes: Legacy: AUTH-03
+
+### R139 — School email verification is provider-agnostic
+- Class: functional
+- Status: validated
+- Description: School email verification is provider-agnostic
+- Why it matters: Authentication completeness
+- Source: M010
+- Primary owning slice: M010
+- Validation: Validated in M010 — school email verification is provider-agnostic
+- Notes: Legacy: AUTH-04
+
+### R140 — Profile page ISR with on-demand revalidation
+- Class: non-functional
+- Status: validated
+- Description: Profile page ISR with on-demand revalidation
+- Why it matters: Page load performance and caching
+- Source: M012
+- Primary owning slice: M012
+- Validation: Validated in M012 — profile page ISR with on-demand revalidation
+- Notes: Legacy: PERF-01
+
+### R141 — ISR within Vercel Hobby plan limits
+- Class: non-functional
+- Status: validated
+- Description: ISR within Vercel Hobby plan limits
+- Why it matters: Page load performance and caching
+- Source: M012
+- Primary owning slice: M012
+- Validation: Validated in M012 — ISR within Vercel Hobby plan limits
+- Notes: Legacy: PERF-06
+
+### R142 — On-demand revalidation via revalidatePath
+- Class: non-functional
+- Status: validated
+- Description: On-demand revalidation via revalidatePath
+- Why it matters: Page load performance and caching
+- Source: M012
+- Primary owning slice: M012
+- Validation: Validated in M012 — on-demand revalidation via revalidatePath
+- Notes: Legacy: PERF-07
+
+### UI-01 — Teacher profile page premium visual treatment (hero, credentials, reviews, about)
+- Status: validated
+- Description: Teacher profile page premium visual treatment (hero, credentials, reviews, about)
+- Primary owning slice: M011/S01
 - Validation: Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes.
 
-### UI-02 — Untitled
+### UI-02 — BookingCalendar decomposed into sub-components
 - Status: validated
+- Description: BookingCalendar decomposed into sub-components
+- Primary owning slice: M011/S02
 - Validation: Validated by M011/S02 — BookingCalendar decomposed into BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel sub-components. All booking paths (direct, recurring, deferred) confirmed functional. Build passes.
 
-### UI-03 — Untitled
+### UI-03 — Mobile navigation: labeled primary tabs + More panel
 - Status: validated
+- Description: Mobile navigation: labeled primary tabs + More panel
+- Primary owning slice: M011/S03
 - Validation: Validated by M011/S03 — MobileBottomNav rebuilt with 4 labeled primary tabs + More panel. ParentMobileNav confirmed with visible text-[10px] labels on all 5 tabs. Build passes.
 
-### UI-04 — Untitled
+### UI-04 — All 11 teacher dashboard pages premium card standard
 - Status: validated
+- Description: All 11 teacher dashboard pages premium card standard
+- Primary owning slice: M011/S04
 - Validation: Validated by M011/S04 — All 11 teacher dashboard pages upgraded: premium card standard (rounded-xl border bg-card shadow-sm), avatar initial circles, empty state pattern, color-mix tinting, tracking-tight headers. Build passes.
 
-### UI-05 — Untitled
+### UI-05 — All 5 parent dashboard pages premium card standard
 - Status: validated
+- Description: All 5 parent dashboard pages premium card standard
+- Primary owning slice: M011/S04
 - Validation: Validated by M011/S04 — All 5 parent dashboard pages upgraded with same premium card standard as teacher dashboard. Build passes.
 
-### UI-06 — Untitled
+### UI-06 — Landing page tightening (footer, hero badge, responsive nav)
 - Status: validated
+- Description: Landing page tightening (footer, hero badge, responsive nav)
+- Primary owning slice: M011/S05
 - Validation: Validated by M011/S05 — Landing page tightening pass applied. SocialLinks always renders attribution footer regardless of teacher social links.
 
-### UI-07 — Untitled
+### UI-07 — Design patterns documented (card standard, avatar circles, tinting, headers)
 - Status: validated
+- Description: Design patterns documented (card standard, avatar circles, tinting, headers)
+- Primary owning slice: M011
 - Validation: Validated by M011 overall — KNOWLEDGE.md documents Premium Dashboard Card Standard, Avatar Initial Circle Pattern, color-mix canonical tinting, and Premium Page Header Pattern applied consistently across all surfaces. Build passes.
 
-### UI-08 — Untitled
+### UI-08 — Bespoke Tutelo patterns replace generic shadcn/ui defaults
 - Status: validated
+- Description: Bespoke Tutelo patterns replace generic shadcn/ui defaults
+- Primary owning slice: M011
 - Validation: Validated by M011 — All surfaces use bespoke Tutelo patterns (color-mix tinting, tracking-tight headers, custom empty states, avatar circles). No default shadcn/ui spacing or generic template patterns visible.
 
-### UI-09 — Untitled
+### UI-09 — Nav lag eliminated, all icons labeled, consistent across surfaces
 - Status: validated
+- Description: Nav lag eliminated, all icons labeled, consistent across surfaces
+- Primary owning slice: M011
 - Validation: Validated by M011 + post-M011 perf work — nav lag eliminated (template.tsx removed, auth dedup, loading skeletons on all pages), all icons labeled, no mystery affordances. Consistent across teacher and parent surfaces.
 
 ## Traceability
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| PERF-02 |  | partially-advanced | none | none | Partial: /tutors/[category] confirmed ISR in build output (● 1h). /tutors correctly dynamic (searchParams Next.js constraint, D059). supabaseAdmin in place, revalidation wiring complete, ready for client-side filtering pivot. M012 complete. |
+| PERF-02 |  | partially-advanced | M012 | none | Partial: /tutors/[category] confirmed ISR in build output (● 1h). /tutors correctly dynamic (searchParams Next.js constraint, D059). supabaseAdmin in place, revalidation wiring complete, ready for client-side filtering pivot. M012 complete. |
 | R001 | quality-attribute | validated | M013/S01 | M013/S03 | 48 test files pass, 470 tests pass, 0 failures. All 14 failures across 4 files (admin-dashboard, messaging, parent-phone-storage, recurring-charges) resolved via mock realignment. Verified by `npx vitest run` on 2026-04-07. |
 | R002 | operability | validated | M013/S02 | none | Sentry SDK installed and initialized on client, server, and edge runtimes. Error boundaries (error.tsx, global-error.tsx) call Sentry.captureException in useEffect. Source maps configured with graceful fallback (errorHandler). sendDefaultPii: false for student data protection. tunnelRoute /monitoring for ad-blocker bypass. Build passes clean without SENTRY_AUTH_TOKEN. 470 tests pass with Sentry mocked. |
 | R003 | failure-visibility | validated | M013/S02 | none | 44 catch blocks across 18 production files instrumented with Sentry.captureException. Fire-and-forget .catch(console.error) patterns upgraded to include Sentry. Known-safe catches (JSON parse guards, timezone fallbacks, cookie read-only, redirect throws) correctly left untouched. Catch block audit confirmed full coverage — no silent catch-and-ignore patterns remain. |
 | R004 | quality-attribute | validated | M013/S03 | none | 52 test files, 490 tests pass, 0 it.todo(), 0 it.skip(), 0 failures. Verified by `npx vitest run` and `rg 'it\.(todo|skip)\('` on 2026-04-07. 7 pure-stub files deleted, 6 stubs removed from mixed files, 16 stubs converted to real passing tests, 4 skipped tests fixed. |
-| R005 | operability | active | M013/S04 | none | unmapped |
+| R005 | operability | validated | M013/S04 | none | REQUIREMENTS.md contains 151 entries with stable IDs, ownership traceability, and coverage summary. All M001–M012 capabilities documented. |
 | R006 | functional | validated | M001 | none | Auth signup/login + session persistence — verified via test suite and browser |
 | R007 | functional | validated | M001 | none | Auth signup/login + session persistence — verified via test suite and browser |
 | R008 | functional | validated | M001 | none | Complete wizard flow with all fields, no-Stripe publish, shareable URL — browser verified |
@@ -1427,19 +1613,36 @@ This file is the explicit capability and coverage contract for the project.
 | R123 | functional | validated | M009 | none | Validated in M009 — cron charges upcoming recurring sessions |
 | R124 | functional | validated | M009 | none | Validated in M009 — parent self-service cancellation via secure email link |
 | R125 | functional | validated | M009 | none | Validated in M009 — recurring sessions in dashboard with series badge |
-| UI-01 |  | validated | none | none | Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes. |
-| UI-02 |  | validated | none | none | Validated by M011/S02 — BookingCalendar decomposed into BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel sub-components. All booking paths (direct, recurring, deferred) confirmed functional. Build passes. |
-| UI-03 |  | validated | none | none | Validated by M011/S03 — MobileBottomNav rebuilt with 4 labeled primary tabs + More panel. ParentMobileNav confirmed with visible text-[10px] labels on all 5 tabs. Build passes. |
-| UI-04 |  | validated | none | none | Validated by M011/S04 — All 11 teacher dashboard pages upgraded: premium card standard (rounded-xl border bg-card shadow-sm), avatar initial circles, empty state pattern, color-mix tinting, tracking-tight headers. Build passes. |
-| UI-05 |  | validated | none | none | Validated by M011/S04 — All 5 parent dashboard pages upgraded with same premium card standard as teacher dashboard. Build passes. |
-| UI-06 |  | validated | none | none | Validated by M011/S05 — Landing page tightening pass applied. SocialLinks always renders attribution footer regardless of teacher social links. |
-| UI-07 |  | validated | none | none | Validated by M011 overall — KNOWLEDGE.md documents Premium Dashboard Card Standard, Avatar Initial Circle Pattern, color-mix canonical tinting, and Premium Page Header Pattern applied consistently across all surfaces. Build passes. |
-| UI-08 |  | validated | none | none | Validated by M011 — All surfaces use bespoke Tutelo patterns (color-mix tinting, tracking-tight headers, custom empty states, avatar circles). No default shadcn/ui spacing or generic template patterns visible. |
-| UI-09 |  | validated | none | none | Validated by M011 + post-M011 perf work — nav lag eliminated (template.tsx removed, auth dedup, loading skeletons on all pages), all icons labeled, no mystery affordances. Consistent across teacher and parent surfaces. |
+| R126 | functional | validated | M010 | none | Validated in M010 — multi-child management CRUD |
+| R127 | functional | validated | M010 | none | Validated in M010 — saved payment methods via Stripe Customer per parent |
+| R128 | functional | validated | M010 | none | Validated in M010 — real-time teacher-parent messaging |
+| R129 | functional | validated | M010 | none | Validated in M010 — auth-guarded parent dashboard |
+| R130 | functional | validated | M010 | none | Validated in M010 — child selector in booking calendar |
+| R131 | functional | validated | M010 | none | Validated in M010 — parent-level Stripe Customer |
+| R132 | functional | validated | M010 | none | Validated in M010 — one-thread-per-pair messaging |
+| R133 | functional | validated | M010 | none | Validated in M010 — real-time messages via Supabase Realtime |
+| R134 | functional | validated | M010 | none | Validated in M010 — new message email notification with rate limiting |
+| R135 | operability | validated | M010 | none | Validated in M010 — admin metrics dashboard |
+| R136 | operability | validated | M010 | none | Validated in M010 — admin activity feed |
+| R137 | operability | validated | M010 | none | Validated in M010 — admin access gate using notFound() for non-admins |
+| R138 | functional | validated | M010 | none | Validated in M010 — Google SSO working end-to-end |
+| R139 | functional | validated | M010 | none | Validated in M010 — school email verification is provider-agnostic |
+| R140 | non-functional | validated | M012 | none | Validated in M012 — profile page ISR with on-demand revalidation |
+| R141 | non-functional | validated | M012 | none | Validated in M012 — ISR within Vercel Hobby plan limits |
+| R142 | non-functional | validated | M012 | none | Validated in M012 — on-demand revalidation via revalidatePath |
+| UI-01 |  | validated | M011/S01 | none | Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes. |
+| UI-02 |  | validated | M011/S02 | none | Validated by M011/S02 — BookingCalendar decomposed into BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel sub-components. All booking paths (direct, recurring, deferred) confirmed functional. Build passes. |
+| UI-03 |  | validated | M011/S03 | none | Validated by M011/S03 — MobileBottomNav rebuilt with 4 labeled primary tabs + More panel. ParentMobileNav confirmed with visible text-[10px] labels on all 5 tabs. Build passes. |
+| UI-04 |  | validated | M011/S04 | none | Validated by M011/S04 — All 11 teacher dashboard pages upgraded: premium card standard (rounded-xl border bg-card shadow-sm), avatar initial circles, empty state pattern, color-mix tinting, tracking-tight headers. Build passes. |
+| UI-05 |  | validated | M011/S04 | none | Validated by M011/S04 — All 5 parent dashboard pages upgraded with same premium card standard as teacher dashboard. Build passes. |
+| UI-06 |  | validated | M011/S05 | none | Validated by M011/S05 — Landing page tightening pass applied. SocialLinks always renders attribution footer regardless of teacher social links. |
+| UI-07 |  | validated | M011 | none | Validated by M011 overall — KNOWLEDGE.md documents Premium Dashboard Card Standard, Avatar Initial Circle Pattern, color-mix canonical tinting, and Premium Page Header Pattern applied consistently across all surfaces. Build passes. |
+| UI-08 |  | validated | M011 | none | Validated by M011 — All surfaces use bespoke Tutelo patterns (color-mix tinting, tracking-tight headers, custom empty states, avatar circles). No default shadcn/ui spacing or generic template patterns visible. |
+| UI-09 |  | validated | M011 | none | Validated by M011 + post-M011 perf work — nav lag eliminated (template.tsx removed, auth dedup, loading skeletons on all pages), all icons labeled, no mystery affordances. Consistent across teacher and parent surfaces. |
 
 ## Coverage Summary
 
-- Active requirements: 1
-- Mapped to slices: 1
-- Validated: 133 (R001, R002, R003, R004, R006, R007, R008, R009, R010, R011, R012, R013, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068, R069, R070, R071, R072, R073, R074, R075, R076, R077, R078, R079, R080, R081, R082, R083, R084, R085, R086, R087, R088, R089, R090, R091, R092, R093, R094, R095, R096, R097, R098, R099, R100, R101, R102, R103, R104, R105, R106, R107, R108, R109, R110, R111, R112, R113, R114, R115, R116, R117, R118, R119, R120, R121, R122, R123, R124, R125, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
+- Active requirements: 0
+- Mapped to slices: 0
+- Validated: 151 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R013, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068, R069, R070, R071, R072, R073, R074, R075, R076, R077, R078, R079, R080, R081, R082, R083, R084, R085, R086, R087, R088, R089, R090, R091, R092, R093, R094, R095, R096, R097, R098, R099, R100, R101, R102, R103, R104, R105, R106, R107, R108, R109, R110, R111, R112, R113, R114, R115, R116, R117, R118, R119, R120, R121, R122, R123, R124, R125, R126, R127, R128, R129, R130, R131, R132, R133, R134, R135, R136, R137, R138, R139, R140, R141, R142, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
 - Unmapped active requirements: 0

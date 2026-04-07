@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M013/S04/T02",
+  "timestamp": 1775576816620,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "grep -c '^### ' .gsd/REQUIREMENTS.md returns >= 133",
+      "exitCode": 2,
+      "durationMs": 8,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

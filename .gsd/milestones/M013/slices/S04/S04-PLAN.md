@@ -250,7 +250,7 @@ Same pattern as T01. For each requirement:
   - Estimate: 15m
   - Files: .gsd/REQUIREMENTS.md
   - Verify: grep -c '^### ' .gsd/REQUIREMENTS.md returns >= 133
-- [ ] **T03: Register M010–M012 requirements, update existing entries, validate R005** — Register 17 new M010/M012 requirements, update 10 existing entries (UI-01–UI-09 descriptions + PERF-02), and validate R005. No code changes — only GSD tool calls.
+- [x] **T03: Registered 17 M010/M012 requirements (R126–R142), fixed 9 Untitled UI entries, updated PERF-02, and validated R005 — REQUIREMENTS.md now contains 151 entries with full traceability** — Register 17 new M010/M012 requirements, update 10 existing entries (UI-01–UI-09 descriptions + PERF-02), and validate R005. No code changes — only GSD tool calls.
 
 ## Part 1: New Requirements (17 entries)
 
