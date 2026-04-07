@@ -28,7 +28,7 @@
   - Estimate: 45m
   - Files: src/app/(dashboard)/dashboard/requests/page.tsx, src/app/(dashboard)/dashboard/sessions/page.tsx, src/app/(dashboard)/dashboard/students/page.tsx, src/app/(dashboard)/dashboard/waitlist/page.tsx
   - Verify: npx tsc --noEmit
-- [ ] **T02: Wire updateTag invalidation into server actions and verify full build** — Server actions that mutate bookings or waitlist entries must invalidate the corresponding page caches via `updateTag`. This ensures that after a teacher accepts/declines a request, completes/cancels a session, or removes a waitlist entry, the cached data is immediately refreshed.
+- [x] **T02: Added updateTag cache invalidation calls to all six booking mutations and removeWaitlistEntry, completing the invalidation layer for all four dashboard page cache tags** — Server actions that mutate bookings or waitlist entries must invalidate the corresponding page caches via `updateTag`. This ensures that after a teacher accepts/declines a request, completes/cancels a session, or removes a waitlist entry, the cached data is immediately refreshed.
 
 ## Steps
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T05:50:21.493Z",
+  "exported_at": "2026-04-07T05:52:42.396Z",
   "milestones": [
     {
       "id": "M001",
@@ -6099,19 +6099,25 @@
       "milestone_id": "M012",
       "slice_id": "S03",
       "id": "T02",
-      "title": "Wire updateTag invalidation into server actions and verify full build",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added updateTag cache invalidation calls to all six booking mutations and removeWaitlistEntry, completing the invalidation layer for all four dashboard page cache tags",
+      "status": "complete",
+      "one_liner": "Added updateTag cache invalidation calls to all six booking mutations and removeWaitlistEntry, completing the invalidation layer for all four dashboard page cache tags",
+      "narrative": "Read bookings.ts and waitlist.ts before editing. bookings.ts already imported updateTag. Made six targeted edits: acceptBooking and declineBooking each got updateTag(`requests-${teacher.id}`); markSessionComplete got updateTag for both sessions and students tags; cancelSession, cancelSingleRecurringSession, and cancelRecurringSeries each got updateTag(`sessions-${teacher.id}`). waitlist.ts had its import expanded to include updateTag and removeWaitlistEntry received updateTag(`waitlist-${teacher.id}`) after the successful delete. All new calls sit beside existing overview and revalidatePath calls for consistency.",
+      "verification_result": "npx tsc --noEmit: zero errors. npx vitest run: 436 tests pass; 38 pre-existing failures in unrelated test files (admin-dashboard getClaims mock, messaging/recurring-charges/reminders/og-metadata supabaseAdmin mock gaps). Tests directly covering modified actions — cancel-session.test.ts (9/9) and booking-action.test.ts (8/8, 3 skipped) — all pass. npm run build: compiled successfully in 5.5s, all 72 pages generated cleanly.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T05:52:42.352Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "38 pre-existing test failures exist unrelated to this task (getClaims mock gap, supabaseAdmin query builder mock gaps in multiple test files).",
+      "key_files": [
+        "src/actions/bookings.ts",
+        "src/actions/waitlist.ts"
+      ],
+      "key_decisions": [
+        "bookings.ts already had updateTag imported — only new call sites needed",
+        "waitlist.ts needed updateTag added to its next/cache import"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M012\nkey_files:\n  - src/actions/bookings.ts\n  - src/actions/waitlist.ts\nkey_decisions:\n  - bookings.ts already had updateTag imported — only new call sites needed\n  - waitlist.ts needed updateTag added to its next/cache import\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T05:52:42.351Z\nblocker_discovered: false\n---\n\n# T02: Added updateTag cache invalidation calls to all six booking mutations and removeWaitlistEntry, completing the invalidation layer for all four dashboard page cache tags\n\n**Added updateTag cache invalidation calls to all six booking mutations and removeWaitlistEntry, completing the invalidation layer for all four dashboard page cache tags**\n\n## What Happened\n\nRead bookings.ts and waitlist.ts before editing. bookings.ts already imported updateTag. Made six targeted edits: acceptBooking and declineBooking each got updateTag(`requests-${teacher.id}`); markSessionComplete got updateTag for both sessions and students tags; cancelSession, cancelSingleRecurringSession, and cancelRecurringSeries each got updateTag(`sessions-${teacher.id}`). waitlist.ts had its import expanded to include updateTag and removeWaitlistEntry received updateTag(`waitlist-${teacher.id}`) after the successful delete. All new calls sit beside existing overview and revalidatePath calls for consistency.\n\n## Verification\n\nnpx tsc --noEmit: zero errors. npx vitest run: 436 tests pass; 38 pre-existing failures in unrelated test files (admin-dashboard getClaims mock, messaging/recurring-charges/reminders/og-metadata supabaseAdmin mock gaps). Tests directly covering modified actions — cancel-session.test.ts (9/9) and booking-action.test.ts (8/8, 3 skipped) — all pass. npm run build: compiled successfully in 5.5s, all 72 pages generated cleanly.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 8000ms |\n| 2 | `npx vitest run` | 1 | ✅ pass (436/474 pass; 38 pre-existing failures unrelated to modified files) | 14180ms |\n| 3 | `npm run build` | 0 | ✅ pass | 14500ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\n38 pre-existing test failures exist unrelated to this task (getClaims mock gap, supabaseAdmin query builder mock gaps in multiple test files).\n\n## Files Created/Modified\n\n- `src/actions/bookings.ts`\n- `src/actions/waitlist.ts`\n",
       "description": "Server actions that mutate bookings or waitlist entries must invalidate the corresponding page caches via `updateTag`. This ensures that after a teacher accepts/declines a request, completes/cancels a session, or removes a waitlist entry, the cached data is immediately refreshed.\n\n## Steps\n\n1. Open `src/actions/bookings.ts`. Add `updateTag` calls to these actions (alongside existing `updateTag('overview-${teacher.id}')` calls):\n   - `acceptBooking`: add `updateTag(\\`requests-${teacher.id}\\`)` — request is removed from list (status requested→pending)\n   - `declineBooking`: add `updateTag(\\`requests-${teacher.id}\\`)` — request is removed from list (status requested→cancelled)\n   - `markSessionComplete`: add `updateTag(\\`sessions-${teacher.id}\\`)` and `updateTag(\\`students-${teacher.id}\\`)` — session status changes, new student may appear in students list\n   - `cancelSession`: add `updateTag(\\`sessions-${teacher.id}\\`)` — session removed from upcoming\n   - `cancelSingleRecurringSession`: add `updateTag(\\`sessions-${teacher.id}\\`)` — session removed\n   - `cancelRecurringSeries`: add `updateTag(\\`sessions-${teacher.id}\\`)` — multiple sessions removed\n\n2. Open `src/actions/waitlist.ts`. Add `import { updateTag } from 'next/cache'` (currently only imports `revalidatePath`). In `removeWaitlistEntry`, add `updateTag(\\`waitlist-${teacher.id}\\`)` after the delete operation succeeds.\n\n3. Run `npx tsc --noEmit` — verify zero type errors.\n\n4. Run `npx vitest run` — verify all tests pass. The existing test mocks already mock `updateTag` from `next/cache`, so new calls won't break tests. If any test explicitly asserts `updateTag` call count, update the expected count.\n\n5. Run `npm run build` — verify build succeeds with no errors.\n\n## Key constraints\n- `updateTag` (not `revalidateTag`) — per research, `revalidateTag` without second argument is deprecated in Next.js 16.1.6\n- `updateTag` is already imported in `bookings.ts` — just add new calls\n- `waitlist.ts` needs a new import: change `import { revalidatePath } from 'next/cache'` to `import { revalidatePath, updateTag } from 'next/cache'`\n- `acceptBooking` does NOT need `sessions-${teacher.id}` tag — status goes to `pending`, not `confirmed`\n- Place `updateTag` calls near existing `revalidatePath`/`updateTag` calls for consistency",
       "estimate": "30m",
       "files": [
@@ -8419,6 +8425,39 @@
       "verdict": "✅ pass",
       "duration_ms": 8000,
       "created_at": "2026-04-07T05:50:21.460Z"
+    },
+    {
+      "id": 144,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M012",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 8000,
+      "created_at": "2026-04-07T05:52:42.352Z"
+    },
+    {
+      "id": 145,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M012",
+      "command": "npx vitest run",
+      "exit_code": 1,
+      "verdict": "✅ pass (436/474 pass; 38 pre-existing failures unrelated to modified files)",
+      "duration_ms": 14180,
+      "created_at": "2026-04-07T05:52:42.352Z"
+    },
+    {
+      "id": 146,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M012",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14500,
+      "created_at": "2026-04-07T05:52:42.352Z"
     }
   ]
 }

@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 
 export async function removeWaitlistEntry(
   entryId: string
@@ -29,6 +29,7 @@ export async function removeWaitlistEntry(
   if (error) return { error: error.message }
   if (count === 0) return { error: 'Entry not found or already removed' }
 
+  updateTag(`waitlist-${teacher.id}`)
   revalidatePath('/dashboard/waitlist')
   return { success: true }
 }

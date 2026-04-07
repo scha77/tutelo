@@ -104,6 +104,7 @@ export async function acceptBooking(
   if (count === 0) return { error: 'Not found or already actioned' }
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`requests-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -177,6 +178,8 @@ export async function markSessionComplete(
   sendSessionCompleteEmail(bookingId, reviewToken).catch(console.error)
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`sessions-${teacher.id}`)
+  updateTag(`students-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   revalidatePath('/dashboard/sessions')
@@ -243,6 +246,7 @@ export async function cancelSession(
   checkAndNotifyWaitlist(teacher.id).catch(console.error)
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`sessions-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -276,6 +280,7 @@ export async function declineBooking(
   if (count === 0) return { error: 'Not found or already actioned' }
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`requests-${teacher.id}`)
   revalidatePath('/dashboard/requests')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -332,6 +337,7 @@ export async function cancelSingleRecurringSession(
   sendCancellationEmail(bookingId).catch(console.error)
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`sessions-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
@@ -406,6 +412,7 @@ export async function cancelRecurringSeries(
   sendRecurringCancellationEmail({ scheduleId }).catch(console.error)
 
   updateTag(`overview-${teacher.id}`)
+  updateTag(`sessions-${teacher.id}`)
   revalidatePath('/dashboard/sessions')
   revalidatePath('/dashboard', 'layout')
   return { success: true }
