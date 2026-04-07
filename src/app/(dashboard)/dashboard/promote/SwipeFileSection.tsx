@@ -1,7 +1,5 @@
 'use client'
 
-import * as m from 'motion/react-client'
-import { staggerContainer, staggerItem } from '@/lib/animation'
 import { templates, type TeacherTemplateData } from '@/lib/templates'
 import { SwipeFileCard } from '@/components/dashboard/SwipeFileCard'
 
@@ -19,22 +17,17 @@ export function SwipeFileSection({ teacherData }: SwipeFileSectionProps) {
         Pre-written copy — click to copy, then paste into your email or social media.
       </p>
 
-      <m.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="space-y-4"
-      >
+      <div className="space-y-4 animate-list">
         {templates.map((template) => (
-          <m.div key={template.id} variants={staggerItem}>
+          <div key={template.id} className="animate-list-item">
             <SwipeFileCard
               title={template.title}
               description={template.description}
               content={template.render(teacherData)}
             />
-          </m.div>
+          </div>
         ))}
-      </m.div>
+      </div>
     </section>
   )
 }

@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import * as m from 'motion/react-client'
 import { Download } from 'lucide-react'
-import { fadeSlideUp, microPress } from '@/lib/animation'
 
 interface FlyerPreviewProps {
   slug: string
@@ -15,10 +13,7 @@ export function FlyerPreview({ slug }: FlyerPreviewProps) {
   const flyerUrl = `/api/flyer/${slug}`
 
   return (
-    <m.div
-      className="rounded-lg border bg-card p-6 space-y-4"
-      {...fadeSlideUp}
-    >
+    <div className="rounded-lg border bg-card p-6 space-y-4 animate-list-item">
       <h2 className="text-lg font-semibold text-foreground mb-1">Mini-Flyer</h2>
       <p className="text-sm text-muted-foreground">
         Download a print-ready flyer with your QR code, name, subjects, and rate.
@@ -41,16 +36,15 @@ export function FlyerPreview({ slug }: FlyerPreviewProps) {
 
       {/* Download */}
       <div className="flex justify-center">
-        <m.a
+        <a
           href={flyerUrl}
           download={`tutelo-flyer-${slug}.png`}
-          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          {...microPress}
+          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-transform transition-colors hover:scale-[1.02] active:scale-[0.97]"
         >
           <Download className="h-4 w-4" />
           Download Flyer
-        </m.a>
+        </a>
       </div>
-    </m.div>
+    </div>
   )
 }

@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { toast } from 'sonner'
-import { AnimatedButton } from '@/components/shared/AnimatedButton'
 
 interface ConfirmedSessionCardProps {
   booking: {
@@ -128,7 +127,7 @@ export function ConfirmedSessionCard({
 
       {/* Action buttons */}
       <div className="mt-4 flex items-center gap-2">
-        <AnimatedButton className="inline-block">
+        <div className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]">
           <button
             onClick={handleMarkComplete}
             disabled={anyPending}
@@ -136,8 +135,8 @@ export function ConfirmedSessionCard({
           >
             {isCompletePending ? 'Capturing payment…' : 'Mark Complete'}
           </button>
-        </AnimatedButton>
-        <AnimatedButton className="inline-block">
+        </div>
+        <div className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]">
           <button
             onClick={handleCancelSession}
             disabled={anyPending}
@@ -145,9 +144,9 @@ export function ConfirmedSessionCard({
           >
             {isCancelPending ? 'Cancelling…' : 'Cancel Session'}
           </button>
-        </AnimatedButton>
+        </div>
         {recurringScheduleId && cancelSeriesAction && (
-          <AnimatedButton className="inline-block">
+          <div className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]">
             <button
               onClick={handleCancelSeries}
               disabled={anyPending}
@@ -155,7 +154,7 @@ export function ConfirmedSessionCard({
             >
               {isCancelSeriesPending ? 'Cancelling Series…' : 'Cancel Series'}
             </button>
-          </AnimatedButton>
+          </div>
         )}
       </div>
     </div>

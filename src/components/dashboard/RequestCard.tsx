@@ -5,7 +5,6 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { AnimatedButton } from '@/components/shared/AnimatedButton'
 
 interface RequestCardProps {
   booking: {
@@ -92,7 +91,7 @@ export function RequestCard({
       {/* Accept / Decline buttons */}
       <div className="mt-4 flex items-center gap-2">
         {stripeConnected ? (
-          <AnimatedButton className="inline-block">
+          <div className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]">
             <button
               onClick={handleAccept}
               disabled={isPending}
@@ -100,7 +99,7 @@ export function RequestCard({
             >
               {isPending && pendingAction === 'accept' ? 'Accepting…' : 'Accept'}
             </button>
-          </AnimatedButton>
+          </div>
         ) : (
           <Link
             href="/dashboard/connect-stripe"
@@ -109,7 +108,7 @@ export function RequestCard({
             Connect Stripe to confirm
           </Link>
         )}
-        <AnimatedButton className="inline-block">
+        <div className="inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]">
           <button
             onClick={handleDecline}
             disabled={isPending}
@@ -117,7 +116,7 @@ export function RequestCard({
           >
             {isPending && pendingAction === 'decline' ? 'Declining…' : 'Decline'}
           </button>
-        </AnimatedButton>
+        </div>
       </div>
     </div>
   )

@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import * as m from 'motion/react-client'
 import { Check, Copy } from 'lucide-react'
-import { microPress } from '@/lib/animation'
 
 interface SwipeFileCardProps {
   title: string
@@ -44,11 +42,10 @@ export function SwipeFileCard({ title, description, content }: SwipeFileCardProp
       </pre>
 
       <div className="flex justify-end">
-        <m.button
+        <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          {...microPress}
+          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-transform transition-colors hover:scale-[1.02] active:scale-[0.97]"
         >
           {copied ? (
             <>
@@ -61,7 +58,7 @@ export function SwipeFileCard({ title, description, content }: SwipeFileCardProp
               Copy
             </>
           )}
-        </m.button>
+        </button>
       </div>
     </div>
   )

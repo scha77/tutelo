@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T06:34:16.612Z",
+  "exported_at": "2026-04-07T06:40:09.596Z",
   "milestones": [
     {
       "id": "M001",
@@ -6188,19 +6188,28 @@
       "milestone_id": "M012",
       "slice_id": "S04",
       "id": "T02",
-      "title": "Remove motion from dashboard page components, delete dead code, and verify build",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Converted all remaining dashboard page components from motion library to CSS-only transitions and deleted dead PageTransition component, eliminating motion from all dashboard routes",
+      "status": "complete",
+      "one_liner": "Converted all remaining dashboard page components from motion library to CSS-only transitions and deleted dead PageTransition component, eliminating motion from all dashboard routes",
+      "narrative": "Converted six dashboard components (RequestCard, ConfirmedSessionCard, SwipeFileCard, QRCodeCard, FlyerPreview, SwipeFileSection) from motion library animations to CSS-only transitions. AnimatedButton wrappers replaced with div+transition-transform, m.button/m.div/m.a elements replaced with plain HTML elements using Tailwind hover:scale-[1.02] active:scale-[0.97] classes. Stagger animations converted to animate-list/animate-list-item CSS pattern from globals.css. Dead PageTransition.tsx deleted (zero imports confirmed). AnimatedButton.tsx preserved for landing page use.",
+      "verification_result": "All verification checks passed: grep confirms zero motion imports across all dashboard routes (exit 1), zero AnimatedButton imports in dashboard components (exit 1), PageTransition.tsx deleted, AnimatedButton.tsx preserved. npx tsc --noEmit passed with zero errors. npm run build succeeded generating all 72 static pages.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T06:40:09.557Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/components/dashboard/RequestCard.tsx",
+        "src/components/dashboard/ConfirmedSessionCard.tsx",
+        "src/components/dashboard/SwipeFileCard.tsx",
+        "src/components/dashboard/QRCodeCard.tsx",
+        "src/components/dashboard/FlyerPreview.tsx",
+        "src/app/(dashboard)/dashboard/promote/SwipeFileSection.tsx"
+      ],
+      "key_decisions": [
+        "Used Write (full-file rewrite) instead of Edit for JSX files with motion elements to avoid partial-replace corruption from mixed HTML/JSX tag matching"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M012\nkey_files:\n  - src/components/dashboard/RequestCard.tsx\n  - src/components/dashboard/ConfirmedSessionCard.tsx\n  - src/components/dashboard/SwipeFileCard.tsx\n  - src/components/dashboard/QRCodeCard.tsx\n  - src/components/dashboard/FlyerPreview.tsx\n  - src/app/(dashboard)/dashboard/promote/SwipeFileSection.tsx\nkey_decisions:\n  - Used Write (full-file rewrite) instead of Edit for JSX files with motion elements to avoid partial-replace corruption from mixed HTML/JSX tag matching\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T06:40:09.556Z\nblocker_discovered: false\n---\n\n# T02: Converted all remaining dashboard page components from motion library to CSS-only transitions and deleted dead PageTransition component, eliminating motion from all dashboard routes\n\n**Converted all remaining dashboard page components from motion library to CSS-only transitions and deleted dead PageTransition component, eliminating motion from all dashboard routes**\n\n## What Happened\n\nConverted six dashboard components (RequestCard, ConfirmedSessionCard, SwipeFileCard, QRCodeCard, FlyerPreview, SwipeFileSection) from motion library animations to CSS-only transitions. AnimatedButton wrappers replaced with div+transition-transform, m.button/m.div/m.a elements replaced with plain HTML elements using Tailwind hover:scale-[1.02] active:scale-[0.97] classes. Stagger animations converted to animate-list/animate-list-item CSS pattern from globals.css. Dead PageTransition.tsx deleted (zero imports confirmed). AnimatedButton.tsx preserved for landing page use.\n\n## Verification\n\nAll verification checks passed: grep confirms zero motion imports across all dashboard routes (exit 1), zero AnimatedButton imports in dashboard components (exit 1), PageTransition.tsx deleted, AnimatedButton.tsx preserved. npx tsc --noEmit passed with zero errors. npm run build succeeded generating all 72 static pages.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `grep -r 'from.*motion' src/components/dashboard/ src/components/parent/ParentMobileNav.tsx src/app/(dashboard)/` | 1 | ✅ pass | 50ms |\n| 2 | `grep -r 'from.*AnimatedButton' src/components/dashboard/` | 1 | ✅ pass | 50ms |\n| 3 | `test ! -f src/components/shared/PageTransition.tsx` | 0 | ✅ pass | 10ms |\n| 4 | `npx tsc --noEmit` | 0 | ✅ pass | 3700ms |\n| 5 | `npm run build` | 0 | ✅ pass | 14500ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/components/dashboard/RequestCard.tsx`\n- `src/components/dashboard/ConfirmedSessionCard.tsx`\n- `src/components/dashboard/SwipeFileCard.tsx`\n- `src/components/dashboard/QRCodeCard.tsx`\n- `src/components/dashboard/FlyerPreview.tsx`\n- `src/app/(dashboard)/dashboard/promote/SwipeFileSection.tsx`\n",
       "description": "## Description\n\nAfter T01 removed motion from the layout components, dashboard routes still pull motion through page-level component imports. This task converts all remaining dashboard motion consumers to CSS, deletes dead code, and runs the final build audit to confirm the slice goal.\n\n**Components to convert:**\n\n1. **RequestCard** and **ConfirmedSessionCard** — import `AnimatedButton` which wraps children in `m.div` with `whileTap={{ scale: 0.97 }}` and `whileHover={{ scale: 1.02 }}`. Replace `<AnimatedButton className=\"inline-block\">` wrappers with `<div className=\"inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]\">`. Remove the AnimatedButton import. **Do NOT modify AnimatedButton.tsx** — landing page components (CTASection, HeroSection) still use it.\n\n2. **SwipeFileCard** — uses `m.button` with `microPress` (same whileTap/whileHover as AnimatedButton). Replace with `<button>` + Tailwind transition classes.\n\n3. **QRCodeCard** — uses `m.div` with `fadeSlideUp` for container entrance, `m.button` with `microPress` for download button. Replace `m.div` with `<div className=\"... animate-list-item\">` and `m.button` with `<button>` + transition classes.\n\n4. **FlyerPreview** — uses `m.div` with `fadeSlideUp` for container, `m.a` with `microPress` for download link. Same conversion as QRCodeCard.\n\n5. **SwipeFileSection** — uses `m.div` with `staggerContainer`/`staggerItem` variants for stagger animation. Replace with the existing `animate-list` CSS pattern from globals.css: parent `<div className=\"... animate-list\">`, children get `animate-list-item` class.\n\n6. **PageTransition** — dead code, zero imports anywhere. Delete the file.\n\n**Critical constraint:** `AnimatedButton.tsx` must NOT be modified or deleted. It's in `src/components/shared/` and used by landing page components where motion is appropriate.\n\n## Steps\n\n1. Open `src/components/dashboard/RequestCard.tsx`. Remove the `AnimatedButton` import. Replace all `<AnimatedButton className=\"inline-block\">...</AnimatedButton>` wrappers with `<div className=\"inline-block transition-transform hover:scale-[1.02] active:scale-[0.97]\">...</div>`.\n2. Open `src/components/dashboard/ConfirmedSessionCard.tsx`. Same conversion as RequestCard — replace AnimatedButton wrappers with CSS transition divs.\n3. Open `src/components/dashboard/SwipeFileCard.tsx`. Remove the `m` import from motion and `microPress` from animation. Replace `<m.button {...microPress}>` with `<button className=\"... transition-transform hover:scale-[1.02] active:scale-[0.97]\">`. Keep all other functionality identical.\n4. Open `src/components/dashboard/QRCodeCard.tsx`. Remove motion and animation imports. Replace `<m.div {...fadeSlideUp}>` with `<div className=\"... animate-list-item\">`. Replace `<m.button {...microPress}>` with `<button>` + transition classes.\n5. Open `src/components/dashboard/FlyerPreview.tsx`. Same conversion as QRCodeCard. Replace `<m.div {...fadeSlideUp}>` with `<div className=\"... animate-list-item\">`. Replace `<m.a {...microPress}>` with `<a>` + transition classes.\n6. Open `src/app/(dashboard)/dashboard/promote/SwipeFileSection.tsx`. Remove motion and animation imports. Replace `<m.div variants={staggerContainer} initial=\"hidden\" animate=\"visible\">` with `<div className=\"space-y-4 animate-list\">`. Replace inner `<m.div key={...} variants={staggerItem}>` with `<div className=\"animate-list-item\">`.\n7. Delete `src/components/shared/PageTransition.tsx`.\n8. Run `grep -r \"from.*motion\" src/components/dashboard/ src/components/parent/ParentMobileNav.tsx 'src/app/(dashboard)/'` — expect zero results.\n9. Run `npx tsc --noEmit` — expect no type errors.\n10. Run `npm run build` — expect success, inspect route output for dashboard routes.\n\n## Must-Haves\n\n- [ ] RequestCard has zero motion/AnimatedButton imports\n- [ ] ConfirmedSessionCard has zero motion/AnimatedButton imports\n- [ ] SwipeFileCard uses plain `<button>` with CSS transitions\n- [ ] QRCodeCard uses plain `<div>` + `<button>` with CSS animations\n- [ ] FlyerPreview uses plain `<div>` + `<a>` with CSS animations\n- [ ] SwipeFileSection uses CSS `animate-list` stagger pattern\n- [ ] PageTransition.tsx deleted\n- [ ] AnimatedButton.tsx is NOT modified (still used by landing pages)\n- [ ] `npm run build` completes with no errors\n- [ ] No motion imports in any dashboard route file\n\n## Verification\n\n- `grep -r \"from.*motion\" src/components/dashboard/ src/components/parent/ParentMobileNav.tsx 'src/app/(dashboard)/' src/components/shared/PageTransition.tsx 2>&1` returns empty or \"No such file\" for PageTransition\n- `test ! -f src/components/shared/PageTransition.tsx && echo 'PASS: PageTransition deleted'`\n- `grep -r \"from.*AnimatedButton\" src/components/dashboard/` returns empty\n- `npx tsc --noEmit` passes\n- `npm run build` succeeds\n- `grep -r \"AnimatedButton\" src/components/shared/AnimatedButton.tsx` still exists (not deleted)",
       "estimate": "45m",
       "files": [
@@ -8588,6 +8597,61 @@
       "verdict": "✅ pass",
       "duration_ms": 21100,
       "created_at": "2026-04-07T06:34:16.572Z"
+    },
+    {
+      "id": 150,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M012",
+      "command": "grep -r 'from.*motion' src/components/dashboard/ src/components/parent/ParentMobileNav.tsx src/app/(dashboard)/",
+      "exit_code": 1,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-07T06:40:09.557Z"
+    },
+    {
+      "id": 151,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M012",
+      "command": "grep -r 'from.*AnimatedButton' src/components/dashboard/",
+      "exit_code": 1,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-07T06:40:09.557Z"
+    },
+    {
+      "id": 152,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M012",
+      "command": "test ! -f src/components/shared/PageTransition.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 10,
+      "created_at": "2026-04-07T06:40:09.557Z"
+    },
+    {
+      "id": 153,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M012",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3700,
+      "created_at": "2026-04-07T06:40:09.557Z"
+    },
+    {
+      "id": 154,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M012",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14500,
+      "created_at": "2026-04-07T06:40:09.557Z"
     }
   ]
 }

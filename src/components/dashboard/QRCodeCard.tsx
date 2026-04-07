@@ -2,9 +2,7 @@
 
 import { useRef, useCallback } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
-import * as m from 'motion/react-client'
 import { Download } from 'lucide-react'
-import { fadeSlideUp, microPress } from '@/lib/animation'
 
 interface QRCodeCardProps {
   slug: string
@@ -30,10 +28,7 @@ export function QRCodeCard({ slug }: QRCodeCardProps) {
   }, [slug])
 
   return (
-    <m.div
-      className="rounded-lg border bg-card p-6 shadow-sm"
-      {...fadeSlideUp}
-    >
+    <div className="rounded-lg border bg-card p-6 shadow-sm animate-list-item">
       <h2 className="text-lg font-semibold text-foreground mb-1">Your QR Code</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Students can scan this to visit your profile at{' '}
@@ -63,16 +58,15 @@ export function QRCodeCard({ slug }: QRCodeCardProps) {
       </div>
 
       <div className="flex justify-center">
-        <m.button
+        <button
           type="button"
           onClick={handleDownload}
-          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          {...microPress}
+          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-transform transition-colors hover:scale-[1.02] active:scale-[0.97]"
         >
           <Download className="h-4 w-4" />
           Download QR Code
-        </m.button>
+        </button>
       </div>
-    </m.div>
+    </div>
   )
 }

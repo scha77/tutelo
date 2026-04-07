@@ -50,7 +50,7 @@ The AnimatePresence exit animation is the trickiest part. CSS transitions requir
   - Estimate: 45m
   - Files: src/components/dashboard/MobileBottomNav.tsx, src/components/parent/ParentMobileNav.tsx
   - Verify: grep -r 'from.*motion' src/components/dashboard/MobileBottomNav.tsx src/components/parent/ParentMobileNav.tsx; test $? -eq 1 && echo 'PASS: no motion imports' && npx tsc --noEmit 2>&1 | tail -5
-- [ ] **T02: Remove motion from dashboard page components, delete dead code, and verify build** — ## Description
+- [x] **T02: Converted all remaining dashboard page components from motion library to CSS-only transitions and deleted dead PageTransition component, eliminating motion from all dashboard routes** — ## Description
 
 After T01 removed motion from the layout components, dashboard routes still pull motion through page-level component imports. This task converts all remaining dashboard motion consumers to CSS, deletes dead code, and runs the final build audit to confirm the slice goal.
 
