@@ -975,3 +975,43 @@ expect(callOrder).toEqual(['update', 'email'])
 
 This is cleaner and more reliable than inspecting `mock.calls` indices or using `toHaveBeenCalledBefore` (which doesn't exist in Vitest).
 
+---
+
+## Next.js 16 Uses proxy.ts, Not middleware.ts (M014)
+
+Next.js 16 replaced `middleware.ts` with `proxy.ts`. You **cannot have both files** — the build fails with "Both middleware file and proxy file are detected." The proxy runs on every matched request (same broad matcher as middleware), exports a `proxy` function (not `middleware`), and uses the same `NextRequest`/`NextResponse` API. The existing proxy handles Supabase session refresh via `getSession()`. Auth redirects for protected routes are added to the same file.
+
+---
+
+## Dashboard Layout Streaming: Synchronous Function + Suspense Async Components (M014)
+
+To make a Next.js layout stream the shell immediately (before data queries resolve), make the layout function **synchronous** (no `async`, no top-level `await`). Move all data-fetching into separate async components wrapped in `<Suspense>`. Each async component gets its own skeleton fallback.
+
+```tsx
+// ❌ Blocks — nothing renders until getTeacher() completes
+export default async function Layout({ children }) {
+  const { teacher } = await getTeacher()
+  return <Sidebar name={teacher.name} />{children}
+}
+
+// ✅ Streams — skeleton renders immediately, sidebar fills in
+function SidebarSkeleton() { return <aside className="animate-pulse">...</aside> }
+async function DashboardSidebar() {
+  const { teacher } = await getTeacher()
+  return <Sidebar name={teacher.name} />
+}
+export default function Layout({ children }) {
+  return <Suspense fallback={<SidebarSkeleton />}><DashboardSidebar /></Suspense>{children}
+}
+```
+
+Key: `getTeacher()` uses `unstable_cache` (60s TTL) so on warm cache it's nearly instant — the skeleton flashes for only a frame. On cold cache, the user sees the skeleton for ~100-200ms while the DB query runs.
+
+---
+
+## Server-Side Chunks in .next/static/chunks Are Not Client-Side (M014)
+
+Turbopack may place server-only code (Supabase server client, Resend, server Sentry) into `.next/static/chunks/` files. These chunks are **never** sent to browsers — they're used only during SSR. When analyzing client bundle size, always verify by checking the actual network waterfall (which chunks appear in page HTML or are fetched by the browser), not just by scanning chunk file contents.
+
+The 200K "Sentry" chunk that appeared in M013's analysis was actually a server chunk containing `createServerClient`, `Resend`, and `BrowserClient` (misleading name — it's the Sentry transport, not a browser-only class). Actual client Sentry footprint: 12K.
+

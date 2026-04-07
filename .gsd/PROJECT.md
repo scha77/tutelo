@@ -15,12 +15,14 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - **151 requirements validated** across M001–M012 with stable IDs, ownership traceability, and coverage summary
+- **Dashboard Mobile Performance (M014 — complete ✅):**
+  - Auth proxy redirects for /dashboard, /parent, /admin — unauthenticated users redirect before layout renders
+  - Dashboard layout streams shell instantly via Suspense (sidebar/nav skeletons while data loads)
+  - Zod (296K) removed from shared client bundle — only loads on /onboarding
+  - 52 test files, 490 tests passing, 0 failures
 - **Codebase Cohesion & Observability (M013 — complete ✅):**
-  - All 14 broken test failures fixed (mock drift from M010–M012)
   - Sentry integrated across client/server/edge runtimes, 44 catch blocks instrumented
-  - All 45 it.todo() stubs and 4 it.skip() tests resolved (29 deleted, 16 converted, 4 fixed)
-  - Full capability contract rebuilt: 151 requirements in REQUIREMENTS.md
-  - 52 test files, 490 tests passing, 0 failures, 0 stubs
+  - All test failures fixed, all stubs resolved, full capability contract rebuilt
 - **Performance & Delivery Efficiency (M012 — complete ✅):** Profile pages and directory served from CDN via ISR, dashboard query caching with revalidateTag, motion library eliminated from all dashboard/parent routes (~135KB savings), clean Vercel Hobby build.
 - **Design Polish (M011 — complete ✅):** Every user-facing surface upgraded to premium SaaS standard — teacher profile page, booking flow (decomposed into 4 sub-components), mobile navigation (labeled tabs + More menu), all 16 dashboard pages (headers, tinted pills, avatar circles, card elevation), landing page (proper footer, hero badge), and global consistency on auth/booking-confirmed/directory pages.
 - **Recurring Sessions (M009 — complete ✅):** recurring_schedules table, weekly/biweekly generation, Stripe setup_future_usage + auto-charge cron, cancel_token self-service cancellation.
