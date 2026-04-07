@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M013/S03/T02",
+  "timestamp": 1775574473341,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npx vitest run tests/stripe/mark-complete.test.ts — expect 6 passed, 0 todo, 0 skip.",
+      "exitCode": 0,
+      "durationMs": 1143,
+      "verdict": "pass"
+    }
+  ]
+}

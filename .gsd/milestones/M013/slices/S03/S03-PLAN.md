@@ -62,7 +62,7 @@ The test file already has mock scaffolding for Stripe (class-based MockStripe wi
   - Estimate: 1h30m
   - Files: tests/stripe/mark-complete.test.ts, src/actions/bookings.ts
   - Verify: npx vitest run tests/stripe/mark-complete.test.ts — expect 6 passed, 0 todo, 0 skip.
-- [ ] **T03: Convert auto-cancel and stripe-reminders cron stubs to real tests** — Convert 10 it.todo() stubs across 2 cron route test files into real passing tests.
+- [x] **T03: Converted all 10 it.todo() stubs across auto-cancel.test.ts and reminders-cron.test.ts into real passing tests** — Convert 10 it.todo() stubs across 2 cron route test files into real passing tests.
 
 ### auto-cancel (5 tests) — `tests/stripe/auto-cancel.test.ts`
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T15:07:49.793Z",
+  "exported_at": "2026-04-07T15:15:23.519Z",
   "milestones": [
     {
       "id": "M001",
@@ -6864,19 +6864,24 @@
       "milestone_id": "M013",
       "slice_id": "S03",
       "id": "T03",
-      "title": "Convert auto-cancel and stripe-reminders cron stubs to real tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Converted all 10 it.todo() stubs across auto-cancel.test.ts and reminders-cron.test.ts into real passing tests",
+      "status": "complete",
+      "one_liner": "Converted all 10 it.todo() stubs across auto-cancel.test.ts and reminders-cron.test.ts into real passing tests",
+      "narrative": "Both cron route test files had 5 it.todo() stubs each with existing mock scaffolding. Read the production route handlers to understand exact query chains and branching logic, then wrote tests exercising each path: auth rejection, successful cancellation, skip-on-connected, idempotency, email-after-update ordering (auto-cancel); auth rejection, 24hr gentle reminder, 48hr urgent email, no-email-under-24hr, skip-on-connected (stripe-reminders).",
+      "verification_result": "npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts — 10 passed, 0 todo, 0 skip, 0 failures.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T15:15:23.474Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/stripe/auto-cancel.test.ts",
+        "tests/stripe/reminders-cron.test.ts"
+      ],
+      "key_decisions": [
+        "Used call-order tracking array to verify email-after-update sequencing rather than mock call index inspection"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M013\nkey_files:\n  - tests/stripe/auto-cancel.test.ts\n  - tests/stripe/reminders-cron.test.ts\nkey_decisions:\n  - Used call-order tracking array to verify email-after-update sequencing rather than mock call index inspection\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T15:15:23.473Z\nblocker_discovered: false\n---\n\n# T03: Converted all 10 it.todo() stubs across auto-cancel.test.ts and reminders-cron.test.ts into real passing tests\n\n**Converted all 10 it.todo() stubs across auto-cancel.test.ts and reminders-cron.test.ts into real passing tests**\n\n## What Happened\n\nBoth cron route test files had 5 it.todo() stubs each with existing mock scaffolding. Read the production route handlers to understand exact query chains and branching logic, then wrote tests exercising each path: auth rejection, successful cancellation, skip-on-connected, idempotency, email-after-update ordering (auto-cancel); auth rejection, 24hr gentle reminder, 48hr urgent email, no-email-under-24hr, skip-on-connected (stripe-reminders).\n\n## Verification\n\nnpx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts — 10 passed, 0 todo, 0 skip, 0 failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts` | 0 | ✅ pass | 4300ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/stripe/auto-cancel.test.ts`\n- `tests/stripe/reminders-cron.test.ts`\n",
       "description": "Convert 10 it.todo() stubs across 2 cron route test files into real passing tests.\n\n### auto-cancel (5 tests) — `tests/stripe/auto-cancel.test.ts`\n\n**Production code** (`src/app/api/cron/auto-cancel/route.ts`):\n- Auth: checks `Authorization: Bearer {CRON_SECRET}` header → 401 if missing/wrong\n- Queries bookings: `supabaseAdmin.from('bookings').select('id, parent_email, teacher_id').eq('status', 'requested').lt('created_at', cutoff48hr)`\n- Per booking: checks teacher's `stripe_charges_enabled` via `supabaseAdmin.from('teachers').select(...).eq('id', teacher_id).maybeSingle()`\n- If teacher NOT connected: updates booking status to 'cancelled' with `.eq('status', 'requested')` idempotency guard\n- Sends `sendCancellationEmail(booking.id)` only if update returned rows\n- Returns JSON `{ cancelled, total_checked }`\n\n**5 tests:**\n1. Returns 401 when Authorization header missing or wrong\n2. Cancels requested bookings >48hr old where teacher stripe_charges_enabled=false\n3. Does NOT cancel when teacher has stripe_charges_enabled=true\n4. Is idempotent — second run cancels 0 rows\n5. Sends cancellation email AFTER status update, not before\n\n### stripe-reminders (5 tests) — `tests/stripe/reminders-cron.test.ts`\n\n**Production code** (`src/app/api/cron/stripe-reminders/route.ts`):\n- Auth: same CRON_SECRET header check → 401\n- Queries: `supabaseAdmin.from('bookings').select('..., teachers(...)').eq('status', 'requested').lt('created_at', hr24)`\n- Per booking: skips if `teacher.stripe_charges_enabled=true` or no `social_email`\n- If booking 48hr+ old: calls `sendUrgentFollowUpEmail(teacher.social_email, ...)`\n- If booking 24-48hr old: calls `sendFollowUpEmail(teacher.social_email, ...)`\n- Returns JSON `{ sent_24hr, sent_48hr }`\n\n**5 tests:**\n1. Returns 401 when Authorization header missing or wrong\n2. Sends 24hr gentle reminder for 24-48hr old booking\n3. Sends 48hr urgent email for >48hr old booking\n4. Sends no email for <24hr old booking (filtered by .lt query)\n5. Sends no reminder when teacher has stripe_charges_enabled=true\n\n**Both files share the same mock pattern:**\n- `supabaseAdmin` from `@/lib/supabase/service` — mock `from()` chains\n- Email functions from `@/lib/email` — already mocked in scaffold\n- `@sentry/nextjs` — already mocked in scaffold\n- `process.env.CRON_SECRET` — set in test\n\n**Import pattern for route handlers:** `const { GET } = await import('@/app/api/cron/auto-cancel/route')`\n**Request construction:** `new NextRequest('http://localhost/api/cron/auto-cancel', { headers: { authorization: 'Bearer test-secret' } })`",
       "estimate": "1h30m",
       "files": [
@@ -9605,6 +9610,17 @@
       "verdict": "✅ pass",
       "duration_ms": 14330,
       "created_at": "2026-04-07T15:07:49.697Z"
+    },
+    {
+      "id": 177,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 4300,
+      "created_at": "2026-04-07T15:15:23.474Z"
     }
   ]
 }
