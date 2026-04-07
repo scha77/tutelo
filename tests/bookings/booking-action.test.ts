@@ -64,12 +64,6 @@ vi.mock('@/lib/supabase/server', () => ({
   })),
 }))
 
-describe('submitBookingRequest', () => {
-  it.todo('returns { success: true, bookingId } on valid insert')
-  it.todo("returns { success: false, error: 'slot_taken' } on duplicate")
-  it.todo("returns { success: false, error: 'validation' } on bad input")
-})
-
 describe('acceptBooking', () => {
   beforeEach(() => {
     vi.clearAllMocks()

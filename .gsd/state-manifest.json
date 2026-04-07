@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T14:36:31.474Z",
+  "exported_at": "2026-04-07T14:56:32.787Z",
   "milestones": [
     {
       "id": "M001",
@@ -1602,14 +1602,14 @@
       "milestone_id": "M013",
       "id": "S02",
       "title": "Sentry Integration & Error Handling Audit",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "Trigger a deliberate error in dev → appears in Sentry dashboard with stack trace and request context. All catch blocks either re-throw, report to Sentry, or log with structured context.",
       "created_at": "2026-04-07T12:44:16.744Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-07T14:39:37.040Z",
+      "full_summary_md": "---\nid: S02\nparent: M013\nmilestone: M013\nprovides:\n  - Sentry SDK initialized on all three runtimes (client/server/edge)\n  - 44 server-side catch blocks reporting to Sentry\n  - vi.mock('@sentry/nextjs') pattern established for all test files\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - sentry.client.config.ts\n  - sentry.server.config.ts\n  - sentry.edge.config.ts\n  - src/instrumentation.ts\n  - next.config.ts\n  - src/app/error.tsx\n  - src/app/global-error.tsx\n  - src/app/api/stripe/webhook/route.ts\n  - src/app/api/cron/recurring-charges/route.ts\n  - src/actions/bookings.ts\n  - src/lib/sms.ts\n  - src/lib/utils/waitlist.ts\nkey_decisions:\n  - tunnelRoute /monitoring for ad-blocker bypass\n  - errorHandler warns instead of failing build without SENTRY_AUTH_TOKEN\n  - Replays disabled (session and error sample rates 0)\n  - Fire-and-forget .catch(console.error) patterns upgraded to include Sentry before console.error\n  - JSON parse guards and timezone/Intl fallbacks correctly left untouched\n  - Uniform vi.mock factory pattern across all 20 test files\npatterns_established:\n  - Sentry init pattern: sendDefaultPii: false, tracesSampleRate conditional on NODE_ENV, replays disabled\n  - Error boundary Sentry pattern: captureException inside useEffect([error])\n  - Catch block instrumentation: Sentry.captureException before console.error, never in JSON parse guards or timezone fallbacks\n  - Fire-and-forget upgrade: .catch(console.error) → .catch((err) => { Sentry.captureException(err); console.error(...) })\n  - Test mock pattern: vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), init: vi.fn(), captureRequestError: vi.fn() }))\nobservability_surfaces:\n  - Sentry SDK on client/server/edge runtimes captures unhandled errors automatically\n  - onRequestError hook in instrumentation.ts captures server request errors\n  - 44 catch blocks now report to Sentry with stack traces and request context\n  - tunnelRoute /monitoring bypasses ad-blockers for reliable error delivery\n  - Error boundaries report to Sentry before rendering fallback UI\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-07T14:39:37.041Z\nblocker_discovered: false\n---\n\n# S02: Sentry Integration & Error Handling Audit\n\n**Integrated @sentry/nextjs across client/server/edge runtimes and instrumented 44 catch blocks in 18 production files with Sentry.captureException, with all 470 tests passing via uniform vi.mock pattern.**\n\n## What Happened\n\nThis slice delivered full Sentry error tracking integration for the Tutelo codebase in three tasks.\n\n**T01 — SDK Bootstrap:** Installed `@sentry/nextjs` and created four configuration files: `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, and `src/instrumentation.ts`. The instrumentation file exports `onRequestError = Sentry.captureRequestError` for automatic server error capture. `next.config.ts` was wrapped with `withSentryConfig` including `tunnelRoute: '/monitoring'` (ad-blocker bypass) and an `errorHandler` that warns instead of failing builds when `SENTRY_AUTH_TOKEN` is not set. Both error boundary files were wired: `src/app/error.tsx` got `Sentry.captureException` added to its existing `useEffect`, and `src/app/global-error.tsx` got a new `useEffect` added. All configs set `sendDefaultPii: false` for student data protection.\n\n**T02 — Catch Block Instrumentation:** All 18 server-side production files were audited and instrumented. 44 catch blocks received `Sentry.captureException` calls placed before existing `console.error` lines. Fire-and-forget `.catch(console.error)` patterns on email/SMS sends were upgraded to `.catch((err) => { Sentry.captureException(err); console.error(...) })`. Known-safe catches were correctly excluded: JSON parse guards returning 400, timezone/Intl fallbacks, clipboard API fallbacks, Supabase SSR cookie read-only catches, and redirect throws. One bare `catch {}` in the waitlist route was given a named variable for Sentry access.\n\n**T03 — Test Mock Layer:** Added `vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), init: vi.fn(), captureRequestError: vi.fn() }))` to all 20 affected test files. Used a uniform factory pattern across every file for consistency. Final catch block coverage audit confirmed no unhandled server-side catches remain.\n\n## Verification\n\nAll slice-level checks pass:\n- `grep -q 'captureException' src/app/error.tsx` → exit 0\n- `grep -q 'captureException' src/app/global-error.tsx` → exit 0\n- `grep -q 'useEffect' src/app/global-error.tsx` → exit 0\n- `rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts'` → 44 occurrences (≥30 threshold)\n- `npx vitest run` → 470 passed, 0 failures\n- `npx tsc --noEmit` → 0 errors\n- All 4 Sentry config files exist at expected paths\n- `next.config.ts` contains `withSentryConfig`\n- All 3 config files have `sendDefaultPii: false`\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\n- R002 — Sentry SDK initialized on client/server/edge. Error boundaries call captureException. Source maps configured with errorHandler fallback. sendDefaultPii: false.\n- R003 — 44 catch blocks instrumented across 18 files. Catch block audit confirms no silent catch-and-ignore patterns. Fire-and-forget patterns upgraded.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nNone. All three tasks executed as planned.\n\n## Known Limitations\n\nSentry is integrated but not yet connected to a live Sentry project. Env vars (NEXT_PUBLIC_SENTRY_DSN, SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT) must be configured in production before errors start appearing in the Sentry dashboard. Without DSN, the SDK no-ops gracefully — no runtime impact.\n\n## Follow-ups\n\nSet NEXT_PUBLIC_SENTRY_DSN and SENTRY_AUTH_TOKEN in Vercel production environment. Create a Sentry project and configure alert rules. Consider adding Sentry.setUser() with non-PII identifier (user ID, role) after auth for richer error context.\n\n## Files Created/Modified\n\n- `sentry.client.config.ts` — New: Sentry client-side init with DSN, trace sampling, PII disabled\n- `sentry.server.config.ts` — New: Sentry server-side init\n- `sentry.edge.config.ts` — New: Sentry edge runtime init\n- `src/instrumentation.ts` — New: Next.js instrumentation hook, conditional server/edge config import, onRequestError export\n- `next.config.ts` — Wrapped with withSentryConfig, tunnelRoute /monitoring, errorHandler for graceful source map upload\n- `src/app/error.tsx` — Added Sentry.captureException in existing useEffect\n- `src/app/global-error.tsx` — Added useEffect with Sentry.captureException\n- `src/app/api/stripe/webhook/route.ts` — Added Sentry import + captureException in 6 catch blocks\n- `src/app/api/stripe-connect/webhook/route.ts` — Added Sentry import + captureException in 1 catch block\n- `src/app/api/cron/recurring-charges/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/cron/session-reminders/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/cron/stripe-reminders/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/cron/auto-cancel/route.ts` — Added Sentry import + captureException in 1 catch block\n- `src/app/api/manage/cancel-session/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/manage/cancel-series/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/direct-booking/create-intent/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/direct-booking/create-recurring/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/messages/route.ts` — Added Sentry import + captureException in 1 catch block\n- `src/app/api/parent/payment-method/route.ts` — Added Sentry import + captureException in 1 catch block\n- `src/app/api/track-view/route.ts` — Added Sentry import + captureException in 2 catch blocks\n- `src/app/api/waitlist/route.ts` — Added Sentry import + captureException in 1 catch block, bare catch {} given named variable\n- `src/actions/bookings.ts` — Added Sentry import + captureException in 11 catch blocks, fire-and-forget patterns upgraded\n- `src/actions/verification.ts` — Added Sentry import + captureException in 1 catch block\n- `src/lib/sms.ts` — Added Sentry import + captureException in 1 catch block\n- `src/lib/utils/waitlist.ts` — Added Sentry import + captureException in 2 catch blocks\n",
+      "full_uat_md": "# S02: Sentry Integration & Error Handling Audit — UAT\n\n**Milestone:** M013\n**Written:** 2026-04-07T14:39:37.041Z\n\n## UAT: Sentry Integration & Error Handling Audit\n\n### Preconditions\n- `NEXT_PUBLIC_SENTRY_DSN` set in `.env.local` (or empty — SDK no-ops gracefully)\n- `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` optionally set for source map upload\n- All dependencies installed (`npm install` completed)\n- Dev server available via `npm run dev`\n\n### Test 1: Error Boundary Captures to Sentry (Client-Side)\n\n1. Start dev server: `npm run dev`\n2. Navigate to any page\n3. Trigger a client-side error (e.g., temporarily add `throw new Error('test-sentry')` in a component render)\n4. **Expected:** Error boundary renders fallback UI. If `NEXT_PUBLIC_SENTRY_DSN` is set, error appears in Sentry dashboard with stack trace and component tree context.\n5. **Without DSN:** Console shows the error, no Sentry network request fires — SDK no-ops.\n\n### Test 2: Server Error Capture via onRequestError\n\n1. Create a temporary API route that throws: `export function GET() { throw new Error('sentry-server-test') }`\n2. Hit the route via browser or curl\n3. **Expected:** If DSN set, error appears in Sentry with server runtime label. `onRequestError` hook captures the unhandled error automatically via instrumentation.ts.\n\n### Test 3: Build Succeeds Without Sentry Auth Token\n\n1. Ensure `SENTRY_AUTH_TOKEN` is NOT set (unset or absent from `.env.local`)\n2. Run `npx next build`\n3. **Expected:** Build completes successfully. Console shows `[sentry] Source map upload skipped: ...` warning (not a build failure). Source maps are not uploaded but all other Sentry features work.\n\n### Test 4: Catch Block Coverage Audit\n\n1. Run: `rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts' | wc -l`\n2. **Expected:** ≥ 44 occurrences across 18 files.\n3. Run: `rg 'catch' src/actions/ src/app/api/ src/lib/ -g '*.ts' -g '*.tsx' --no-heading`\n4. Review each catch block — it should either have `captureException`, `console.error` with context, or be one of: JSON parse guard, timezone fallback, cookie read-only, redirect throw, or client-side `setError()`.\n5. **Expected:** No silent catch-and-ignore patterns.\n\n### Test 5: Test Suite Integrity\n\n1. Run: `npx vitest run`\n2. **Expected:** 470+ tests pass, 0 failures. All 20 test files with Sentry imports have `vi.mock('@sentry/nextjs')`.\n\n### Test 6: Type Safety\n\n1. Run: `npx tsc --noEmit`\n2. **Expected:** 0 type errors. All `import * as Sentry from '@sentry/nextjs'` statements resolve.\n\n### Test 7: PII Protection\n\n1. Inspect all three Sentry config files: `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`\n2. **Expected:** All contain `sendDefaultPii: false`. No student names, emails, or phone numbers should be sent to Sentry by default.\n\n### Test 8: Tunnel Route (Ad-Blocker Bypass)\n\n1. Check `next.config.ts` for `tunnelRoute: '/monitoring'`\n2. In production with DSN set, Sentry events route through `/monitoring` instead of `sentry.io` — bypasses common ad-blockers.\n3. **Expected:** Network tab shows POST to `/monitoring` (not `o*.ingest.sentry.io`).\n\n### Edge Cases\n\n- **No DSN configured:** All Sentry calls no-op. No errors thrown, no network requests. Build and runtime work normally.\n- **Invalid DSN:** Sentry SDK logs a warning to console but does not crash the application.\n- **Sentry service outage:** `captureException` calls fail silently — they never block the primary request flow or user interaction.\n",
       "goal": "Integrate Sentry error tracking SDK and audit all server-side catch blocks for proper error reporting, satisfying R002 (operability) and R003 (failure-visibility).",
       "success_criteria": "`npx next build` succeeds with `withSentryConfig` wrapper. `npx vitest run` passes all tests with Sentry mocked. `npx tsc --noEmit` reports zero errors. Every server-side catch block either re-throws, reports to Sentry, or logs with structured context — no empty catches, no catch-and-ignore.",
       "proof_level": "Integration — Sentry SDK initializes and `captureException` is called in all error paths. Full runtime verification (error → Sentry dashboard) deferred to manual/deployment step.",
@@ -1624,19 +1624,17 @@
       "title": "Test Stub Audit & Cleanup",
       "status": "pending",
       "risk": "medium",
-      "depends": [
-        "S01"
-      ],
+      "depends": [],
       "demo": "npx vitest run shows 0 todo stubs. Every test either passes or was deliberately removed with justification.",
       "created_at": "2026-04-07T12:44:16.745Z",
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Resolve all 45 it.todo() stubs in tests/ — delete if already covered by src/__tests__/, convert to real tests if gap exists.",
-      "success_criteria": "All 45 todo stubs resolved. Each resolution documented (deleted: reason, converted: what it tests). Suite stays green. No coverage regressions.",
-      "proof_level": "command: npx vitest run → 0 todos, 0 failures",
-      "integration_closure": "Any new tests written must use the established mock patterns from src/__tests__/ — not introduce new mock approaches.",
-      "observability_impact": "Test report becomes a clean signal — every line is either passing or skipped-with-reason.",
+      "goal": "Resolve all 45 it.todo() stubs and 4 it.skip() tests — delete stubs covered elsewhere, convert high-value stubs to real passing tests, fix skipped tests.",
+      "success_criteria": "`npx vitest run` shows 0 todo, 0 skip, all tests pass. Every test either passes or was deliberately deleted (with justification). Test count ≥ 490 (470 existing + ~20 new).",
+      "proof_level": "Contract — all assertions run in Vitest with mocked dependencies, no real runtime required.",
+      "integration_closure": "Upstream: S01 provides green test baseline (0 failures). No new wiring — all changes are within test files. Nothing remains before milestone is usable.",
+      "observability_impact": "None — test-only changes, no runtime code modified.",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -6769,6 +6767,170 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Deleted 7 pure-stub test files and removed 6 stubs from 2 mixed files, reducing todo count from 22 to 16 with zero test regressions",
+      "status": "complete",
+      "one_liner": "Deleted 7 pure-stub test files and removed 6 stubs from 2 mixed files, reducing todo count from 22 to 16 with zero test regressions",
+      "narrative": "Deleted 7 files containing only it.todo() stubs (23 stubs total) and removed 6 stubs from 2 mixed files (booking-action.test.ts and checkout-session.test.ts), preserving all 9 passing tests in those files. The submitBookingRequest stubs were obsolete since that code path now uses the direct-booking API route. The checkout-session stubs described behavior already covered by the remaining passing tests.",
+      "verification_result": "Ran npx vitest run after all changes. Results: 52 test files (59 - 7 deleted), 470 passed (unchanged), 16 todo (22 - 6 removed), 4 skipped (unchanged), 0 failures. All numbers match plan expectations exactly.",
+      "duration": "",
+      "completed_at": "2026-04-07T14:56:32.741Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/bookings/booking-action.test.ts",
+        "tests/stripe/checkout-session.test.ts"
+      ],
+      "key_decisions": [
+        "Removed entire submitBookingRequest describe block since that code path now uses the direct-booking API route"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M013\nkey_files:\n  - tests/bookings/booking-action.test.ts\n  - tests/stripe/checkout-session.test.ts\nkey_decisions:\n  - Removed entire submitBookingRequest describe block since that code path now uses the direct-booking API route\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T14:56:32.740Z\nblocker_discovered: false\n---\n\n# T01: Deleted 7 pure-stub test files and removed 6 stubs from 2 mixed files, reducing todo count from 22 to 16 with zero test regressions\n\n**Deleted 7 pure-stub test files and removed 6 stubs from 2 mixed files, reducing todo count from 22 to 16 with zero test regressions**\n\n## What Happened\n\nDeleted 7 files containing only it.todo() stubs (23 stubs total) and removed 6 stubs from 2 mixed files (booking-action.test.ts and checkout-session.test.ts), preserving all 9 passing tests in those files. The submitBookingRequest stubs were obsolete since that code path now uses the direct-booking API route. The checkout-session stubs described behavior already covered by the remaining passing tests.\n\n## Verification\n\nRan npx vitest run after all changes. Results: 52 test files (59 - 7 deleted), 470 passed (unchanged), 16 todo (22 - 6 removed), 4 skipped (unchanged), 0 failures. All numbers match plan expectations exactly.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run 2>&1 | tail -10` | 0 | ✅ pass | 8200ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/bookings/booking-action.test.ts`\n- `tests/stripe/checkout-session.test.ts`\n",
+      "description": "Bulk cleanup of 29 it.todo() stubs that describe behavior already covered by existing tests in src/__tests__/ or that describe obsolete/low-value behavior.\n\n**Delete these 7 files entirely** (all stubs, no passing tests):\n1. `tests/auth/session.test.ts` (2 todo) — E2E behavior, not unit-testable\n2. `tests/onboarding/wizard.test.ts` (4 todo) — component changed substantially, heavy mocking for low ROI\n3. `tests/bookings/booking-calendar.test.tsx` (5 todo) — BookingCalendar decomposed in M011, stubs describe old API\n4. `tests/stripe/email-confirmation.test.ts` (3 todo) — webhook-capture.test.ts covers the email call path\n5. `tests/stripe/email-complete.test.ts` (3 todo) — thin Resend wrapper, low ROI\n6. `tests/stripe/email-cancellation.test.ts` (2 todo) — cancel-session.test.ts covers the email call path\n7. `tests/stripe/connect-stripe.test.ts` (4 todo) — straightforward server action with no branching bugs\n\n**Remove stubs from these 2 mixed files** (keep passing tests, delete only todo stubs):\n1. `tests/bookings/booking-action.test.ts` — remove 3 todo stubs for `submitBookingRequest` (now uses direct-booking API route), keep 5 passing tests for acceptBooking/declineBooking\n2. `tests/stripe/checkout-session.test.ts` — remove 3 todo stubs, keep 4 passing tests\n\nTotal: 29 stubs removed.",
+      "estimate": "20m",
+      "files": [
+        "tests/auth/session.test.ts",
+        "tests/onboarding/wizard.test.ts",
+        "tests/bookings/booking-calendar.test.tsx",
+        "tests/bookings/booking-action.test.ts",
+        "tests/stripe/email-confirmation.test.ts",
+        "tests/stripe/email-complete.test.ts",
+        "tests/stripe/email-cancellation.test.ts",
+        "tests/stripe/connect-stripe.test.ts",
+        "tests/stripe/checkout-session.test.ts"
+      ],
+      "verify": "npx vitest run 2>&1 | tail -5 — expect 470 passed, 16 todo, 4 skipped, 0 failures. Total test files should be 52 (59 - 7 deleted).",
+      "inputs": [
+        "`tests/auth/session.test.ts` — pure-stub file to delete",
+        "`tests/onboarding/wizard.test.ts` — pure-stub file to delete",
+        "`tests/bookings/booking-calendar.test.tsx` — pure-stub file to delete",
+        "`tests/bookings/booking-action.test.ts` — mixed file: remove 3 stubs, keep 5 passing",
+        "`tests/stripe/email-confirmation.test.ts` — pure-stub file to delete",
+        "`tests/stripe/email-complete.test.ts` — pure-stub file to delete",
+        "`tests/stripe/email-cancellation.test.ts` — pure-stub file to delete",
+        "`tests/stripe/connect-stripe.test.ts` — pure-stub file to delete",
+        "`tests/stripe/checkout-session.test.ts` — mixed file: remove 3 stubs, keep 4 passing"
+      ],
+      "expected_output": [
+        "`tests/bookings/booking-action.test.ts` — stubs removed, only passing tests remain",
+        "`tests/stripe/checkout-session.test.ts` — stubs removed, only passing tests remain"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Convert mark-complete stubs to real tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Convert 6 it.todo() stubs in `tests/stripe/mark-complete.test.ts` into real passing tests for the `markSessionComplete` server action from `src/actions/bookings.ts`.\n\nThe test file already has mock scaffolding for Stripe (class-based MockStripe with paymentIntents.retrieve/capture), createClient, @/lib/email, and next/cache. What's missing: the test bodies.\n\n**Production code behavior** (from `src/actions/bookings.ts` lines 117-186):\n1. Auth: `createClient() → auth.getClaims() → claims.sub` — returns 'Not authenticated' if no claims\n2. Teacher lookup: `from('teachers').select('id').eq('user_id', userId).single()` — returns 'Teacher not found' if no teacher\n3. Booking lookup: `from('bookings').select('id, stripe_payment_intent').eq('id', bookingId).eq('teacher_id', teacher.id).eq('status', 'confirmed').maybeSingle()` — returns error if not found or not confirmed\n4. Stripe retrieve: `stripe.paymentIntents.retrieve(pi_id)` — gets amount_capturable\n5. Fee calc: `applicationFee = Math.round(amountToCapture * 0.07)` — 7% platform fee\n6. Stripe capture: `stripe.paymentIntents.capture(pi_id, { amount_to_capture, application_fee_amount })` \n7. DB update: booking status → 'completed', amount_cents set\n8. Review insert: supabaseAdmin inserts review stub with token\n9. Email: fire-and-forget `sendSessionCompleteEmail(bookingId, reviewToken)`\n\n**6 tests to implement:**\n1. Retrieves PI and calls capture with correct amount\n2. application_fee_amount is exactly 7% of amount_capturable\n3. Booking status updated to 'completed'\n4. sendSessionCompleteEmail called with bookingId\n5. Returns error if booking not found or not confirmed\n6. Returns 'Not authenticated' if no user session\n\n**Mock setup needed:**\n- `createClient` → returns supabase with `auth.getClaims` mock and `from` mock\n- `from('teachers')` chain: `.select().eq().single()` → teacher\n- `from('bookings')` chain: `.select().eq().eq().eq().maybeSingle()` → booking; `.update().eq()` for status update\n- Stripe `paymentIntents.retrieve` → returns `{ amount_capturable: 5000, amount: 5000 }`\n- Stripe `paymentIntents.capture` → resolves\n- `supabaseAdmin.from('reviews').insert()` → resolves\n- `sendSessionCompleteEmail` → mock already in place\n- `@sentry/nextjs` → mock captureException\n\n**Import pattern:** Use `const { markSessionComplete } = await import('@/actions/bookings')` inside each test (dynamic import after mocks are set up).\n\n**Known pattern from KNOWLEDGE.md:** Vitest mock.calls index access needs casting through `unknown[]` to avoid TS2493.",
+      "estimate": "1h30m",
+      "files": [
+        "tests/stripe/mark-complete.test.ts",
+        "src/actions/bookings.ts"
+      ],
+      "verify": "npx vitest run tests/stripe/mark-complete.test.ts — expect 6 passed, 0 todo, 0 skip.",
+      "inputs": [
+        "`tests/stripe/mark-complete.test.ts` — existing stub file with mock scaffolding",
+        "`src/actions/bookings.ts` — production code for markSessionComplete (lines 117-186)"
+      ],
+      "expected_output": [
+        "`tests/stripe/mark-complete.test.ts` — 6 real passing tests, 0 stubs"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Convert auto-cancel and stripe-reminders cron stubs to real tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Convert 10 it.todo() stubs across 2 cron route test files into real passing tests.\n\n### auto-cancel (5 tests) — `tests/stripe/auto-cancel.test.ts`\n\n**Production code** (`src/app/api/cron/auto-cancel/route.ts`):\n- Auth: checks `Authorization: Bearer {CRON_SECRET}` header → 401 if missing/wrong\n- Queries bookings: `supabaseAdmin.from('bookings').select('id, parent_email, teacher_id').eq('status', 'requested').lt('created_at', cutoff48hr)`\n- Per booking: checks teacher's `stripe_charges_enabled` via `supabaseAdmin.from('teachers').select(...).eq('id', teacher_id).maybeSingle()`\n- If teacher NOT connected: updates booking status to 'cancelled' with `.eq('status', 'requested')` idempotency guard\n- Sends `sendCancellationEmail(booking.id)` only if update returned rows\n- Returns JSON `{ cancelled, total_checked }`\n\n**5 tests:**\n1. Returns 401 when Authorization header missing or wrong\n2. Cancels requested bookings >48hr old where teacher stripe_charges_enabled=false\n3. Does NOT cancel when teacher has stripe_charges_enabled=true\n4. Is idempotent — second run cancels 0 rows\n5. Sends cancellation email AFTER status update, not before\n\n### stripe-reminders (5 tests) — `tests/stripe/reminders-cron.test.ts`\n\n**Production code** (`src/app/api/cron/stripe-reminders/route.ts`):\n- Auth: same CRON_SECRET header check → 401\n- Queries: `supabaseAdmin.from('bookings').select('..., teachers(...)').eq('status', 'requested').lt('created_at', hr24)`\n- Per booking: skips if `teacher.stripe_charges_enabled=true` or no `social_email`\n- If booking 48hr+ old: calls `sendUrgentFollowUpEmail(teacher.social_email, ...)`\n- If booking 24-48hr old: calls `sendFollowUpEmail(teacher.social_email, ...)`\n- Returns JSON `{ sent_24hr, sent_48hr }`\n\n**5 tests:**\n1. Returns 401 when Authorization header missing or wrong\n2. Sends 24hr gentle reminder for 24-48hr old booking\n3. Sends 48hr urgent email for >48hr old booking\n4. Sends no email for <24hr old booking (filtered by .lt query)\n5. Sends no reminder when teacher has stripe_charges_enabled=true\n\n**Both files share the same mock pattern:**\n- `supabaseAdmin` from `@/lib/supabase/service` — mock `from()` chains\n- Email functions from `@/lib/email` — already mocked in scaffold\n- `@sentry/nextjs` — already mocked in scaffold\n- `process.env.CRON_SECRET` — set in test\n\n**Import pattern for route handlers:** `const { GET } = await import('@/app/api/cron/auto-cancel/route')`\n**Request construction:** `new NextRequest('http://localhost/api/cron/auto-cancel', { headers: { authorization: 'Bearer test-secret' } })`",
+      "estimate": "1h30m",
+      "files": [
+        "tests/stripe/auto-cancel.test.ts",
+        "tests/stripe/reminders-cron.test.ts",
+        "src/app/api/cron/auto-cancel/route.ts",
+        "src/app/api/cron/stripe-reminders/route.ts"
+      ],
+      "verify": "npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts — expect 10 passed, 0 todo, 0 skip.",
+      "inputs": [
+        "`tests/stripe/auto-cancel.test.ts` — existing stub file with mock scaffolding",
+        "`tests/stripe/reminders-cron.test.ts` — existing stub file with mock scaffolding",
+        "`src/app/api/cron/auto-cancel/route.ts` — production route handler",
+        "`src/app/api/cron/stripe-reminders/route.ts` — production route handler"
+      ],
+      "expected_output": [
+        "`tests/stripe/auto-cancel.test.ts` — 5 real passing tests, 0 stubs",
+        "`tests/stripe/reminders-cron.test.ts` — 5 real passing tests, 0 stubs"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "Fix og-metadata mock chain, unskip tests, and run final verification",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Fix 4 it.skip() tests in `tests/unit/og-metadata.test.ts` and verify the full suite is clean.\n\n**Root cause:** The mock for `supabaseAdmin.from().select().eq().single()` returns raw teacher data instead of the `{ data, error }` object that Supabase's `.single()` actually returns. Production code does `const { data } = await single()` — so with the current mock, `data` is `undefined` and the metadata function returns the fallback for every test.\n\n**Fix:**\n1. Change `mockAdminSingle.mockResolvedValue({ full_name: '...', ... })` → `mockAdminSingle.mockResolvedValue({ data: { full_name: '...', ... }, error: null })`\n2. Change `mockAdminSingle.mockResolvedValue(null)` (null teacher test) → `mockAdminSingle.mockResolvedValue({ data: null, error: null })`\n3. Change all 4 `it.skip(` → `it(`\n\n**4 tests to unskip:**\n1. Returns personalized title and description for a valid teacher slug\n2. Returns generic Tutelo fallback for an invalid slug\n3. Handles teacher with no subjects gracefully\n4. Handles teacher with null subjects array\n\n**Verification assertions already written** — they test metadata.title, metadata.description, metadata.openGraph.url, etc. The assertions should pass once the mock returns the correct shape.\n\n**Potential issue:** React's `cache()` wrapper on `getTeacherBySlug` — in test context without RSC render, `cache` is effectively a pass-through. Each test uses a unique slug, so no caching conflicts.\n\n**Final verification:** Run `npx vitest run` on the full suite. Expected: all files pass, 0 todo, 0 skip, ~490 total tests.",
+      "estimate": "30m",
+      "files": [
+        "tests/unit/og-metadata.test.ts"
+      ],
+      "verify": "npx vitest run — expect 0 todo, 0 skip, 0 failures, all files pass. Test count ≥ 490.",
+      "inputs": [
+        "`tests/unit/og-metadata.test.ts` — existing test file with 4 it.skip tests",
+        "`src/app/[slug]/page.tsx` — production generateMetadata function using supabaseAdmin"
+      ],
+      "expected_output": [
+        "`tests/unit/og-metadata.test.ts` — 4 real passing tests, 0 skips"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -9408,6 +9570,17 @@
       "verdict": "✅ pass",
       "duration_ms": 100,
       "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 174,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run 2>&1 | tail -10",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 8200,
+      "created_at": "2026-04-07T14:56:32.741Z"
     }
   ]
 }

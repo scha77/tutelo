@@ -4,17 +4,6 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Active
 
-### R002 — Sentry SDK captures client-side and server-side errors with stack traces, breadcrumbs, and source maps. Error boundaries report to Sentry before rendering fallback UI.
-- Class: operability
-- Status: active
-- Description: Sentry SDK captures client-side and server-side errors with stack traces, breadcrumbs, and source maps. Error boundaries report to Sentry before rendering fallback UI.
-- Why it matters: Production errors are currently invisible unless a user reports them. Console.error is not monitoring.
-- Source: user
-- Primary owning slice: M013/S02
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Free tier sufficient for current traffic. No PII in error payloads.
-
 ### R003 — Every catch block in production code either re-throws, reports to Sentry, or logs with structured context. No empty catch blocks, no catch-and-ignore patterns.
 - Class: failure-visibility
 - Status: active
@@ -61,6 +50,17 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: 48 test files pass, 470 tests pass, 0 failures. All 14 failures across 4 files (admin-dashboard, messaging, parent-phone-storage, recurring-charges) resolved via mock realignment. Verified by `npx vitest run` on 2026-04-07.
 - Notes: Root causes were mock drift from M010-M012 code changes: (1) admin layout switched auth import chain, (2) conversations route refactored to batch query, (3) parent-phone-storage added slug revalidation, (4) recurring-charges idempotencyKey format changed.
 
+### R002 — Sentry SDK captures client-side and server-side errors with stack traces, breadcrumbs, and source maps. Error boundaries report to Sentry before rendering fallback UI.
+- Class: operability
+- Status: validated
+- Description: Sentry SDK captures client-side and server-side errors with stack traces, breadcrumbs, and source maps. Error boundaries report to Sentry before rendering fallback UI.
+- Why it matters: Production errors are currently invisible unless a user reports them. Console.error is not monitoring.
+- Source: user
+- Primary owning slice: M013/S02
+- Supporting slices: none
+- Validation: Sentry SDK installed and initialized on client, server, and edge runtimes. Error boundaries (error.tsx, global-error.tsx) call Sentry.captureException in useEffect. Source maps configured with graceful fallback (errorHandler). sendDefaultPii: false for student data protection. tunnelRoute /monitoring for ad-blocker bypass. Build passes clean without SENTRY_AUTH_TOKEN. 470 tests pass with Sentry mocked.
+- Notes: Free tier sufficient for current traffic. No PII in error payloads.
+
 ### UI-01 — Untitled
 - Status: validated
 - Validation: Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes.
@@ -103,7 +103,7 @@ This file is the explicit capability and coverage contract for the project.
 |---|---|---|---|---|---|
 | PERF-02 |  | partially-advanced | none | none | Partial: /tutors/[category] confirmed ISR in build output (● 1h). /tutors correctly dynamic (searchParams Next.js constraint, D059). supabaseAdmin in place, revalidation wiring complete, ready for client-side filtering pivot. M012 complete. |
 | R001 | quality-attribute | validated | M013/S01 | M013/S03 | 48 test files pass, 470 tests pass, 0 failures. All 14 failures across 4 files (admin-dashboard, messaging, parent-phone-storage, recurring-charges) resolved via mock realignment. Verified by `npx vitest run` on 2026-04-07. |
-| R002 | operability | active | M013/S02 | none | unmapped |
+| R002 | operability | validated | M013/S02 | none | Sentry SDK installed and initialized on client, server, and edge runtimes. Error boundaries (error.tsx, global-error.tsx) call Sentry.captureException in useEffect. Source maps configured with graceful fallback (errorHandler). sendDefaultPii: false for student data protection. tunnelRoute /monitoring for ad-blocker bypass. Build passes clean without SENTRY_AUTH_TOKEN. 470 tests pass with Sentry mocked. |
 | R003 | failure-visibility | active | M013/S02 | none | unmapped |
 | R004 | quality-attribute | active | M013/S03 | none | unmapped |
 | R005 | operability | active | M013/S04 | none | unmapped |
@@ -119,7 +119,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 4
-- Mapped to slices: 4
-- Validated: 10 (R001, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
+- Active requirements: 3
+- Mapped to slices: 3
+- Validated: 11 (R001, R002, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
 - Unmapped active requirements: 0

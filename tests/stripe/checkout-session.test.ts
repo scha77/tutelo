@@ -178,14 +178,6 @@ describe('createCheckoutSessionsForTeacher (account.updated handler)', () => {
     )
   })
 
-  it.todo(
-    'session includes on_behalf_of and transfer_data.destination set to the teacher stripe_account_id'
-  )
-
-  it.todo('session metadata includes booking_id')
-
-  it.todo('stripe_checkout_url is stored on the booking after session creation')
-
   it('skips bookings that already have stripe_payment_intent set (idempotency — prevents duplicate Checkout sessions)', async () => {
     const { POST } = await import('@/app/api/stripe/webhook/route')
     const { supabaseAdmin } = await import('@/lib/supabase/service')
