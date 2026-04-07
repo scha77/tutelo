@@ -893,3 +893,45 @@ Example: A page with `interface PageProps { searchParams: Promise<{ subject?: st
 
 **Also:** This constraint is documented in Next.js, but it's often discovered through build output surprises (route marked `ƒ` when expected to be `●`). Future agents: if a cacheable page is marked dynamic despite removing cookies() and other dynamic APIs, check if `searchParams` is being accessed server-side.
 
+---
+
+## CSS data-state Pattern for Replacing AnimatePresence Exit Animations
+
+When replacing `AnimatePresence` (motion library) with CSS-only transitions, you cannot conditionally render elements — CSS transitions require the element to stay in DOM. Use a `data-state` attribute pattern:
+
+1. Keep the element in DOM always (no `{isOpen && <Panel />}` conditional)
+2. Toggle `data-state="open"` / `data-state="closed"` via React state
+3. Apply CSS transitions with Tailwind's `data-[state=...]` selector:
+   - `data-[state=open]:opacity-100 data-[state=closed]:opacity-0` for fades
+   - `data-[state=open]:translate-y-0 data-[state=closed]:translate-y-full` for slides
+4. Add `data-[state=closed]:pointer-events-none` to prevent interaction while hidden
+
+This avoids the ~135KB motion library for simple open/close animations. The existing `animate-list-item` and `animate-list` classes in `globals.css` handle entrance/stagger animations without motion.
+
+**Constraint:** `AnimatedButton.tsx` and `src/lib/animation.ts` must be preserved — they serve landing page, profile, and onboarding routes where motion is still appropriate. Only dashboard and parent layout routes should be motion-free.
+
+**Affected:** `src/components/dashboard/MobileBottomNav.tsx` (More panel), and any future dashboard component needing open/close transitions.
+
+---
+
+## Dashboard Query Caching with unstable_cache + Dynamic supabaseAdmin Import (M012/S03)
+
+When wrapping dashboard page queries with `unstable_cache`, import `supabaseAdmin` dynamically inside the cache callback — not at module level:
+
+```ts
+const getCachedData = (teacherId: string) =>
+  unstable_cache(
+    async () => {
+      const { supabaseAdmin } = await import('@/lib/supabase/service')
+      const { data } = await supabaseAdmin.from('bookings')...
+      return data
+    },
+    [`data-${teacherId}`],         // cache key
+    { tags: [`data-${teacherId}`], revalidate: 30 }  // 30s TTL + named tag
+  )()
+```
+
+Pair each cached page with `updateTag(\`data-\${teacherId}\`)` calls in the corresponding server actions. This ensures mutations immediately invalidate the cache without waiting for TTL expiry. Tag naming convention: `${page}-${teacherId}` (e.g., `requests-abc123`, `sessions-abc123`).
+
+The `getTeacher()` auth call must remain OUTSIDE the cache callback — it's the redirect/auth gate and should run on every request.
+

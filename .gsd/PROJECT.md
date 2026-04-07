@@ -15,8 +15,9 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - All 124 requirements validated (59 MVP from M001/M002 + 17 polish from M003 + 5 scheduling from M004 + 4 trust & communication from M005 + 5 growth tools from M006 + 9 capacity & pricing from M007 + 2 waitlist from M007/S02 + 9 recurring sessions from M009 + 14 parent & admin from M010)
+- **Performance & Delivery Efficiency (M012 — complete ✅):** Profile pages and directory served from CDN via ISR, dashboard query caching with revalidateTag, motion library eliminated from all dashboard/parent routes (~135KB savings), clean Vercel Hobby build.
 - **Design Polish (M011 — complete ✅):** Every user-facing surface upgraded to premium SaaS standard — teacher profile page, booking flow (decomposed into 4 sub-components), mobile navigation (labeled tabs + More menu), all 16 dashboard pages (headers, tinted pills, avatar circles, card elevation), landing page (proper footer, hero badge), and global consistency on auth/booking-confirmed/directory pages.
-- 474 tests passing (0 failures); `tsc --noEmit` clean; `npx next build` succeeds (67 pages)
+- 474 tests passing (0 failures); `tsc --noEmit` clean; `npx next build` succeeds (72 pages)
 - **Recurring Sessions (M009 — complete ✅):**
   - S01 ✅ Schema & Recurring Booking Creation — `recurring_schedules` table, `generateRecurringDates` + `checkDateConflicts` utilities, `POST /api/direct-booking/create-recurring` (Stripe setup_future_usage), `RecurringOptions` UI component in BookingCalendar, `RecurringBookingConfirmationEmail` template. 25 tests passing.
   - S02 ✅ Saved Cards & Auto-Charge Cron — Stripe Customer per schedule, per-session auto-charge cron (`/api/cron/recurring-charges`, runs noon UTC daily), `payment_failed` booking status, failed-charge notification emails.
@@ -48,11 +49,13 @@ See `LAUNCH.md` for production environment documentation.
 - **Stack:** Next.js 16.1.6 + Tailwind CSS v4 + Supabase (DB + Auth + Storage) + Stripe Connect Express + Resend + Vercel
 - **Auth:** Supabase Auth (Google SSO + email/password). `getUser()` for verified identity checks. `getClaims()` unreliable on POST re-renders in Next.js 16.
 - **Protected routes:** API route handlers (not server actions + redirect()) for any action needing cookies under the dashboard layout — Next.js 16 server-action auth bug.
+- **ISR & Caching:** Profile pages (`/[slug]`) and directory category pages (`/tutors/[category]`) served via ISR with 1h revalidation. On-demand revalidation via `revalidatePath` in profile/booking/availability actions. Dashboard queries cached with `unstable_cache` + `revalidateTag`. ISR routes must use `supabaseAdmin` (not `createClient()` which calls `cookies()` and forces dynamic).
+- **Motion library boundary:** motion is used ONLY on landing page, profile page, and onboarding routes. All dashboard (`/dashboard/*`) and parent (`/parent/*`) routes use CSS-only transitions (data-state pattern, animate-list/animate-list-item, Tailwind transition-transform). AnimatedButton.tsx and animation.ts are preserved for public-facing routes.
 - **Availability:** `TIME` columns in `availability` table, interpreted relative to `teachers.timezone`. Recurring weekly with 5-min granularity. Per-date overrides with override-wins-recurring precedence. 30-min booking slots. Duration-prorated payments.
 - **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`.
 - **SMS:** Twilio SDK in `src/lib/sms.ts`. All sends gated on `phone IS NOT NULL AND sms_opt_in = true`. A2P 10DLC registration required for production delivery.
 - **Verification:** School email verification via custom token flow. Token gen + Resend email + public callback route stamps `verified_at`.
-- **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations. Design follows 4pt grid system, one sans-serif font family, semantic colors. Premium card standard: `rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow`. Tinted icon pills: `color-mix(in srgb, var(--primary) 12%, transparent)` in dashboards, `var(--accent)` on teacher profile only. Page headers: `text-2xl font-bold tracking-tight` + muted subtitle.
+- **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations on public pages only. Design follows 4pt grid system, one sans-serif font family, semantic colors. Premium card standard: `rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow`. Tinted icon pills: `color-mix(in srgb, var(--primary) 12%, transparent)` in dashboards, `var(--accent)` on teacher profile only. Page headers: `text-2xl font-bold tracking-tight` + muted subtitle.
 - **OG Images & Flyers:** File-based `opengraph-image.tsx` (edge runtime) for OG tags on teacher pages. `/api/flyer/[slug]/route.tsx` (Node.js runtime) for printable flyer PNG — uses Node runtime for `qrcode.toDataURL()` canvas compatibility.
 
 ## Test Accounts
@@ -83,11 +86,11 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
   - S03 ✅ Mobile Navigation Overhaul — 4 labeled primary tabs + More panel for teachers, labeled tabs for parents
   - S04 ✅ Dashboard Polish — Premium headers, tinted icon pills, avatar circles, card elevation, empty states across all 11 teacher + 5 parent pages
   - S05 ✅ Landing Page & Global Consistency — Proper footer with nav links, hero pill badge, card wrappers on auth/booking-confirmed/tutors directory
-- [ ] **M012:** Performance & Delivery Efficiency — Serve public pages from CDN cache (ISR), extend query caching across dashboard, audit and trim JS bundle weight. Zero Vercel Hobby plan limits exceeded.
-  - S01 ✅ Profile Page ISR + On-Demand Revalidation — ViewTracker client component for page view tracking, draft mode API endpoint with token validation, profile page converted to ISR (`●` with 1h revalidation), slug-specific revalidatePath in profile/booking/availability actions. Build output confirms ISR. PERF-01 and PERF-07 validated.
-  - S02 ⬜ Directory Pages ISR — `/tutors` and `/tutors/[category]` ISR caching
-  - S03 ⬜ Dashboard Query Caching — unstable_cache with revalidateTag across all dashboard pages
-  - S04 ⬜ Asset & Bundle Audit — motion library code-split, next/image audit, build size verification
+- [x] **M012:** Performance & Delivery Efficiency — ISR on profile + directory pages, dashboard query caching, motion library removed from dashboard routes, clean Vercel Hobby build
+  - S01 ✅ Profile Page ISR + On-Demand Revalidation — ViewTracker client component, draft mode API, profile pages ISR (● with 1h revalidation), slug-specific revalidatePath in actions
+  - S02 ✅ Directory Pages ISR — /tutors/[category] pages ISR cached; /tutors correctly dynamic (searchParams)
+  - S03 ✅ Dashboard Query Caching — unstable_cache with revalidateTag across dashboard pages, 30s staleTime
+  - S04 ✅ Asset & Bundle Audit — motion library eliminated from 8 dashboard/parent components, CSS-only transitions, PageTransition deleted, HeroSection confirmed next/image, build clean
 
 ---
-*Last updated: 2026-04-07 — M011 complete, M012/S01 complete. S01 validates PERF-01 (profile page ISR) and PERF-07 (on-demand revalidation). Critical discovery: createClient() blocks ISR (it calls cookies() which is dynamic); all ISR routes must use supabaseAdmin. Also: useSearchParams() components on ISR pages require Suspense wrapper. See DECISIONS.md D057, D058 and KNOWLEDGE.md.*
+*Last updated: 2026-04-07 — M012 complete (all 4 slices done). Profile/directory pages served from CDN via ISR, dashboard queries cached with revalidateTag, motion library stripped from all dashboard/parent routes (~135KB bundle savings). 72 static pages, tsc clean, build green.*
