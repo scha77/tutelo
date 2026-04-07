@@ -62,7 +62,17 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
     // Defensive catch — silent fail if email module errors
   }
 
-  revalidatePath('/[slug]', 'page')
+  // Revalidate the specific teacher's public profile — slug-specific for precision
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('id', parsed.data.teacherId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
   return { success: true, bookingId: result.booking_id! }
 }
 

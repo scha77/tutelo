@@ -81,7 +81,17 @@ export async function updateAvailability(
   }
 
   revalidatePath('/dashboard/availability')
-  revalidatePath('/[slug]', 'page')
+  // Revalidate public profile — slug-specific for precision, broad pattern as fallback
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('user_id', userId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
 
   return {}
 }
@@ -153,7 +163,17 @@ export async function saveOverrides(
   }
 
   revalidatePath('/dashboard/availability')
-  revalidatePath('/[slug]', 'page')
+  // Revalidate public profile — slug-specific for precision, broad pattern as fallback
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('user_id', userId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
 
   return {}
 }
@@ -187,7 +207,17 @@ export async function deleteOverridesForDate(
   if (deleteError) return { error: `Delete failed: ${deleteError.message}` }
 
   revalidatePath('/dashboard/availability')
-  revalidatePath('/[slug]', 'page')
+  // Revalidate public profile — slug-specific for precision, broad pattern as fallback
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('user_id', userId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
 
   return {}
 }

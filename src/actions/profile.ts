@@ -59,8 +59,17 @@ export async function updateProfile(
   updateTag(`teacher-${userId}`)
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/page')
-  // Revalidate public profile (slug is unknown here, revalidate all /[slug] paths)
-  revalidatePath('/[slug]', 'page')
+  // Revalidate public profile — slug-specific for precision, broad pattern as fallback
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('user_id', userId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
 
   return {}
 }
@@ -82,7 +91,17 @@ export async function updatePublishStatus(
   updateTag(`teacher-${userId}`)
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/page')
-  revalidatePath('/[slug]', 'page')
+  // Revalidate public profile — slug-specific for precision, broad pattern as fallback
+  const { data: teacherRow } = await supabase
+    .from('teachers')
+    .select('slug')
+    .eq('user_id', userId)
+    .single()
+  if (teacherRow?.slug) {
+    revalidatePath(`/${teacherRow.slug}`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+  }
 
   return {}
 }
