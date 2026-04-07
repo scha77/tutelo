@@ -1,5 +1,6 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -53,6 +54,7 @@ export async function requestSchoolEmailVerification(
   try {
     await sendVerificationEmail(email, token)
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[verification] Failed to send verification email:', err)
     return { error: 'Failed to send verification email' }
   }

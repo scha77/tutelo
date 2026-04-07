@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
       try {
         await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
       } catch (err) {
+        Sentry.captureException(err)
         console.error(
           `[cancel-series] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`,
           err
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
     .in('id', bookingIds)
 
   // Send series cancellation email — fire and forget
-  sendRecurringCancellationEmail({ scheduleId: schedule.id }).catch(console.error)
+  sendRecurringCancellationEmail({ scheduleId: schedule.id }).catch((err) => { Sentry.captureException(err); console.error('[cancel-series] Series cancellation email failed:', err) })
 
   return NextResponse.json({ success: true, cancelledCount: bookings.length })
 }

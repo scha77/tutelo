@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { randomBytes } from 'crypto'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
@@ -255,6 +256,7 @@ export async function POST(req: Request) {
       },
     })
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[create-recurring] Stripe operation failed:', err)
     // Clean up: delete all inserted bookings + schedule row
     if (insertedBookingIds.length > 0) {
@@ -291,6 +293,7 @@ export async function POST(req: Request) {
       manageUrl,
     })
   } catch (emailErr) {
+    Sentry.captureException(emailErr)
     console.error('[create-recurring] Email sending failed (non-fatal):', emailErr)
   }
 

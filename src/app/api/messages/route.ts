@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { Resend } from 'resend'
@@ -253,6 +254,7 @@ export async function POST(req: Request) {
   try {
     await sendNotificationEmail(resolvedConversationId, user.id, body.trim(), senderTeacher)
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[POST /api/messages] Email notification failed:', err)
   }
 

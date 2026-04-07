@@ -1,5 +1,6 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from '@/lib/supabase/server'
 import { BookingRequestSchema } from '@/lib/schemas/booking'
 import { revalidatePath, updateTag } from 'next/cache'
@@ -47,6 +48,7 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
         })
         .eq('id', result.booking_id!)
     } catch (err) {
+      Sentry.captureException(err)
       console.warn('[submitBookingRequest] Failed to store parent phone for booking', result.booking_id, err)
     }
   }
@@ -56,10 +58,12 @@ export async function submitBookingRequest(formData: unknown): Promise<BookingRe
   try {
     const { sendBookingEmail } = await import('@/lib/email')
     sendBookingEmail(parsed.data.teacherId, result.booking_id!, parsed.data).catch(
-      console.error
+      (err) => { Sentry.captureException(err); console.error('[submitBookingRequest] Booking email failed:', err) }
     )
-  } catch {
-    // Defensive catch — silent fail if email module errors
+  } catch (err) {
+    // Defensive catch — email module load failure
+    Sentry.captureException(err)
+    console.error('[submitBookingRequest] Email module import failed:', err)
   }
 
   // Revalidate the specific teacher's public profile — slug-specific for precision
@@ -175,7 +179,7 @@ export async function markSessionComplete(
 
   // Send session-complete email to parent (NOTIF-06) — fire and forget
   const { sendSessionCompleteEmail } = await import('@/lib/email')
-  sendSessionCompleteEmail(bookingId, reviewToken).catch(console.error)
+  sendSessionCompleteEmail(bookingId, reviewToken).catch((err) => { Sentry.captureException(err); console.error('[markSessionComplete] Session-complete email failed:', err) })
 
   updateTag(`overview-${teacher.id}`)
   updateTag(`sessions-${teacher.id}`)
@@ -220,6 +224,7 @@ export async function cancelSession(
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
       await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
     } catch (err) {
+      Sentry.captureException(err)
       console.error(`[cancelSession] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
       // Non-blocking: PI authorization will auto-expire; proceed with DB update
     }
@@ -235,15 +240,15 @@ export async function cancelSession(
 
   // Send cancellation email to parent (and teacher) — fire and forget
   const { sendCancellationEmail } = await import('@/lib/email')
-  sendCancellationEmail(bookingId).catch(console.error)
+  sendCancellationEmail(bookingId).catch((err) => { Sentry.captureException(err); console.error('[cancelSession] Cancellation email failed:', err) })
 
   // Send cancellation SMS to opted-in recipients — fire and forget
   const { sendSmsCancellation } = await import('@/lib/sms')
-  sendSmsCancellation(bookingId).catch(console.error)
+  sendSmsCancellation(bookingId).catch((err) => { Sentry.captureException(err); console.error('[cancelSession] SMS cancellation failed:', err) })
 
   // Notify waitlisted parents if capacity freed — fire and forget
   const { checkAndNotifyWaitlist } = await import('@/lib/utils/waitlist')
-  checkAndNotifyWaitlist(teacher.id).catch(console.error)
+  checkAndNotifyWaitlist(teacher.id).catch((err) => { Sentry.captureException(err); console.error('[cancelSession] Waitlist notification failed:', err) })
 
   updateTag(`overview-${teacher.id}`)
   updateTag(`sessions-${teacher.id}`)
@@ -322,6 +327,7 @@ export async function cancelSingleRecurringSession(
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
       await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
     } catch (err) {
+      Sentry.captureException(err)
       console.error(`[cancelSingleRecurringSession] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
     }
   }
@@ -334,7 +340,7 @@ export async function cancelSingleRecurringSession(
 
   // Send cancellation email — fire and forget
   const { sendCancellationEmail } = await import('@/lib/email')
-  sendCancellationEmail(bookingId).catch(console.error)
+  sendCancellationEmail(bookingId).catch((err) => { Sentry.captureException(err); console.error('[cancelSingleRecurringSession] Cancellation email failed:', err) })
 
   updateTag(`overview-${teacher.id}`)
   updateTag(`sessions-${teacher.id}`)
@@ -395,6 +401,7 @@ export async function cancelRecurringSeries(
       try {
         await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
       } catch (err) {
+        Sentry.captureException(err)
         console.error(`[cancelRecurringSeries] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`, err)
       }
     }
@@ -409,7 +416,7 @@ export async function cancelRecurringSeries(
 
   // Send series cancellation email — fire and forget
   const { sendRecurringCancellationEmail } = await import('@/lib/email')
-  sendRecurringCancellationEmail({ scheduleId }).catch(console.error)
+  sendRecurringCancellationEmail({ scheduleId }).catch((err) => { Sentry.captureException(err); console.error('[cancelRecurringSeries] Series cancellation email failed:', err) })
 
   updateTag(`overview-${teacher.id}`)
   updateTag(`sessions-${teacher.id}`)

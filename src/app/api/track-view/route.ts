@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { isBot } from '@/lib/utils/bot-filter'
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[track-view] unexpected error', err)
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 })
   }

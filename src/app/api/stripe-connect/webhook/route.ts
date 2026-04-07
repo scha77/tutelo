@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
     // Verify signature with CONNECT secret (different from platform secret)
     stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_CONNECT_WEBHOOK_SECRET!)
   } catch (err) {
+    Sentry.captureException(err)
     return new Response(`Webhook Error: ${err}`, { status: 400 })
   }
 

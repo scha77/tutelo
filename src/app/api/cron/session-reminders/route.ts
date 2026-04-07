@@ -1,4 +1,5 @@
 // REQUIRES Vercel Pro plan — daily cron (0 9 * * *) is not available on Hobby plan.
+import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { sendSessionReminderEmail } from '@/lib/email'
@@ -55,8 +56,8 @@ export async function GET(request: NextRequest) {
 
     if (updated && updated.length > 0) {
       // Only notify if this run actually set the flag — prevents duplicates on re-run
-      await sendSessionReminderEmail(session.id).catch(console.error)
-      sendSmsReminder(session.id).catch(console.error)
+      await sendSessionReminderEmail(session.id).catch((err) => { Sentry.captureException(err); console.error('[cron/session-reminders] Email send failed:', err) })
+      sendSmsReminder(session.id).catch((err) => { Sentry.captureException(err); console.error('[cron/session-reminders] SMS send failed:', err) })
       sent++
     }
   }

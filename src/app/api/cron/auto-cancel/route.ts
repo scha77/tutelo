@@ -1,5 +1,6 @@
 // REQUIRES Vercel Pro plan — hourly cron (0 * * * *) is not available on the Hobby plan.
 // Upgrade to Pro ($20/mo) before enabling in production.
+import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { sendCancellationEmail } from '@/lib/email'
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       if (updated && updated.length > 0) {
         // Only email if update actually changed a row — updated is [] on re-run because
         // .eq('status', 'requested') no longer matches the already-cancelled booking
-        await sendCancellationEmail(booking.id).catch(console.error)
+        await sendCancellationEmail(booking.id).catch((err) => { Sentry.captureException(err); console.error('[cron/auto-cancel] Cancellation email failed:', err) })
         cancelled++
       }
     }

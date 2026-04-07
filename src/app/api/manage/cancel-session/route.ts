@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
       await stripe.paymentIntents.cancel(booking.stripe_payment_intent)
     } catch (err) {
+      Sentry.captureException(err)
       console.error(
         `[cancel-session] Failed to cancel Stripe PI ${booking.stripe_payment_intent}:`,
         err
@@ -68,7 +70,7 @@ export async function POST(request: NextRequest) {
     .eq('id', bookingId)
 
   // Send cancellation email — fire and forget
-  sendCancellationEmail(bookingId).catch(console.error)
+  sendCancellationEmail(bookingId).catch((err) => { Sentry.captureException(err); console.error('[cancel-session] Cancellation email failed:', err) })
 
   return NextResponse.json({ success: true })
 }

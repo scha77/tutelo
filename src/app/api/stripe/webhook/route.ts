@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { sendCheckoutLinkEmail, sendBookingConfirmationEmail } from '@/lib/email'
@@ -71,13 +72,14 @@ async function createCheckoutSessionsForTeacher(
       // Email the parent their unique checkout link
       if (session.url) {
         await sendCheckoutLinkEmail(booking.parent_email, booking.student_name, session.url).catch(
-          (err) => console.error(`[stripe/webhook] Failed to email checkout link for booking ${booking.id}:`, err)
+          (err) => { Sentry.captureException(err); console.error(`[stripe/webhook] Failed to email checkout link for booking ${booking.id}:`, err) }
         )
       }
 
       console.log(`[stripe/webhook] Checkout session created for booking ${booking.id}: ${session.id}`)
     } catch (err) {
       // Individual booking failure does not block other bookings
+      Sentry.captureException(err)
       console.error(`[stripe/webhook] Failed to create Checkout session for booking ${booking.id}:`, err)
     }
   }
@@ -93,6 +95,7 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[stripe/webhook] Signature verification failed:', err)
     return new Response(`Webhook Error: ${err}`, { status: 400 })
   }
@@ -146,10 +149,11 @@ export async function POST(req: Request) {
         .select('id')
 
       if (error) {
+        Sentry.captureException(error)
         console.error(`[stripe/webhook] Failed to confirm booking ${bookingId}:`, error)
       } else if (updated && updated.length > 0) {
         console.log(`[stripe/webhook] Booking ${bookingId} confirmed — payment intent: ${session.payment_intent}`)
-        await sendBookingConfirmationEmail(bookingId).catch(console.error)
+        await sendBookingConfirmationEmail(bookingId).catch((err) => { Sentry.captureException(err); console.error('[stripe/webhook] Booking confirmation email failed:', err) })
       } else {
         console.log(`[stripe/webhook] Booking ${bookingId} already confirmed — skipping email (re-delivery)`)
       }
@@ -178,7 +182,7 @@ export async function POST(req: Request) {
       if (updated && updated.length > 0) {
         // Pass accountUrl so parent-facing confirmation email includes /account link (PARENT-02)
         const accountUrl = `${appUrl}/account`
-        await sendBookingConfirmationEmail(bookingId, { accountUrl }).catch(console.error)
+        await sendBookingConfirmationEmail(bookingId, { accountUrl }).catch((err) => { Sentry.captureException(err); console.error('[stripe/webhook] Direct booking confirmation email failed:', err) })
         console.log(`[stripe/webhook] Direct booking ${bookingId} confirmed via payment_intent.amount_capturable_updated`)
       }
 
@@ -225,12 +229,14 @@ export async function POST(req: Request) {
             )
 
           if (profileError) {
+            Sentry.captureException(profileError)
             console.error(`[stripe/webhook] Failed to upsert parent_profiles for parent ${parentId}:`, profileError)
           } else {
             console.log(`[stripe/webhook] Upserted parent_profiles PM for parent ${parentId} (${cardBrand} ****${cardLast4})`)
           }
         } catch (pmErr) {
           // Non-critical — booking confirm already succeeded; PM storage is best-effort
+          Sentry.captureException(pmErr)
           console.error(`[stripe/webhook] Failed to retrieve PM ${pi.payment_method} for PI ${pi.id}:`, pmErr)
         }
       }

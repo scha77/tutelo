@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { getCapacityStatus } from '@/lib/utils/capacity'
 import { sendWaitlistNotificationEmail } from '@/lib/email'
@@ -48,6 +49,7 @@ export async function checkAndNotifyWaitlist(teacherId: string): Promise<void> {
         )
         notifiedIds.push(entry.id)
       } catch (error) {
+        Sentry.captureException(error)
         console.error('[waitlist] Failed to send notification', {
           teacher_id: teacherId,
           parent_email: entry.parent_email,
@@ -64,6 +66,7 @@ export async function checkAndNotifyWaitlist(teacherId: string): Promise<void> {
         .in('id', notifiedIds)
     }
   } catch (error) {
+    Sentry.captureException(error)
     console.error('[waitlist] checkAndNotifyWaitlist failed', {
       teacher_id: teacherId,
       error,

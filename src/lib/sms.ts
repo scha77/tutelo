@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import Twilio from 'twilio'
 import { parsePhoneNumber } from 'libphonenumber-js'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -28,6 +29,7 @@ async function sendSms(to: string, body: string): Promise<void> {
   try {
     await twilio.messages.create({ to, from: FROM_NUMBER, body })
   } catch (err) {
+    Sentry.captureException(err)
     console.error(`[sms] Failed to send SMS:`, err)
   }
 }

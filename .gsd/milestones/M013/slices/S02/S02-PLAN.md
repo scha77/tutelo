@@ -51,7 +51,7 @@ Env vars (`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_P
   - Estimate: 45m
   - Files: package.json, sentry.client.config.ts, sentry.server.config.ts, sentry.edge.config.ts, src/instrumentation.ts, next.config.ts, src/app/error.tsx, src/app/global-error.tsx
   - Verify: npx next build && grep -q 'captureException' src/app/error.tsx && grep -q 'captureException' src/app/global-error.tsx && grep -q 'useEffect' src/app/global-error.tsx
-- [ ] **T02: Add Sentry.captureException to All Server-Side Catch Blocks** — ## Description
+- [x] **T02: Added Sentry.captureException to 44 catch blocks across 18 production files covering webhooks, crons, manage routes, booking routes, actions, and utilities** — ## Description
 
 Audit and instrument all server-side catch blocks that handle real errors (not expected failures like JSON parse or redirect throws). Add `import * as Sentry from '@sentry/nextjs'` and `Sentry.captureException(error)` to each file's catch blocks.
 

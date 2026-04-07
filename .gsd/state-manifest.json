@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T14:20:29.699Z",
+  "exported_at": "2026-04-07T14:29:58.532Z",
   "milestones": [
     {
       "id": "M001",
@@ -6565,19 +6565,28 @@
       "milestone_id": "M013",
       "slice_id": "S02",
       "id": "T02",
-      "title": "Add Sentry.captureException to All Server-Side Catch Blocks",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added Sentry.captureException to 44 catch blocks across 18 production files covering webhooks, crons, manage routes, booking routes, actions, and utilities",
+      "status": "complete",
+      "one_liner": "Added Sentry.captureException to 44 catch blocks across 18 production files covering webhooks, crons, manage routes, booking routes, actions, and utilities",
+      "narrative": "Read all 18 server-side files listed in the task plan, identified every catch block handling real errors, and added `import * as Sentry from '@sentry/nextjs'` plus `Sentry.captureException(error)` before existing console.error calls. Fire-and-forget `.catch(console.error)` patterns on email/SMS sends were upgraded to include Sentry. JSON parse guards, timezone fallbacks, and cookie read-only catches were correctly left untouched. One bare `catch {}` in the waitlist route was given a named variable to enable the Sentry call.",
+      "verification_result": "npx tsc --noEmit passes clean (0 errors). rg captureException count is 44 (≥30 threshold). All 18 files confirmed to have Sentry import. All 4 slice-level grep checks pass.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T14:29:58.487Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Waitlist route bare catch {} changed to catch (err) for Sentry variable access — minor improvement, not a plan deviation.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/app/api/stripe/webhook/route.ts",
+        "src/app/api/cron/recurring-charges/route.ts",
+        "src/actions/bookings.ts",
+        "src/lib/sms.ts",
+        "src/lib/utils/waitlist.ts"
+      ],
+      "key_decisions": [
+        "Fire-and-forget .catch(console.error) patterns upgraded to include Sentry before console.error",
+        "JSON parse guards and timezone fallbacks left untouched"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M013\nkey_files:\n  - src/app/api/stripe/webhook/route.ts\n  - src/app/api/cron/recurring-charges/route.ts\n  - src/actions/bookings.ts\n  - src/lib/sms.ts\n  - src/lib/utils/waitlist.ts\nkey_decisions:\n  - Fire-and-forget .catch(console.error) patterns upgraded to include Sentry before console.error\n  - JSON parse guards and timezone fallbacks left untouched\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T14:29:58.486Z\nblocker_discovered: false\n---\n\n# T02: Added Sentry.captureException to 44 catch blocks across 18 production files covering webhooks, crons, manage routes, booking routes, actions, and utilities\n\n**Added Sentry.captureException to 44 catch blocks across 18 production files covering webhooks, crons, manage routes, booking routes, actions, and utilities**\n\n## What Happened\n\nRead all 18 server-side files listed in the task plan, identified every catch block handling real errors, and added `import * as Sentry from '@sentry/nextjs'` plus `Sentry.captureException(error)` before existing console.error calls. Fire-and-forget `.catch(console.error)` patterns on email/SMS sends were upgraded to include Sentry. JSON parse guards, timezone fallbacks, and cookie read-only catches were correctly left untouched. One bare `catch {}` in the waitlist route was given a named variable to enable the Sentry call.\n\n## Verification\n\nnpx tsc --noEmit passes clean (0 errors). rg captureException count is 44 (≥30 threshold). All 18 files confirmed to have Sentry import. All 4 slice-level grep checks pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx tsc --noEmit` | 0 | ✅ pass | 4400ms |\n| 2 | `rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts' | wc -l (44 >= 30)` | 0 | ✅ pass | 100ms |\n| 3 | `grep -q 'captureException' src/app/error.tsx` | 0 | ✅ pass | 100ms |\n| 4 | `grep -q 'captureException' src/app/global-error.tsx` | 0 | ✅ pass | 100ms |\n| 5 | `grep -q 'useEffect' src/app/global-error.tsx` | 0 | ✅ pass | 100ms |\n\n## Deviations\n\nWaitlist route bare catch {} changed to catch (err) for Sentry variable access — minor improvement, not a plan deviation.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/app/api/stripe/webhook/route.ts`\n- `src/app/api/cron/recurring-charges/route.ts`\n- `src/actions/bookings.ts`\n- `src/lib/sms.ts`\n- `src/lib/utils/waitlist.ts`\n",
       "description": "## Description\n\nAudit and instrument all server-side catch blocks that handle real errors (not expected failures like JSON parse or redirect throws). Add `import * as Sentry from '@sentry/nextjs'` and `Sentry.captureException(error)` to each file's catch blocks.\n\nThe research already classified every catch block. Apply `Sentry.captureException(error)` in catch blocks that currently use `console.error` for real errors. Place the Sentry call BEFORE the existing `console.error` (so Sentry captures even if the console.error line changes later). Do NOT modify catches that are: JSON parse guards returning 400, timezone/Intl fallbacks, clipboard API fallbacks, Supabase SSR cookie read-only catches, redirect throws, or client-side `setError()` patterns.\n\nFor fire-and-forget `.catch(console.error)` patterns on email/SMS sends, upgrade to `.catch((err) => { Sentry.captureException(err); console.error(...) })` — these are real errors worth tracking even if the primary action succeeded.\n\n## Files to instrument (18 production files):\n\n**Webhooks:**\n- `src/app/api/stripe/webhook/route.ts` — 6 catch blocks for sig verify, checkout, PM, confirmation\n- `src/app/api/stripe-connect/webhook/route.ts` — 1 catch for sig verification\n\n**Cron jobs:**\n- `src/app/api/cron/recurring-charges/route.ts` — 2 catches for Stripe charge failures (critical)\n- `src/app/api/cron/session-reminders/route.ts` — 2 catches for email/SMS send failures\n- `src/app/api/cron/stripe-reminders/route.ts` — 2 catches for reminder email failures\n- `src/app/api/cron/auto-cancel/route.ts` — 1 catch for cancellation email\n\n**Manage routes:**\n- `src/app/api/manage/cancel-session/route.ts` — 2 catches for token validation + cancellation\n- `src/app/api/manage/cancel-series/route.ts` — 2 catches for token validation + series cancel\n\n**Booking routes:**\n- `src/app/api/direct-booking/create-intent/route.ts` — 2 catches for Stripe PI creation\n- `src/app/api/direct-booking/create-recurring/route.ts` — 2 catches for recurring booking creation\n\n**Other API routes:**\n- `src/app/api/messages/route.ts` — 1 catch for email notification failure\n- `src/app/api/parent/payment-method/route.ts` — 1 catch for Stripe PM detach\n- `src/app/api/track-view/route.ts` — 2 catches for view tracking errors\n- `src/app/api/waitlist/route.ts` — 1 catch for waitlist POST error\n\n**Actions & utilities:**\n- `src/actions/bookings.ts` — 11 catch blocks (Stripe PI cancellation, phone storage, email errors; some are fire-and-forget .catch(console.error) — upgrade those too)\n- `src/actions/verification.ts` — 1 catch for email send failure\n- `src/lib/sms.ts` — 1 catch for SMS send failure\n- `src/lib/utils/waitlist.ts` — 2 catches for notification send failures\n\n## Pattern to apply per file:\n\n```ts\n// At top of file, add:\nimport * as Sentry from '@sentry/nextjs'\n\n// In each catch block, add before console.error:\nSentry.captureException(error)\n```\n\n## Steps\n\n1. For each of the 18 files listed above: read the file, add `import * as Sentry from '@sentry/nextjs'`, and add `Sentry.captureException(error)` (or `Sentry.captureException(err)` matching the catch variable name) in each relevant catch block.\n2. For `src/actions/bookings.ts`, pay special attention to the fire-and-forget patterns like `.catch(console.error)` on email/SMS sends — upgrade to `.catch((err) => { Sentry.captureException(err); console.error('context:', err) })`.\n3. Do NOT touch catch blocks that are: JSON parse guards (`catch { return new Response('Invalid JSON', { status: 400 }) }`), timezone fallbacks (`catch { return 'UTC' }`), or cookie read-only patterns.\n4. Run `npx tsc --noEmit` to verify all imports resolve and types are correct.\n\n## Must-Haves\n\n- [ ] All 18 production files have `import * as Sentry from '@sentry/nextjs'`\n- [ ] Every server-side catch block handling real errors calls `Sentry.captureException`\n- [ ] Fire-and-forget `.catch(console.error)` patterns upgraded to include Sentry\n- [ ] No changes to JSON parse guards, timezone fallbacks, clipboard fallbacks, or redirect catches\n- [ ] `npx tsc --noEmit` passes\n\n## Verification\n\n- `npx tsc --noEmit` exits 0 (all Sentry imports resolve, no type errors)\n- `rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts' | wc -l` returns >= 30 (confirming broad coverage)",
       "estimate": "1h30m",
       "files": [
@@ -9255,6 +9264,61 @@
       "verdict": "✅ pass",
       "duration_ms": 100,
       "created_at": "2026-04-07T14:20:29.659Z"
+    },
+    {
+      "id": 163,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 4400,
+      "created_at": "2026-04-07T14:29:58.487Z"
+    },
+    {
+      "id": 164,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts' | wc -l (44 >= 30)",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:29:58.487Z"
+    },
+    {
+      "id": 165,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'captureException' src/app/error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:29:58.487Z"
+    },
+    {
+      "id": 166,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'captureException' src/app/global-error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:29:58.487Z"
+    },
+    {
+      "id": 167,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'useEffect' src/app/global-error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:29:58.487Z"
     }
   ]
 }

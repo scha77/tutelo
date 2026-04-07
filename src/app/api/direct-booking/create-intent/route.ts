@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -148,6 +149,7 @@ export async function POST(req: Request) {
       console.log(`[direct-booking/create-intent] Created Stripe Customer ${customer.id} for parent ${user.id}`)
     }
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[direct-booking/create-intent] Customer resolution failed:', err)
     await supabaseAdmin.from('bookings').delete().eq('id', bookingId)
     return new Response('Payment setup failed', { status: 502 })
@@ -175,6 +177,7 @@ export async function POST(req: Request) {
       },
     })
   } catch (err) {
+    Sentry.captureException(err)
     console.error('[direct-booking/create-intent] Stripe PI creation failed:', err)
     // Clean up the orphaned booking row so the slot isn't permanently blocked
     await supabaseAdmin.from('bookings').delete().eq('id', bookingId)

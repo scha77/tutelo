@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -72,6 +73,7 @@ export async function DELETE() {
   try {
     await stripe.paymentMethods.detach(profile.stripe_payment_method_id)
   } catch (stripeErr) {
+    Sentry.captureException(stripeErr)
     console.error('[DELETE /api/parent/payment-method] Stripe detach failed:', stripeErr)
     return NextResponse.json({ error: 'Failed to detach payment method' }, { status: 502 })
   }

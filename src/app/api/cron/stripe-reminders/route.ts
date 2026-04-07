@@ -1,5 +1,6 @@
 // REQUIRES Vercel Pro plan — hourly cron (30 * * * *) is not available on the Hobby plan.
 // Upgrade to Pro ($20/mo) before enabling in production.
+import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { sendFollowUpEmail, sendUrgentFollowUpEmail } from '@/lib/email'
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
         booking.booking_date,
         cancelDeadline,
         connectUrl
-      ).catch(console.error)
+      ).catch((err) => { Sentry.captureException(err); console.error('[cron/stripe-reminders] Urgent follow-up email failed:', err) })
       sent48++
     } else {
       // Booking is 24–48hr old — gentle reminder
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
         booking.parent_email,
         booking.booking_date,
         connectUrl
-      ).catch(console.error)
+      ).catch((err) => { Sentry.captureException(err); console.error('[cron/stripe-reminders] Follow-up email failed:', err) })
       sent24++
     }
   }

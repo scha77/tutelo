@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -119,6 +120,7 @@ export async function GET(request: NextRequest) {
       console.log(`[recurring-charges] Charged booking ${bookingId}`)
       charged++
     } catch (err) {
+      Sentry.captureException(err)
       const stripeError = err as Stripe.errors.StripeError
       console.error(
         `[recurring-charges] Payment failed for booking ${bookingId}: ${stripeError.code ?? stripeError.message}`
@@ -135,9 +137,10 @@ export async function GET(request: NextRequest) {
         .eq('status', 'requested')
 
       // Fire-and-forget email notification
-      sendRecurringPaymentFailedEmail({ bookingId }).catch((emailErr) =>
+      sendRecurringPaymentFailedEmail({ bookingId }).catch((emailErr) => {
+        Sentry.captureException(emailErr)
         console.error(`[recurring-charges] Failed to send failure email for ${bookingId}:`, emailErr)
-      )
+      })
 
       failed++
     }

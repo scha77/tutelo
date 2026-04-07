@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { rateLimit } from '@/lib/utils/rate-limit'
@@ -66,7 +67,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true }, { status: 201 })
-  } catch {
+  } catch (err) {
+    Sentry.captureException(err)
     console.error('[waitlist] Unexpected error in POST handler')
     return NextResponse.json(
       { error: 'Internal server error' },
