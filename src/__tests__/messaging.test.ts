@@ -820,21 +820,18 @@ describe('GET /api/conversations', () => {
         }),
       }),
     })
-    // Call 3: last message for conv
+    // Call 3: batch last-message fetch via .select().or()
     fromMock.mockReturnValueOnce({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: {
-                  body: 'Hello teacher!',
-                  sender_id: USER_ID,
-                  created_at: '2026-01-01T10:00:00Z',
-                },
-              }),
-            }),
-          }),
+        or: vi.fn().mockResolvedValue({
+          data: [
+            {
+              conversation_id: CONV_ID,
+              body: 'Hello teacher!',
+              sender_id: USER_ID,
+              created_at: '2026-01-01T10:00:00Z',
+            },
+          ],
         }),
       }),
     })
@@ -901,21 +898,18 @@ describe('GET /api/conversations', () => {
         }),
       }),
     })
-    // Call 3: last message
+    // Call 3: batch last-message fetch via .select().or()
     fromMock.mockReturnValueOnce({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: {
-                  body: 'See you at 3pm',
-                  sender_id: TEACHER_USER_ID,
-                  created_at: '2026-01-01T10:00:00Z',
-                },
-              }),
-            }),
-          }),
+        or: vi.fn().mockResolvedValue({
+          data: [
+            {
+              conversation_id: CONV_ID,
+              body: 'See you at 3pm',
+              sender_id: TEACHER_USER_ID,
+              created_at: '2026-01-01T10:00:00Z',
+            },
+          ],
         }),
       }),
     })
@@ -966,22 +960,19 @@ describe('GET /api/conversations', () => {
         }),
       }),
     })
-    // last message with long body
+    // Call 3: batch last-message fetch via .select().or() with long body
     const longBody = 'A'.repeat(200)
     fromMock.mockReturnValueOnce({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: {
-                  body: longBody,
-                  sender_id: TEACHER_USER_ID,
-                  created_at: '2026-01-01T10:00:00Z',
-                },
-              }),
-            }),
-          }),
+        or: vi.fn().mockResolvedValue({
+          data: [
+            {
+              conversation_id: CONV_ID,
+              body: longBody,
+              sender_id: TEACHER_USER_ID,
+              created_at: '2026-01-01T10:00:00Z',
+            },
+          ],
         }),
       }),
     })

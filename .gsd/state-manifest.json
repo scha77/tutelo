@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T13:55:22.493Z",
+  "exported_at": "2026-04-07T13:57:37.801Z",
   "milestones": [
     {
       "id": "M001",
@@ -6426,19 +6426,23 @@
       "milestone_id": "M013",
       "slice_id": "S01",
       "id": "T02",
-      "title": "Fix messaging.test.ts — update conversations mock chain for batch .or() pattern",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Updated 3 GET /api/conversations test mocks from per-conversation chain to batch .select().or() pattern — all 21 messaging tests pass",
+      "status": "complete",
+      "one_liner": "Updated 3 GET /api/conversations test mocks from per-conversation chain to batch .select().or() pattern — all 21 messaging tests pass",
+      "narrative": "The conversations route was refactored to batch-fetch last messages using .from('messages').select(...).or(orFilter) instead of querying each conversation individually. Three GET /api/conversations tests still mocked the old per-conversation chain (.select().eq().order().limit().maybeSingle()), causing TypeError: .or is not a function. Replaced the 3rd fromMock.mockReturnValueOnce in each test with .select().or() returning a data array with conversation_id, body, sender_id, and created_at fields.",
+      "verification_result": "npx vitest run src/__tests__/messaging.test.ts — 21 passed, 0 failed.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T13:57:37.775Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/messaging.test.ts"
+      ],
+      "key_decisions": [
+        "Mock .select().or() returning data array with conversation_id field to match batch message-fetch pattern"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M013\nkey_files:\n  - src/__tests__/messaging.test.ts\nkey_decisions:\n  - Mock .select().or() returning data array with conversation_id field to match batch message-fetch pattern\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T13:57:37.775Z\nblocker_discovered: false\n---\n\n# T02: Updated 3 GET /api/conversations test mocks from per-conversation chain to batch .select().or() pattern — all 21 messaging tests pass\n\n**Updated 3 GET /api/conversations test mocks from per-conversation chain to batch .select().or() pattern — all 21 messaging tests pass**\n\n## What Happened\n\nThe conversations route was refactored to batch-fetch last messages using .from('messages').select(...).or(orFilter) instead of querying each conversation individually. Three GET /api/conversations tests still mocked the old per-conversation chain (.select().eq().order().limit().maybeSingle()), causing TypeError: .or is not a function. Replaced the 3rd fromMock.mockReturnValueOnce in each test with .select().or() returning a data array with conversation_id, body, sender_id, and created_at fields.\n\n## Verification\n\nnpx vitest run src/__tests__/messaging.test.ts — 21 passed, 0 failed.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/messaging.test.ts` | 0 | ✅ pass | 3300ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/messaging.test.ts`\n",
       "description": "In the 'GET /api/conversations' describe block, replace the 3rd `fromMock.mockReturnValueOnce(...)` in each of the 3 failing tests with the new `.select().or()` chain shape. The `.or()` call returns an array of `{ conversation_id, body, sender_id, created_at }` objects (one per conversation). All other test blocks (POST /api/messages, email rate-limiting, GET /api/messages) are already passing — do not change them.",
       "estimate": "25m",
       "files": [
@@ -8930,6 +8934,17 @@
       "verdict": "✅ pass",
       "duration_ms": 6100,
       "created_at": "2026-04-07T13:55:22.472Z"
+    },
+    {
+      "id": 156,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M013",
+      "command": "npx vitest run src/__tests__/messaging.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3300,
+      "created_at": "2026-04-07T13:57:37.775Z"
     }
   ]
 }

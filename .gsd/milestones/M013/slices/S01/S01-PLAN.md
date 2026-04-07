@@ -8,7 +8,7 @@
   - Estimate: 30m
   - Files: src/__tests__/admin-dashboard.test.ts
   - Verify: npx vitest run src/__tests__/admin-dashboard.test.ts — 0 failures
-- [ ] **T02: Fix messaging.test.ts — update conversations mock chain for batch .or() pattern** — In the 'GET /api/conversations' describe block, replace the 3rd `fromMock.mockReturnValueOnce(...)` in each of the 3 failing tests with the new `.select().or()` chain shape. The `.or()` call returns an array of `{ conversation_id, body, sender_id, created_at }` objects (one per conversation). All other test blocks (POST /api/messages, email rate-limiting, GET /api/messages) are already passing — do not change them.
+- [x] **T02: Updated 3 GET /api/conversations test mocks from per-conversation chain to batch .select().or() pattern — all 21 messaging tests pass** — In the 'GET /api/conversations' describe block, replace the 3rd `fromMock.mockReturnValueOnce(...)` in each of the 3 failing tests with the new `.select().or()` chain shape. The `.or()` call returns an array of `{ conversation_id, body, sender_id, created_at }` objects (one per conversation). All other test blocks (POST /api/messages, email rate-limiting, GET /api/messages) are already passing — do not change them.
   - Estimate: 25m
   - Files: src/__tests__/messaging.test.ts
   - Verify: npx vitest run src/__tests__/messaging.test.ts — 0 failures
