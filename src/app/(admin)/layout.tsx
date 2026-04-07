@@ -7,10 +7,12 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Fast auth gate via local JWT decode (~0ms) — avoids 200ms network round-trip
+  // Auth redirect is handled by middleware (src/middleware.ts) at the edge.
+  // By the time we reach this layout, the user is authenticated.
   const { user, supabase } = await getAuthUser()
 
   if (!user) {
+    // Defensive fallback — should not happen since middleware verified auth
     redirect('/login')
   }
 

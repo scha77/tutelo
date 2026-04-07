@@ -10,9 +10,12 @@ export default async function ParentLayout({
 }) {
   const supabase = await createClient()
 
-  // Fast local JWT decode — proxy already verified/refreshed the session
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
-  if (claimsError || !claimsData?.claims?.sub) {
+  // Auth redirect is handled by middleware (src/middleware.ts) at the edge.
+  // By the time we reach this layout, the user is authenticated.
+  // getClaims() is still used to extract user ID and email for the layout data queries.
+  const { data: claimsData } = await supabase.auth.getClaims()
+  if (!claimsData?.claims?.sub) {
+    // Defensive fallback — should not happen since middleware verified auth
     redirect('/login?redirect=/parent')
   }
 

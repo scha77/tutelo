@@ -23,9 +23,25 @@ export async function proxy(request: NextRequest) {
 
   // Refresh auth token if expired — getSession() refreshes the access token
   // when needed but skips the server verification round-trip that getUser()
-  // makes on EVERY request (~200ms). Auth protection is handled by individual
-  // layouts/pages via getClaims(); the proxy just keeps cookies fresh.
-  await supabase.auth.getSession()
+  // makes on EVERY request (~200ms). The session object also tells us if the
+  // user is authenticated, so we can redirect protected routes here — before
+  // the layout renders — letting the layout stream the shell immediately.
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const { pathname } = request.nextUrl
+  const isProtectedRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/parent') ||
+    pathname.startsWith('/admin')
+
+  if (!session && isProtectedRoute) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    if (pathname !== '/login') {
+      loginUrl.searchParams.set('redirect', pathname)
+    }
+    return NextResponse.redirect(loginUrl)
+  }
 
   return supabaseResponse
 }

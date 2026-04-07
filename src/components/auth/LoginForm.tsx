@@ -1,22 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { signUp, signIn } from '@/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-
-const authSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
-
-type AuthFormValues = z.infer<typeof authSchema>
 
 interface LoginFormProps {
   redirectTo?: string
@@ -26,22 +16,36 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<AuthFormValues>({
-    resolver: zodResolver(authSchema),
-  })
+  function validate(email: string, password: string): boolean {
+    const errors: { email?: string; password?: string } = {}
 
-  const onSubmit = async (values: AuthFormValues) => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Please enter a valid email address'
+    }
+    if (!password || password.length < 8) {
+      errors.password = 'Password must be at least 8 characters'
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formEl = e.currentTarget
+    const email = (formEl.elements.namedItem('email') as HTMLInputElement).value
+    const password = (formEl.elements.namedItem('password') as HTMLInputElement).value
+
+    if (!validate(email, password)) return
+
     setIsLoading(true)
     setServerError(null)
 
     const formData = new FormData()
-    formData.set('email', values.email)
-    formData.set('password', values.password)
+    formData.set('email', email)
+    formData.set('password', password)
     if (redirectTo) {
       formData.set('redirectTo', redirectTo)
     }
@@ -82,18 +86,19 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="you@school.edu"
               autoComplete="email"
-              {...register('email')}
+              required
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {fieldErrors.email && (
+              <p className="text-sm text-destructive">{fieldErrors.email}</p>
             )}
           </div>
 
@@ -101,13 +106,15 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               placeholder="8+ characters"
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              {...register('password')}
+              required
+              minLength={8}
             />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+            {fieldErrors.password && (
+              <p className="text-sm text-destructive">{fieldErrors.password}</p>
             )}
           </div>
 
