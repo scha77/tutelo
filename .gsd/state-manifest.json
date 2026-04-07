@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-03T18:08:09.988Z",
+  "exported_at": "2026-04-07T03:31:56.235Z",
   "milestones": [
     {
       "id": "M001",
@@ -523,6 +523,68 @@
       ],
       "requirement_coverage": "Covers: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09. Deferred: UI-10 (dark mode).",
       "boundary_map_markdown": "### S01 → S02\n\nProduces:\n- Polished profile page layout patterns (hero, credentials, about, reviews) that S02's booking calendar must visually integrate with\n- Established spacing rhythm, card treatment patterns, and typography scale for the profile page\n\nConsumes:\n- nothing (first slice, sets the visual tone)\n\n### S01 → S05\n\nProduces:\n- Visual treatment patterns (card styles, spacing, typography) that S05 uses as reference for the global consistency pass\n\n### S02 → S04\n\nProduces:\n- BookingCalendar decomposed into sub-components — patterns for component decomposition that S04 can reference\n- Polished form field treatments reusable across dashboard forms\n\n### S03 → S04\n\nProduces:\n- MobileBottomNav with labeled tabs + More menu — dashboard pages render inside this nav shell\n- ParentMobileNav with same pattern\n\nConsumes:\n- nothing (independent of profile work)\n\n### S04 → S05\n\nProduces:\n- Polished dashboard card treatments, stat presentations, and page layouts\n- Consistent patterns across 16 dashboard pages\n\nConsumes from S03:\n- Mobile nav shell for layout context\n\n### S05\n\nProduces:\n- Tightened landing page\n- Global consistency audit — any cross-surface inconsistencies caught and fixed\n\nConsumes from S01:\n- Profile page visual patterns as reference baseline\nConsumes from S04:\n- Dashboard visual patterns as reference baseline"
+    },
+    {
+      "id": "M012",
+      "title": "Performance & Delivery Efficiency",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-04-07T03:25:24.691Z",
+      "completed_at": null,
+      "vision": "Serve public pages from Vercel's CDN instead of dynamic SSR, extend query caching across all dashboard pages, and trim JS bundle weight — all within Vercel Hobby plan constraints. The profile page load goes from ~800ms dynamic SSR to ~50ms CDN-cached. Dashboard navigation feels instant on re-visit.",
+      "success_criteria": [
+        "Profile page /[slug] is ISR-cached: build shows it as static/ISR, not ƒ Dynamic",
+        "Teacher saves profile → public page reflects change within seconds (on-demand revalidation)",
+        "All major dashboard pages (requests, sessions, students, waitlist) use unstable_cache with invalidation tags",
+        "Motion library is absent from dashboard route JS chunks",
+        "npm run build succeeds cleanly on Vercel Hobby with no bundle size errors or limit warnings"
+      ],
+      "key_risks": [
+        {
+          "risk": "ISR + dynamic BookingCalendar coexistence",
+          "whyItMatters": "The profile page is ISR-cached but contains a live booking calendar. If any dynamic per-request data (slot availability, capacity status) leaks into the ISR shell, parents will see stale booking state."
+        },
+        {
+          "risk": "/tutors directory with dynamic search params",
+          "whyItMatters": "Full static generation is impossible with searchParams. Wrong caching strategy breaks filter UX or serves hopelessly stale results to parents searching for tutors."
+        },
+        {
+          "risk": "Motion bundle leak scope larger than expected",
+          "whyItMatters": "PageTransition and AnimatedButton are shared components that may pull motion into many dashboard chunks. Removing them could have cascading UI side effects if not done carefully."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "ISR + BookingCalendar dynamic data coexistence",
+          "retireIn": "S01",
+          "whatWillBeProven": "Build confirms /[slug] is ISR. BookingCalendar client component fetches slot data via client-side API call, not baked into static shell. Verified by inspecting cached HTML — no slot availability data present."
+        },
+        {
+          "riskOrUnknown": "/tutors search params caching",
+          "retireIn": "S02",
+          "whatWillBeProven": "Short TTL (5 min) revalidation on /tutors base page. Filtered views still work. Build confirms /tutors as ISR."
+        },
+        {
+          "riskOrUnknown": "Motion bundle in dashboard chunks",
+          "retireIn": "S04",
+          "whatWillBeProven": "Build analysis confirms motion library absent from dashboard route chunks. PageTransition and AnimatedButton either converted to CSS or confirmed not imported in dashboard routes."
+        }
+      ],
+      "verification_contract": "Build output shows /[slug] as ISR, /tutors as ISR, all dashboard pages compile cleanly. Source audit confirms no motion imports in dashboard route tree. unstable_cache present in requests/sessions/students/waitlist pages with correct tags.",
+      "verification_integration": "In production: teacher saves profile → x-vercel-cache transitions from HIT to MISS on next request to /[slug] → subsequent requests show HIT with updated content. revalidateTag calls confirmed in booking/profile mutation actions.",
+      "verification_operational": "Vercel Hobby deploy completes without bundle size errors. No function timeout warnings. No edge runtime violations.",
+      "verification_uat": "Teacher can observe their profile page update after saving changes without needing a hard refresh or waiting minutes. Navigation between dashboard pages feels snappy on repeat visits.",
+      "definition_of_done": [
+        "Profile page /[slug] is ISR-cached with on-demand revalidation confirmed working",
+        "Directory pages /tutors and /tutors/[category] are ISR-cached",
+        "Dashboard pages requests/sessions/students/waitlist use unstable_cache with invalidation tags wired to mutations",
+        "Motion library absent from all dashboard route chunks",
+        "All profile page images go through next/image",
+        "npm run build succeeds on Vercel Hobby with no limit errors",
+        "revalidatePath and revalidateTag calls are confirmed effective (not no-ops)"
+      ],
+      "requirement_coverage": "Covers: PERF-01, PERF-02, PERF-03, PERF-04, PERF-05, PERF-06, PERF-07. Leaves for later: none — all active perf requirements are mapped.",
+      "boundary_map_markdown": "### S01 → S02\\nProduces:\\n- ISR-enabled /[slug] route with revalidation pattern established\\n- Confirmed: revalidatePath is effective on ISR-cached pages\\n\\nConsumes:\\n- nothing (first slice)\\n\\n### S01 → S03\\nProduces:\\n- Established pattern: unstable_cache + supabaseAdmin + revalidateTag for page-level data\\n- Confirmed: revalidatePath wiring in profile.ts and bookings.ts works\\n\\nConsumes:\\n- nothing (first slice)\\n\\n### S02 → (none downstream)\\nProduces:\\n- ISR-cached /tutors and /tutors/[category] routes\\n- Confirmed: dynamic search params coexist with base-page ISR\\n\\nConsumes from S01:\\n- ISR pattern confirmation (proof that Next.js ISR works correctly in this codebase)\\n\\n### S03 → (none downstream)\\nProduces:\\n- unstable_cache on requests/sessions/students/waitlist with tags: `requests-{id}`, `sessions-{id}`, `students-{id}`, `waitlist-{id}`\\n- revalidateTag calls wired in bookings.ts mutations\\n\\nConsumes:\\n- nothing (parallel with S01)\\n\\n### S04 → (none downstream)\\nProduces:\\n- Motion-free dashboard bundle (verified)\\n- next/image on all profile page images (verified)\\n- Clean Vercel Hobby build\\n\\nConsumes:\\n- nothing (parallel with S01, S03)"
     }
   ],
   "slices": [
@@ -1416,6 +1478,88 @@
       "proof_level": "build-pass + visual inspection",
       "integration_closure": "Landing page footer links verified. Global card/spacing patterns consistent across landing, directory, auth, dashboard, and profile surfaces.",
       "observability_impact": "None — visual-only changes.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S01",
+      "title": "Profile Page ISR + On-Demand Revalidation",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "After this: visiting any /[slug] URL returns a response with x-vercel-cache: HIT header; npm run build shows the route as ISR; saving a profile change in the dashboard causes the public page to reflect the update within seconds.",
+      "created_at": "2026-04-07T03:31:56.182Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Add ISR to the public teacher profile page so it is served from Vercel's CDN cache, and verify that on-demand revalidation via revalidatePath activates when teachers save profile changes.",
+      "success_criteria": "- `export const revalidate` added to /[slug]/page.tsx with appropriate TTL\n- `generateStaticParams` fetches all published teacher slugs at build time\n- Build output shows /[slug] as ISR (not ƒ Dynamic)\n- `revalidatePath` calls in profile.ts and bookings.ts are confirmed effective (not no-ops)\n- BookingCalendar client component verified to fetch dynamic data client-side, not from ISR shell\n- No Vercel Hobby bundle size errors",
+      "proof_level": "Integration — verified in production or production-like deploy by checking response headers",
+      "integration_closure": "revalidatePath in profile.ts lines 63/85 and bookings.ts activates and triggers CDN cache purge on teacher save",
+      "observability_impact": "x-vercel-cache response header shows HIT/MISS/STALE; revalidation errors logged to Vercel function logs",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S02",
+      "title": "Directory Pages ISR",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01"
+      ],
+      "demo": "After this: /tutors base page and all /tutors/[category] pages are served from CDN cache; filter UX still works; new published teachers appear in directory within the revalidation window.",
+      "created_at": "2026-04-07T03:31:56.182Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Ensure /tutors and /tutors/[category] are both served from Vercel CDN cache. /tutors/[category] already has ISR; verify it. /tutors needs a short-TTL revalidation strategy that works with dynamic search params.",
+      "success_criteria": "- /tutors/[category] ISR verified working (revalidate=3600 + generateStaticParams already present — confirm no regressions)\n- /tutors base page gets short TTL revalidation (export const revalidate = 300)\n- Filter search params still work — filtering is client-side state or URL-param-driven without breaking cache\n- Build shows both /tutors routes as ISR\n- New teacher who publishes appears in directory within revalidation window",
+      "proof_level": "Contract — build output confirms ISR markers; filter UX tested manually",
+      "integration_closure": "Teacher publishes profile → directory listing revalidates within 5 minutes",
+      "observability_impact": "No new instrumentation needed beyond existing ISR cache headers",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S03",
+      "title": "Dashboard Query Caching",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "After this: navigating away from /dashboard/sessions and back within 30 seconds returns the cached result instantly; confirming a booking request invalidates the requests cache so the count updates correctly.",
+      "created_at": "2026-04-07T03:31:56.182Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Extend unstable_cache to all remaining dashboard pages with significant DB queries: requests, sessions, students, waitlist. Wire cache invalidation tags to the mutations that change each page's data so caches stay correct.",
+      "success_criteria": "- requests page: unstable_cache with `requests-{teacherId}` tag, 30s TTL\n- sessions page: unstable_cache with `sessions-{teacherId}` tag, 30s TTL\n- students page: unstable_cache with `students-{teacherId}` tag, 60s TTL\n- waitlist page: unstable_cache with `waitlist-{teacherId}` tag, 60s TTL\n- All four pages use supabaseAdmin inside cache callbacks (established pattern)\n- revalidateTag called on the correct cache tags when booking status changes, new students added, waitlist updated\n- No stale data visible after a mutation (confirmed by testing confirm/cancel flow)",
+      "proof_level": "Contract — verified by inspecting cache tag invalidation in booking/profile actions and confirming correct tags are called",
+      "integration_closure": "bookings.ts confirm/cancel actions call revalidateTag for requests and sessions tags; waitlist signup calls revalidateTag for waitlist tag",
+      "observability_impact": "Cache hit/miss visible in Vercel function logs; invalidation errors surface as console.error",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S04",
+      "title": "Asset & Bundle Audit",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "After this: npm run build output shows no motion-related chunks in dashboard routes; HeroSection banner and avatar confirmed as next/image; build deploys to Vercel Hobby without errors.",
+      "created_at": "2026-04-07T03:31:56.182Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Verify all profile page images go through next/image; identify and remove motion library from dashboard JS chunks; confirm no Vercel Hobby limits are exceeded in the final build.",
+      "success_criteria": "- HeroSection banner image uses next/image with fill + sized container (not raw <img>)\n- Profile photo/avatar in HeroSection uses next/image\n- Motion library absent from /dashboard/* route chunks (verified via build chunk analysis or @next/bundle-analyzer)\n- PageTransition and AnimatedButton either converted to CSS animation or confirmed not imported in dashboard layout/pages\n- npm run build succeeds cleanly; no Hobby plan warnings\n- Remaining motion usage (landing, onboarding, profile AnimatedProfile, MobileBottomNav More panel) confirmed code-split to their respective routes only",
+      "proof_level": "Contract — build output and source audit",
+      "integration_closure": "No motion imports in src/app/(dashboard)/** or dashboard-consumed shared components",
+      "observability_impact": "Build chunk output is the verification artifact; no runtime instrumentation needed",
       "sequence": 0,
       "replan_triggered_at": null
     }

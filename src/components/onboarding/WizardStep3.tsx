@@ -170,7 +170,7 @@ export function WizardStep3({ isSubmitting, onPublish }: WizardStep3Props) {
   function handlePreview() {
     const slug = getValues('slug')
     if (slug) {
-      window.open(`/${slug}?preview=true`, '_blank')
+      window.open(`/api/draft/${slug}?token=${process.env.NEXT_PUBLIC_DRAFT_MODE_SECRET}`, '_blank')
     }
   }
 

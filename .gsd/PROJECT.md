@@ -83,6 +83,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
   - S03 ✅ Mobile Navigation Overhaul — 4 labeled primary tabs + More panel for teachers, labeled tabs for parents
   - S04 ✅ Dashboard Polish — Premium headers, tinted icon pills, avatar circles, card elevation, empty states across all 11 teacher + 5 parent pages
   - S05 ✅ Landing Page & Global Consistency — Proper footer with nav links, hero pill badge, card wrappers on auth/booking-confirmed/tutors directory
+- [ ] **M012:** Performance & Delivery Efficiency — Serve public pages from CDN cache (ISR), extend query caching across dashboard, audit and trim JS bundle weight. Zero Vercel Hobby plan limits exceeded.
 
 ---
-*Last updated: 2026-04-03 — M011 complete and deployed. All user-facing surfaces polished to premium standard. 474 tests passing, tsc clean, build green.*
+*Last updated: 2026-04-06 — M011 complete. M011 UI requirements (UI-01 through UI-09) marked validated. Post-M011 perf work (auth dedup, parallel queries, loading skeletons, proxy optimization, pre-deploy hardening) committed outside GSD. M012 planned: performance & delivery efficiency.*
