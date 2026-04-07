@@ -35,7 +35,7 @@
         "fail": 0
       },
       "standard": {
-        "success": 1,
+        "success": 2,
         "fail": 0
       },
       "heavy": {
@@ -45,5 +45,5 @@
     }
   },
   "feedback": [],
-  "updatedAt": "2026-04-07T03:49:58.648Z"
+  "updatedAt": "2026-04-07T03:59:00.893Z"
 }

@@ -857,3 +857,16 @@ For user/child avatar placeholders:
 
 The `12%` opacity is the standard for pill backgrounds. Use `15%` for slightly stronger tinting (e.g., subject chips on the profile page with `--accent`).
 
+
+---
+
+## createClient() (Supabase SSR) Blocks ISR — Use supabaseAdmin for Public Pages (M012/S01)
+
+`createClient()` from `src/lib/supabase/server.ts` calls `cookies()` from `next/headers`, which is a dynamic API. Any Server Component that calls `createClient()` — even if no real cookie is read — will opt the entire route out of the Full Route Cache and prevent ISR.
+
+**Fix:** Use `supabaseAdmin` (from `src/lib/supabase/service.ts`) for all data fetching in public, cacheable pages. `supabaseAdmin` uses the service role key directly with no cookie dependency.
+
+**Also:** `draftMode()` from `next/headers` does NOT block ISR in Next.js 16. It reads the bypass cookie transparently and only opts a specific request out of the cache when the draft cookie is active — the route still builds as `● (SSG)` with revalidation.
+
+**Also:** Client components using `useSearchParams()` must be wrapped in `<Suspense>` when the parent page is ISR-rendered (builds with `generateStaticParams`). Without this, Next.js throws during prerendering: "useSearchParams() should be wrapped in a suspense boundary."
+

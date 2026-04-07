@@ -88,14 +88,14 @@ Then use `isDraftMode` in the unpublished check: `if (!teacher.is_published && !
 
 ## Must-Haves
 
-- [ ] `headers()` import completely removed from page
-- [ ] `searchParams` prop completely removed from page component signature
-- [ ] `export const revalidate = 3600` present
-- [ ] `generateStaticParams` function present, queries `supabaseAdmin` for published teacher slugs
-- [ ] `draftMode()` used for preview check instead of searchParams
-- [ ] `<ViewTracker teacherId={teacher.id} />` rendered in JSX
-- [ ] `npm run build` shows `/[slug]` as ISR, not Dynamic
-- [ ] No TypeScript errors
+- [x] `headers()` import completely removed from page
+- [x] `searchParams` prop completely removed from page component signature
+- [x] `export const revalidate = 3600` present
+- [x] `generateStaticParams` function present, queries `supabaseAdmin` for published teacher slugs
+- [x] `draftMode()` used for preview check instead of searchParams
+- [x] `<ViewTracker teacherId={teacher.id} />` rendered in JSX
+- [x] `npm run build` shows `/[slug]` as ISR, not Dynamic
+- [x] No TypeScript errors
 
 ## Verification
 

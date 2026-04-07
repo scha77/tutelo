@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { cache } from 'react'
-import { headers } from 'next/headers'
+import { cache, Suspense } from 'react'
+import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Instagram, Mail, Globe } from 'lucide-react'
 import { format, addDays, startOfToday } from 'date-fns'
-import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
-import { isBot } from '@/lib/utils/bot-filter'
+import { ViewTracker } from './ViewTracker'
 import { HeroSection } from '@/components/profile/HeroSection'
 import { CredentialsBar } from '@/components/profile/CredentialsBar'
 import { AboutSection } from '@/components/profile/AboutSection'
@@ -17,15 +16,26 @@ import { ReviewsSection } from '@/components/profile/ReviewsSection'
 import { AnimatedProfile } from '@/components/profile/AnimatedProfile'
 import { submitBookingRequest } from '@/actions/bookings'
 
+// ISR: revalidate cached pages every hour; on-demand revalidation overrides this
+export const revalidate = 3600
+
+export async function generateStaticParams() {
+  const { data } = await supabaseAdmin
+    .from('teachers')
+    .select('slug')
+    .eq('is_published', true)
+  return (data ?? []).map(({ slug }) => ({ slug }))
+}
+
 // Deduplicate teacher query between generateMetadata and page component
+// Uses supabaseAdmin (service role, no cookies) so this page stays ISR-compatible
 const getTeacherBySlug = cache(async (slug: string) => {
-  const supabase = await createClient()
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('teachers')
     .select('*, availability(*)')
     .eq('slug', slug)
     .single()
-  return { teacher: data, supabase }
+  return { teacher: data }
 })
 
 // SEO-01: Dynamic OG metadata for teacher profile pages
@@ -147,33 +157,20 @@ function SocialLinks({ instagram, email, website }: SocialLinksProps) {
 
 export default async function TeacherProfilePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ preview?: string }>
 }) {
   const { slug } = await params
-  const { preview } = await searchParams
 
-  const { teacher, supabase } = await getTeacherBySlug(slug)
+  const { teacher } = await getTeacherBySlug(slug)
 
   if (!teacher) return notFound()
 
-  // M008/S04: Fire-and-forget page view tracking (non-blocking, bot-filtered)
-  const headersList = await headers()
-  const userAgent = headersList.get('user-agent')
-  if (!isBot(userAgent)) {
-    void Promise.resolve(
-      supabaseAdmin
-        .from('page_views')
-        .insert({ teacher_id: teacher.id, user_agent: userAgent, is_bot: false })
-    ).catch(() => {}) // never block page render
-  }
-
-  const isPreview = preview === 'true'
+  // ISR-compatible preview check via Next.js draft mode (replaces the old ?preview=true query param)
+  const { isEnabled: isDraftMode } = await draftMode()
 
   // VIS-02: Draft page shows "not available" — NOT notFound()
-  if (!teacher.is_published && !isPreview) {
+  if (!teacher.is_published && !isDraftMode) {
     return <DraftPage />
   }
 
@@ -189,7 +186,7 @@ export default async function TeacherProfilePage({
     { data: sessionTypes },
   ] = await Promise.all([
     // S02-T03: Override availability for the next 90 days
-    supabase
+    supabaseAdmin
       .from('availability_overrides')
       .select('specific_date, start_time, end_time')
       .eq('teacher_id', teacher.id)
@@ -199,7 +196,7 @@ export default async function TeacherProfilePage({
       .order('start_time'),
 
     // REVIEW-02: Submitted reviews for public profile display
-    supabase
+    supabaseAdmin
       .from('reviews')
       .select('rating, review_text, reviewer_name, created_at')
       .eq('teacher_id', teacher.id)
@@ -209,7 +206,7 @@ export default async function TeacherProfilePage({
 
     // M007-S01: Capacity check — only query if teacher has a capacity limit set
     teacher.capacity_limit != null
-      ? supabase
+      ? supabaseAdmin
           .from('bookings')
           .select('student_name')
           .eq('teacher_id', teacher.id)
@@ -218,7 +215,7 @@ export default async function TeacherProfilePage({
       : Promise.resolve({ data: null, error: null }),
 
     // SESS-02: Session types for session type selector
-    supabase
+    supabaseAdmin
       .from('session_types')
       .select('id, label, price, duration_minutes, sort_order')
       .eq('teacher_id', teacher.id)
@@ -249,27 +246,29 @@ export default async function TeacherProfilePage({
       <AnimatedProfile delay={0.15}>
         <AboutSection teacher={teacher} />
       </AnimatedProfile>
-      {atCapacity ? (
-        <AtCapacitySection
-          teacherName={teacher.full_name}
-          teacherId={teacher.id}
-          accentColor={teacher.accent_color}
-        />
-      ) : (
-        <BookingCalendar
-          slots={teacher.availability ?? []}
-          overrides={overrides ?? []}
-          teacherTimezone={teacher.timezone}
-          teacherName={teacher.full_name}
-          accentColor={teacher.accent_color}
-          subjects={teacher.subjects ?? []}
-          teacherId={teacher.id}
-          submitAction={submitBookingRequest}
-          stripeConnected={teacher.stripe_charges_enabled ?? false}
-          teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
-          sessionTypes={sessionTypes ?? []}
-        />
-      )}
+      <Suspense>
+        {atCapacity ? (
+          <AtCapacitySection
+            teacherName={teacher.full_name}
+            teacherId={teacher.id}
+            accentColor={teacher.accent_color}
+          />
+        ) : (
+          <BookingCalendar
+            slots={teacher.availability ?? []}
+            overrides={overrides ?? []}
+            teacherTimezone={teacher.timezone}
+            teacherName={teacher.full_name}
+            accentColor={teacher.accent_color}
+            subjects={teacher.subjects ?? []}
+            teacherId={teacher.id}
+            submitAction={submitBookingRequest}
+            stripeConnected={teacher.stripe_charges_enabled ?? false}
+            teacherStripeAccountId={teacher.stripe_account_id ?? undefined}
+            sessionTypes={sessionTypes ?? []}
+          />
+        )}
+      </Suspense>
       {!atCapacity && <BookNowCTA />}
       <AnimatedProfile delay={0.2}>
         <ReviewsSection reviews={reviews ?? []} accentColor={teacher.accent_color} />
@@ -279,6 +278,7 @@ export default async function TeacherProfilePage({
         email={teacher.social_email}
         website={teacher.social_website}
       />
+      <ViewTracker teacherId={teacher.id} />
     </main>
   )
 }
