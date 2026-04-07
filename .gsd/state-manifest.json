@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T15:15:23.519Z",
+  "exported_at": "2026-04-07T15:17:41.757Z",
   "milestones": [
     {
       "id": "M001",
@@ -6909,19 +6909,21 @@
       "milestone_id": "M013",
       "slice_id": "S03",
       "id": "T04",
-      "title": "Fix og-metadata mock chain, unskip tests, and run final verification",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Fixed Supabase mock return shape in og-metadata.test.ts — all 4 skipped tests now pass, full suite at 490 tests with 0 todo and 0 skip",
+      "status": "complete",
+      "one_liner": "Fixed Supabase mock return shape in og-metadata.test.ts — all 4 skipped tests now pass, full suite at 490 tests with 0 todo and 0 skip",
+      "narrative": "The 4 it.skip() tests in og-metadata.test.ts failed because mockAdminSingle returned raw teacher data instead of the { data, error } envelope that Supabase .single() returns. Production code destructures { data } from the result, so raw data yielded undefined and generateMetadata always hit the fallback branch. Fixed by wrapping each mock return in { data: {...}, error: null } and removing all 4 skip markers. Confirmed zero it.todo() and zero it.skip() remain across the entire codebase.",
+      "verification_result": "1. npx vitest run tests/unit/og-metadata.test.ts — 4 tests pass. 2. npx vitest run — 52 files, 490 tests, all pass, 0 todo, 0 skip. 3. rg 'it\\.(todo|skip)\\(' — zero matches across entire codebase.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T15:17:41.717Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/unit/og-metadata.test.ts"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T04\nparent: S03\nmilestone: M013\nkey_files:\n  - tests/unit/og-metadata.test.ts\nkey_decisions:\n  - (none)\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T15:17:41.716Z\nblocker_discovered: false\n---\n\n# T04: Fixed Supabase mock return shape in og-metadata.test.ts — all 4 skipped tests now pass, full suite at 490 tests with 0 todo and 0 skip\n\n**Fixed Supabase mock return shape in og-metadata.test.ts — all 4 skipped tests now pass, full suite at 490 tests with 0 todo and 0 skip**\n\n## What Happened\n\nThe 4 it.skip() tests in og-metadata.test.ts failed because mockAdminSingle returned raw teacher data instead of the { data, error } envelope that Supabase .single() returns. Production code destructures { data } from the result, so raw data yielded undefined and generateMetadata always hit the fallback branch. Fixed by wrapping each mock return in { data: {...}, error: null } and removing all 4 skip markers. Confirmed zero it.todo() and zero it.skip() remain across the entire codebase.\n\n## Verification\n\n1. npx vitest run tests/unit/og-metadata.test.ts — 4 tests pass. 2. npx vitest run — 52 files, 490 tests, all pass, 0 todo, 0 skip. 3. rg 'it\\.(todo|skip)\\(' — zero matches across entire codebase.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/unit/og-metadata.test.ts` | 0 | ✅ pass | 6300ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 9300ms |\n| 3 | `rg 'it\\.(todo|skip)\\(' tests/ src/` | 1 | ✅ pass (0 matches) | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/unit/og-metadata.test.ts`\n",
       "description": "Fix 4 it.skip() tests in `tests/unit/og-metadata.test.ts` and verify the full suite is clean.\n\n**Root cause:** The mock for `supabaseAdmin.from().select().eq().single()` returns raw teacher data instead of the `{ data, error }` object that Supabase's `.single()` actually returns. Production code does `const { data } = await single()` — so with the current mock, `data` is `undefined` and the metadata function returns the fallback for every test.\n\n**Fix:**\n1. Change `mockAdminSingle.mockResolvedValue({ full_name: '...', ... })` → `mockAdminSingle.mockResolvedValue({ data: { full_name: '...', ... }, error: null })`\n2. Change `mockAdminSingle.mockResolvedValue(null)` (null teacher test) → `mockAdminSingle.mockResolvedValue({ data: null, error: null })`\n3. Change all 4 `it.skip(` → `it(`\n\n**4 tests to unskip:**\n1. Returns personalized title and description for a valid teacher slug\n2. Returns generic Tutelo fallback for an invalid slug\n3. Handles teacher with no subjects gracefully\n4. Handles teacher with null subjects array\n\n**Verification assertions already written** — they test metadata.title, metadata.description, metadata.openGraph.url, etc. The assertions should pass once the mock returns the correct shape.\n\n**Potential issue:** React's `cache()` wrapper on `getTeacherBySlug` — in test context without RSC render, `cache` is effectively a pass-through. Each test uses a unique slug, so no caching conflicts.\n\n**Final verification:** Run `npx vitest run` on the full suite. Expected: all files pass, 0 todo, 0 skip, ~490 total tests.",
       "estimate": "30m",
       "files": [
@@ -9621,6 +9623,39 @@
       "verdict": "✅ pass",
       "duration_ms": 4300,
       "created_at": "2026-04-07T15:15:23.474Z"
+    },
+    {
+      "id": 178,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run tests/unit/og-metadata.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6300,
+      "created_at": "2026-04-07T15:17:41.717Z"
+    },
+    {
+      "id": 179,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9300,
+      "created_at": "2026-04-07T15:17:41.717Z"
+    },
+    {
+      "id": 180,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "rg 'it\\.(todo|skip)\\(' tests/ src/",
+      "exit_code": 1,
+      "verdict": "✅ pass (0 matches)",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T15:17:41.717Z"
     }
   ]
 }

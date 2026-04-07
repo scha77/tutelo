@@ -109,7 +109,7 @@ The test file already has mock scaffolding for Stripe (class-based MockStripe wi
   - Estimate: 1h30m
   - Files: tests/stripe/auto-cancel.test.ts, tests/stripe/reminders-cron.test.ts, src/app/api/cron/auto-cancel/route.ts, src/app/api/cron/stripe-reminders/route.ts
   - Verify: npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts — expect 10 passed, 0 todo, 0 skip.
-- [ ] **T04: Fix og-metadata mock chain, unskip tests, and run final verification** — Fix 4 it.skip() tests in `tests/unit/og-metadata.test.ts` and verify the full suite is clean.
+- [x] **T04: Fixed Supabase mock return shape in og-metadata.test.ts — all 4 skipped tests now pass, full suite at 490 tests with 0 todo and 0 skip** — Fix 4 it.skip() tests in `tests/unit/og-metadata.test.ts` and verify the full suite is clean.
 
 **Root cause:** The mock for `supabaseAdmin.from().select().eq().single()` returns raw teacher data instead of the `{ data, error }` object that Supabase's `.single()` actually returns. Production code does `const { data } = await single()` — so with the current mock, `data` is `undefined` and the metadata function returns the fallback for every test.
 
