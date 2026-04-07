@@ -112,7 +112,7 @@ IDs are auto-assigned by the tool (R006, R007, ...). Never provide an ID manuall
   - Estimate: 15m
   - Files: .gsd/REQUIREMENTS.md
   - Verify: grep -c '^### ' .gsd/REQUIREMENTS.md returns >= 74
-- [ ] **T02: Register M003–M009 capability requirements (59 entries)** — Register all 59 M003–M009 capability requirements in the GSD database using `gsd_requirement_save`. No code changes — only GSD tool calls.
+- [x] **T02: Registered 59 M003–M009 capability requirements (R067–R125) across 7 milestones with validated status and legacy ID traceability** — Register all 59 M003–M009 capability requirements in the GSD database using `gsd_requirement_save`. No code changes — only GSD tool calls.
 
 ## Tool Pattern
 

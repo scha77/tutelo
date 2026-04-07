@@ -661,6 +661,606 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Submit review, display on profile, email prompt — tests + browser
 - Notes: Legacy: REVIEW-02
 
+### R066 — Review prompt via email
+- Class: functional
+- Status: validated
+- Description: Review prompt via email
+- Why it matters: Reviews build social proof
+- Source: M001
+- Primary owning slice: M001
+- Validation: Submit review, display on profile, email prompt — tests + browser
+- Notes: Legacy: REVIEW-03
+
+### R067 — Marketing landing page (hero, how-it-works, problem/solution, CTA)
+- Class: functional
+- Status: validated
+- Description: Marketing landing page (hero, how-it-works, problem/solution, CTA)
+- Why it matters: Marketing landing page drives teacher signups
+- Source: M003
+- Primary owning slice: M003
+- Validation: Marketing landing page with hero, how-it-works, problem/solution, CTA
+- Notes: Legacy: LAND-01
+
+### R068 — Interactive teacher page mock on landing
+- Class: functional
+- Status: validated
+- Description: Interactive teacher page mock on landing
+- Why it matters: Marketing landing page drives teacher signups
+- Source: M003
+- Primary owning slice: M003
+- Validation: Interactive TeacherMockSection with hover/transition effects
+- Notes: Legacy: LAND-02
+
+### R069 — 'Start your page' CTA links to /login
+- Class: functional
+- Status: validated
+- Description: 'Start your page' CTA links to /login
+- Why it matters: Marketing landing page drives teacher signups
+- Source: M003
+- Primary owning slice: M003
+- Validation: Start your page CTA links to /login
+- Notes: Legacy: LAND-03
+
+### R070 — Brand palette + logo in navigation
+- Class: functional
+- Status: validated
+- Description: Brand palette + logo in navigation
+- Why it matters: Marketing landing page drives teacher signups
+- Source: M003
+- Primary owning slice: M003
+- Validation: Brand palette applied; logo in all nav surfaces
+- Notes: Legacy: LAND-04
+
+### R071 — Shareable slug URLs in landing copy
+- Class: functional
+- Status: validated
+- Description: Shareable slug URLs in landing copy
+- Why it matters: Marketing landing page drives teacher signups
+- Source: M003
+- Primary owning slice: M003
+- Validation: Shareable slug URLs showcased in multiple landing sections
+- Notes: Legacy: LAND-05
+
+### R072 — Scroll-triggered reveals on landing sections
+- Class: quality-attribute
+- Status: validated
+- Description: Scroll-triggered reveals on landing sections
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Scroll-triggered reveals on all landing sections
+- Notes: Legacy: ANIM-01
+
+### R073 — Route transitions via template.tsx
+- Class: quality-attribute
+- Status: validated
+- Description: Route transitions via template.tsx
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Route transitions via template.tsx + PageTransition
+- Notes: Legacy: ANIM-02
+
+### R074 — Onboarding step directional slides
+- Class: quality-attribute
+- Status: validated
+- Description: Onboarding step directional slides
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Onboarding step directional slides
+- Notes: Legacy: ANIM-03
+
+### R075 — Dashboard card/list stagger animations
+- Class: quality-attribute
+- Status: validated
+- Description: Dashboard card/list stagger animations
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Dashboard card/list stagger animations
+- Notes: Legacy: ANIM-04
+
+### R076 — Teacher profile section sequential fades
+- Class: quality-attribute
+- Status: validated
+- Description: Teacher profile section sequential fades
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Teacher profile section sequential fades
+- Notes: Legacy: ANIM-05
+
+### R077 — Micro-interaction press/hover on CTAs
+- Class: quality-attribute
+- Status: validated
+- Description: Micro-interaction press/hover on CTAs
+- Why it matters: Animations add polish and perceived quality
+- Source: M003
+- Primary owning slice: M003
+- Validation: Micro-interaction press/hover on primary CTAs
+- Notes: Legacy: ANIM-06
+
+### R078 — Mobile bottom tab bar for dashboard
+- Class: functional
+- Status: validated
+- Description: Mobile bottom tab bar for dashboard
+- Why it matters: Mobile-first dashboard navigation
+- Source: M003
+- Primary owning slice: M003
+- Validation: Bottom tab bar on mobile, all 7 tabs functional
+- Notes: Legacy: MOBILE-01
+
+### R079 — Global brand palette, teacher accent preserved
+- Class: quality-attribute
+- Status: validated
+- Description: Global brand palette, teacher accent preserved
+- Why it matters: Visual brand consistency
+- Source: M003
+- Primary owning slice: M003
+- Validation: Global brand palette, teacher accent color preserved
+- Notes: Legacy: BRAND-01
+
+### R080 — Logo in NavBar, Sidebar, MobileHeader
+- Class: quality-attribute
+- Status: validated
+- Description: Logo in NavBar, Sidebar, MobileHeader
+- Why it matters: Visual brand consistency
+- Source: M003
+- Primary owning slice: M003
+- Validation: Logo in NavBar, Sidebar, MobileHeader
+- Notes: Legacy: BRAND-02
+
+### R081 — Dynamic OG tags + 1200x630 image per teacher
+- Class: non-functional
+- Status: validated
+- Description: Dynamic OG tags + 1200x630 image per teacher
+- Why it matters: Discoverability and social sharing
+- Source: M003
+- Primary owning slice: M003
+- Validation: Dynamic OG tags + 1200x630 image per teacher
+- Notes: Legacy: SEO-01
+
+### R082 — Landing page OG meta tags
+- Class: non-functional
+- Status: validated
+- Description: Landing page OG meta tags
+- Why it matters: Discoverability and social sharing
+- Source: M003
+- Primary owning slice: M003
+- Validation: Landing page OG meta tags
+- Notes: Legacy: SEO-02
+
+### R083 — social_email auto-populated from auth email
+- Class: functional
+- Status: validated
+- Description: social_email auto-populated from auth email
+- Why it matters: Data integrity for teacher contact
+- Source: M003
+- Primary owning slice: M003
+- Validation: social_email auto-populated from auth email
+- Notes: Legacy: FIX-01
+
+### R084 — 5-minute granularity availability editor
+- Class: functional
+- Status: validated
+- Description: 5-minute granularity availability editor
+- Why it matters: Advanced scheduling precision
+- Source: M004
+- Primary owning slice: M004
+- Validation: Validated in M004 — 5-minute granularity availability editor
+- Notes: Legacy: AVAIL-04
+
+### R085 — Per-date availability overrides
+- Class: functional
+- Status: validated
+- Description: Per-date availability overrides
+- Why it matters: Advanced scheduling precision
+- Source: M004
+- Primary owning slice: M004
+- Validation: Validated in M004 — per-date availability overrides
+- Notes: Legacy: AVAIL-05
+
+### R086 — Future-date planning via overrides
+- Class: functional
+- Status: validated
+- Description: Future-date planning via overrides
+- Why it matters: Advanced scheduling precision
+- Source: M004
+- Primary owning slice: M004
+- Validation: Validated in M004 — future-date planning via overrides
+- Notes: Legacy: AVAIL-06
+
+### R087 — Time-range picker editor rewrite
+- Class: functional
+- Status: validated
+- Description: Time-range picker editor rewrite
+- Why it matters: Advanced scheduling precision
+- Source: M004
+- Primary owning slice: M004
+- Validation: Validated in M004 — time-range picker editor rewrite
+- Notes: Legacy: AVAIL-07
+
+### R088 — Session cancellation with Stripe void + email
+- Class: functional
+- Status: validated
+- Description: Session cancellation with Stripe void + email
+- Why it matters: Clean session cancellation flow
+- Source: M004
+- Primary owning slice: M004
+- Validation: Validated in M004 — session cancellation with Stripe void + email
+- Notes: Legacy: CANCEL-01
+
+### R089 — School email verification flow (OTP token → email → callback → verified_at stamp)
+- Class: functional
+- Status: validated
+- Description: School email verification flow (OTP token → email → callback → verified_at stamp)
+- Why it matters: Trust signal for parents
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — school email verification flow with OTP
+- Notes: Legacy: VERIFY-01
+
+### R090 — CredentialsBar badge gated on verified_at
+- Class: functional
+- Status: validated
+- Description: CredentialsBar badge gated on verified_at
+- Why it matters: Trust signal for parents
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — CredentialsBar badge gated on verified_at
+- Notes: Legacy: VERIFY-02
+
+### R091 — SMS session reminders for opted-in recipients
+- Class: functional
+- Status: validated
+- Description: SMS session reminders for opted-in recipients
+- Why it matters: Multi-channel notifications improve engagement
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — SMS session reminders for opted-in
+- Notes: Legacy: SMS-01
+
+### R092 — Cancellation SMS alongside email
+- Class: functional
+- Status: validated
+- Description: Cancellation SMS alongside email
+- Why it matters: Multi-channel notifications improve engagement
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — cancellation SMS alongside email
+- Notes: Legacy: SMS-02
+
+### R093 — Parent phone + SMS consent on booking form
+- Class: functional
+- Status: validated
+- Description: Parent phone + SMS consent on booking form
+- Why it matters: Multi-channel notifications improve engagement
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — parent phone + SMS consent on booking form
+- Notes: Legacy: SMS-03
+
+### R094 — Teacher phone + SMS opt-in in onboarding/settings
+- Class: functional
+- Status: validated
+- Description: Teacher phone + SMS opt-in in onboarding/settings
+- Why it matters: Multi-channel notifications improve engagement
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — teacher phone + SMS opt-in in onboarding/settings
+- Notes: Legacy: SMS-04
+
+### R095 — cancelSession sends SMS alongside email
+- Class: functional
+- Status: validated
+- Description: cancelSession sends SMS alongside email
+- Why it matters: SMS channel for cancellation notifications
+- Source: M005
+- Primary owning slice: M005
+- Validation: Validated in M005 — cancelSession sends SMS alongside email
+- Notes: Legacy: CANCEL-02
+
+### R096 — High-res QR code PNG download
+- Class: functional
+- Status: validated
+- Description: High-res QR code PNG download
+- Why it matters: Offline marketing for teachers
+- Source: M006
+- Primary owning slice: M006
+- Validation: Validated in M006 — high-res QR code PNG download
+- Notes: Legacy: QR-01
+
+### R097 — Printable mini-flyer PNG
+- Class: functional
+- Status: validated
+- Description: Printable mini-flyer PNG
+- Why it matters: Offline marketing for teachers
+- Source: M006
+- Primary owning slice: M006
+- Validation: Validated in M006 — printable mini-flyer PNG
+- Notes: Legacy: QR-02
+
+### R098 — Pre-written announcement templates
+- Class: functional
+- Status: validated
+- Description: Pre-written announcement templates
+- Why it matters: Social media marketing enablement
+- Source: M006
+- Primary owning slice: M006
+- Validation: Validated in M006 — pre-written announcement templates
+- Notes: Legacy: SWIPE-01
+
+### R099 — One-click copy-to-clipboard
+- Class: functional
+- Status: validated
+- Description: One-click copy-to-clipboard
+- Why it matters: Social media marketing enablement
+- Source: M006
+- Primary owning slice: M006
+- Validation: Validated in M006 — one-click copy-to-clipboard
+- Notes: Legacy: SWIPE-02
+
+### R100 — OG image unfurl across platforms
+- Class: non-functional
+- Status: validated
+- Description: OG image unfurl across platforms
+- Why it matters: Link preview quality across platforms
+- Source: M006
+- Primary owning slice: M006
+- Validation: Validated in M006 — OG image unfurl across platforms
+- Notes: Legacy: OG-01
+
+### R101 — Teacher capacity limit setting
+- Class: functional
+- Status: validated
+- Description: Teacher capacity limit setting
+- Why it matters: Capacity management prevents overcommitment
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — teacher capacity limit setting
+- Notes: Legacy: CAP-01
+
+### R102 — Profile at-capacity state with waitlist form
+- Class: functional
+- Status: validated
+- Description: Profile at-capacity state with waitlist form
+- Why it matters: Capacity management prevents overcommitment
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — profile at-capacity state with waitlist form
+- Notes: Legacy: CAP-02
+
+### R103 — Anonymous waitlist signup
+- Class: functional
+- Status: validated
+- Description: Anonymous waitlist signup
+- Why it matters: Waitlist captures demand when at capacity
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — anonymous waitlist signup
+- Notes: Legacy: WAIT-01
+
+### R104 — Teacher waitlist dashboard
+- Class: functional
+- Status: validated
+- Description: Teacher waitlist dashboard
+- Why it matters: Waitlist captures demand when at capacity
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — teacher waitlist dashboard
+- Notes: Legacy: WAIT-02
+
+### R105 — Waitlist notifications on capacity freed
+- Class: functional
+- Status: validated
+- Description: Waitlist notifications on capacity freed
+- Why it matters: Waitlist captures demand when at capacity
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — waitlist notifications on capacity freed
+- Notes: Legacy: WAIT-03
+
+### R106 — Session types CRUD
+- Class: functional
+- Status: validated
+- Description: Session types CRUD
+- Why it matters: Session types enable structured service offering
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — session types CRUD
+- Notes: Legacy: SESS-01
+
+### R107 — Booking form session type selector with duration filtering
+- Class: functional
+- Status: validated
+- Description: Booking form session type selector with duration filtering
+- Why it matters: Session types enable structured service offering
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — booking form session type selector with duration filtering
+- Notes: Legacy: SESS-02
+
+### R108 — Flat session-type price for Stripe PI
+- Class: functional
+- Status: validated
+- Description: Flat session-type price for Stripe PI
+- Why it matters: Session types enable structured service offering
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — flat session-type price for Stripe PI
+- Notes: Legacy: SESS-03
+
+### R109 — Unchanged flow for teachers without session types
+- Class: functional
+- Status: validated
+- Description: Unchanged flow for teachers without session types
+- Why it matters: Session types enable structured service offering
+- Source: M007
+- Primary owning slice: M007
+- Validation: Validated in M007 — unchanged flow for teachers without session types
+- Notes: Legacy: SESS-04
+
+### R110 — Teacher directory at /tutors
+- Class: functional
+- Status: validated
+- Description: Teacher directory at /tutors
+- Why it matters: Teacher discovery drives marketplace growth
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — teacher directory at /tutors
+- Notes: Legacy: DIR-01
+
+### R111 — Directory filters (subject, grade, city, price)
+- Class: functional
+- Status: validated
+- Description: Directory filters (subject, grade, city, price)
+- Why it matters: Teacher discovery drives marketplace growth
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — directory filters
+- Notes: Legacy: DIR-02
+
+### R112 — Full-text search
+- Class: functional
+- Status: validated
+- Description: Full-text search
+- Why it matters: Teacher discovery drives marketplace growth
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — full-text search
+- Notes: Legacy: DIR-03
+
+### R113 — XML sitemap covering all teacher URLs
+- Class: non-functional
+- Status: validated
+- Description: XML sitemap covering all teacher URLs
+- Why it matters: Organic search traffic
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — XML sitemap
+- Notes: Legacy: SEO-03
+
+### R114 — SEO category pages with unique meta + ISR
+- Class: non-functional
+- Status: validated
+- Description: SEO category pages with unique meta + ISR
+- Why it matters: Organic search traffic
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — SEO category pages with ISR
+- Notes: Legacy: SEO-04
+
+### R115 — Page view tracking with bot filtering
+- Class: functional
+- Status: validated
+- Description: Page view tracking with bot filtering
+- Why it matters: Teachers need performance visibility
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — page view tracking with bot filtering
+- Notes: Legacy: ANALYTICS-01
+
+### R116 — Dashboard analytics funnel
+- Class: functional
+- Status: validated
+- Description: Dashboard analytics funnel
+- Why it matters: Teachers need performance visibility
+- Source: M008
+- Primary owning slice: M008
+- Validation: Validated in M008 — dashboard analytics funnel
+- Notes: Legacy: ANALYTICS-02
+
+### R117 — Parent selects recurring schedule (weekly/biweekly)
+- Class: functional
+- Status: validated
+- Description: Parent selects recurring schedule (weekly/biweekly)
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — parent selects recurring schedule
+- Notes: Legacy: RECUR-01
+
+### R118 — System auto-creates future booking rows
+- Class: functional
+- Status: validated
+- Description: System auto-creates future booking rows
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — system auto-creates future booking rows
+- Notes: Legacy: RECUR-02
+
+### R119 — Per-session payment handling
+- Class: functional
+- Status: validated
+- Description: Per-session payment handling
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — per-session payment handling
+- Notes: Legacy: RECUR-03
+
+### R120 — Cancel individual/series
+- Class: functional
+- Status: validated
+- Description: Cancel individual/series
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — cancel individual/series
+- Notes: Legacy: RECUR-04
+
+### R121 — Availability + double-booking prevention for recurring
+- Class: functional
+- Status: validated
+- Description: Availability + double-booking prevention for recurring
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — availability + double-booking prevention for recurring
+- Notes: Legacy: RECUR-05
+
+### R122 — Saved card via Stripe Customer
+- Class: functional
+- Status: validated
+- Description: Saved card via Stripe Customer
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — saved card via Stripe Customer
+- Notes: Legacy: RECUR-06
+
+### R123 — Cron charges upcoming recurring sessions
+- Class: functional
+- Status: validated
+- Description: Cron charges upcoming recurring sessions
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — cron charges upcoming recurring sessions
+- Notes: Legacy: RECUR-07
+
+### R124 — Parent self-service cancellation via secure email link
+- Class: functional
+- Status: validated
+- Description: Parent self-service cancellation via secure email link
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — parent self-service cancellation via secure email link
+- Notes: Legacy: RECUR-08
+
+### R125 — Recurring sessions in dashboard with series badge
+- Class: functional
+- Status: validated
+- Description: Recurring sessions in dashboard with series badge
+- Why it matters: Recurring sessions are key for retention and revenue predictability
+- Source: M009
+- Primary owning slice: M009
+- Validation: Validated in M009 — recurring sessions in dashboard with series badge
+- Notes: Legacy: RECUR-09
+
 ### UI-01 — Untitled
 - Status: validated
 - Validation: Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes.
@@ -767,6 +1367,66 @@ This file is the explicit capability and coverage contract for the project.
 | R063 | functional | validated | M001 | none | Submit review, display on profile, email prompt — tests + browser |
 | R064 | functional | validated | M001 | none | Submit review, display on profile, email prompt — tests + browser |
 | R065 | functional | validated | M001 | none | Submit review, display on profile, email prompt — tests + browser |
+| R066 | functional | validated | M001 | none | Submit review, display on profile, email prompt — tests + browser |
+| R067 | functional | validated | M003 | none | Marketing landing page with hero, how-it-works, problem/solution, CTA |
+| R068 | functional | validated | M003 | none | Interactive TeacherMockSection with hover/transition effects |
+| R069 | functional | validated | M003 | none | Start your page CTA links to /login |
+| R070 | functional | validated | M003 | none | Brand palette applied; logo in all nav surfaces |
+| R071 | functional | validated | M003 | none | Shareable slug URLs showcased in multiple landing sections |
+| R072 | quality-attribute | validated | M003 | none | Scroll-triggered reveals on all landing sections |
+| R073 | quality-attribute | validated | M003 | none | Route transitions via template.tsx + PageTransition |
+| R074 | quality-attribute | validated | M003 | none | Onboarding step directional slides |
+| R075 | quality-attribute | validated | M003 | none | Dashboard card/list stagger animations |
+| R076 | quality-attribute | validated | M003 | none | Teacher profile section sequential fades |
+| R077 | quality-attribute | validated | M003 | none | Micro-interaction press/hover on primary CTAs |
+| R078 | functional | validated | M003 | none | Bottom tab bar on mobile, all 7 tabs functional |
+| R079 | quality-attribute | validated | M003 | none | Global brand palette, teacher accent color preserved |
+| R080 | quality-attribute | validated | M003 | none | Logo in NavBar, Sidebar, MobileHeader |
+| R081 | non-functional | validated | M003 | none | Dynamic OG tags + 1200x630 image per teacher |
+| R082 | non-functional | validated | M003 | none | Landing page OG meta tags |
+| R083 | functional | validated | M003 | none | social_email auto-populated from auth email |
+| R084 | functional | validated | M004 | none | Validated in M004 — 5-minute granularity availability editor |
+| R085 | functional | validated | M004 | none | Validated in M004 — per-date availability overrides |
+| R086 | functional | validated | M004 | none | Validated in M004 — future-date planning via overrides |
+| R087 | functional | validated | M004 | none | Validated in M004 — time-range picker editor rewrite |
+| R088 | functional | validated | M004 | none | Validated in M004 — session cancellation with Stripe void + email |
+| R089 | functional | validated | M005 | none | Validated in M005 — school email verification flow with OTP |
+| R090 | functional | validated | M005 | none | Validated in M005 — CredentialsBar badge gated on verified_at |
+| R091 | functional | validated | M005 | none | Validated in M005 — SMS session reminders for opted-in |
+| R092 | functional | validated | M005 | none | Validated in M005 — cancellation SMS alongside email |
+| R093 | functional | validated | M005 | none | Validated in M005 — parent phone + SMS consent on booking form |
+| R094 | functional | validated | M005 | none | Validated in M005 — teacher phone + SMS opt-in in onboarding/settings |
+| R095 | functional | validated | M005 | none | Validated in M005 — cancelSession sends SMS alongside email |
+| R096 | functional | validated | M006 | none | Validated in M006 — high-res QR code PNG download |
+| R097 | functional | validated | M006 | none | Validated in M006 — printable mini-flyer PNG |
+| R098 | functional | validated | M006 | none | Validated in M006 — pre-written announcement templates |
+| R099 | functional | validated | M006 | none | Validated in M006 — one-click copy-to-clipboard |
+| R100 | non-functional | validated | M006 | none | Validated in M006 — OG image unfurl across platforms |
+| R101 | functional | validated | M007 | none | Validated in M007 — teacher capacity limit setting |
+| R102 | functional | validated | M007 | none | Validated in M007 — profile at-capacity state with waitlist form |
+| R103 | functional | validated | M007 | none | Validated in M007 — anonymous waitlist signup |
+| R104 | functional | validated | M007 | none | Validated in M007 — teacher waitlist dashboard |
+| R105 | functional | validated | M007 | none | Validated in M007 — waitlist notifications on capacity freed |
+| R106 | functional | validated | M007 | none | Validated in M007 — session types CRUD |
+| R107 | functional | validated | M007 | none | Validated in M007 — booking form session type selector with duration filtering |
+| R108 | functional | validated | M007 | none | Validated in M007 — flat session-type price for Stripe PI |
+| R109 | functional | validated | M007 | none | Validated in M007 — unchanged flow for teachers without session types |
+| R110 | functional | validated | M008 | none | Validated in M008 — teacher directory at /tutors |
+| R111 | functional | validated | M008 | none | Validated in M008 — directory filters |
+| R112 | functional | validated | M008 | none | Validated in M008 — full-text search |
+| R113 | non-functional | validated | M008 | none | Validated in M008 — XML sitemap |
+| R114 | non-functional | validated | M008 | none | Validated in M008 — SEO category pages with ISR |
+| R115 | functional | validated | M008 | none | Validated in M008 — page view tracking with bot filtering |
+| R116 | functional | validated | M008 | none | Validated in M008 — dashboard analytics funnel |
+| R117 | functional | validated | M009 | none | Validated in M009 — parent selects recurring schedule |
+| R118 | functional | validated | M009 | none | Validated in M009 — system auto-creates future booking rows |
+| R119 | functional | validated | M009 | none | Validated in M009 — per-session payment handling |
+| R120 | functional | validated | M009 | none | Validated in M009 — cancel individual/series |
+| R121 | functional | validated | M009 | none | Validated in M009 — availability + double-booking prevention for recurring |
+| R122 | functional | validated | M009 | none | Validated in M009 — saved card via Stripe Customer |
+| R123 | functional | validated | M009 | none | Validated in M009 — cron charges upcoming recurring sessions |
+| R124 | functional | validated | M009 | none | Validated in M009 — parent self-service cancellation via secure email link |
+| R125 | functional | validated | M009 | none | Validated in M009 — recurring sessions in dashboard with series badge |
 | UI-01 |  | validated | none | none | Validated by M011/S01 — HeroSection, CredentialsBar, ReviewsSection, AboutSection all rebuilt with premium visual treatment. Two-row CredentialsBar layout, taller hero banner with ring-inset avatar, inline SVG star ratings, dynamic --accent color throughout. Build passes. |
 | UI-02 |  | validated | none | none | Validated by M011/S02 — BookingCalendar decomposed into BookingForm, SessionTypeSelector, CalendarGrid, TimeSlotsPanel sub-components. All booking paths (direct, recurring, deferred) confirmed functional. Build passes. |
 | UI-03 |  | validated | none | none | Validated by M011/S03 — MobileBottomNav rebuilt with 4 labeled primary tabs + More panel. ParentMobileNav confirmed with visible text-[10px] labels on all 5 tabs. Build passes. |
@@ -781,5 +1441,5 @@ This file is the explicit capability and coverage contract for the project.
 
 - Active requirements: 1
 - Mapped to slices: 1
-- Validated: 73 (R001, R002, R003, R004, R006, R007, R008, R009, R010, R011, R012, R013, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
+- Validated: 133 (R001, R002, R003, R004, R006, R007, R008, R009, R010, R011, R012, R013, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068, R069, R070, R071, R072, R073, R074, R075, R076, R077, R078, R079, R080, R081, R082, R083, R084, R085, R086, R087, R088, R089, R090, R091, R092, R093, R094, R095, R096, R097, R098, R099, R100, R101, R102, R103, R104, R105, R106, R107, R108, R109, R110, R111, R112, R113, R114, R115, R116, R117, R118, R119, R120, R121, R122, R123, R124, R125, UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08, UI-09)
 - Unmapped active requirements: 0
