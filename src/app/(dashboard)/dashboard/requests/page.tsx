@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { getTeacher } from '@/lib/supabase/auth-cache'
 import { Inbox } from 'lucide-react'
 import { RequestCard } from '@/components/dashboard/RequestCard'
@@ -6,19 +7,32 @@ import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedL
 import { acceptBooking, declineBooking } from '@/actions/bookings'
 import { CopyLinkButton } from './CopyLinkButton'
 
+/** Pending booking requests cached for 30 s. */
+function getCachedRequestsData(teacherId: string) {
+  return unstable_cache(
+    async () => {
+      const { supabaseAdmin: supabase } = await import('@/lib/supabase/service')
+
+      const { data } = await supabase
+        .from('bookings')
+        .select('id, student_name, subject, booking_date, start_time, parent_email, created_at')
+        .eq('teacher_id', teacherId)
+        .eq('status', 'requested')
+        .order('created_at', { ascending: false })
+
+      return data ?? []
+    },
+    [`requests-${teacherId}`],
+    { revalidate: 30, tags: [`requests-${teacherId}`] },
+  )()
+}
+
 export default async function RequestsPage() {
-  const { teacher, supabase } = await getTeacher()
+  const { teacher } = await getTeacher()
   if (!teacher) redirect('/login')
 
-  // Fetch pending booking requests
-  const { data: requests } = await supabase
-    .from('bookings')
-    .select('id, student_name, subject, booking_date, start_time, parent_email, created_at')
-    .eq('teacher_id', teacher.id)
-    .eq('status', 'requested')
-    .order('created_at', { ascending: false })
+  const bookings = await getCachedRequestsData(teacher.id)
 
-  const bookings = requests ?? []
   const teacherTimezone = teacher.timezone ?? 'America/New_York'
   const stripeConnected = teacher.stripe_charges_enabled ?? false
   const pageUrl = `https://tutelo.app/${teacher.slug}`

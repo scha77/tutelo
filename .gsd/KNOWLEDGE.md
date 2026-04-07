@@ -870,3 +870,26 @@ The `12%` opacity is the standard for pill backgrounds. Use `15%` for slightly s
 
 **Also:** Client components using `useSearchParams()` must be wrapped in `<Suspense>` when the parent page is ISR-rendered (builds with `generateStaticParams`). Without this, Next.js throws during prerendering: "useSearchParams() should be wrapped in a suspense boundary."
 
+
+---
+
+## Server-Side searchParams Access Blocks ISR — Use Client-Side or API Routes for Filtered Caching (M012/S02)
+
+In Next.js App Router, accessing `searchParams` in a Server Component (even if not read from cookies, even if only used for server-side filtering) **unconditionally opts the entire route out of static generation**. This is independent of the data-fetching strategy (supabaseAdmin vs. createClient).
+
+Example: A page with `interface PageProps { searchParams: Promise<{ subject?: string }> }` and `const params = await searchParams` in the server component body will build as `ƒ (Dynamic)` even if all data is fetched from supabaseAdmin and no dynamic APIs are called.
+
+**Why:** `searchParams` is a Next.js built-in that represents URL query parameters, which are per-request and cannot be predicted at build time. Allowing server-side access to searchParams in a page component would require building a separate static version for every possible query param combination — impossible.
+
+**Solutions for Caching Filtered Pages:**
+
+1. **Static category pages + client-side filtering** — `/tutors/[category]` with `generateStaticParams` (ISR works ✓), `/tutors?subject=math` stays dynamic but filters applied client-side via JavaScript. This is how Tutelo proceeded: `/tutors/[category]` became ISR at 1h, `/tutors` remains dynamic but has fast client-side filtering.
+
+2. **Static shell + API route** — Render static page with all results, client-side JavaScript filters and displays (no page reload). Trades bundle size for static generation. More work, but purely static output.
+
+3. **Revalidate + API route** — Keep page dynamic for searchParams, but use `unstable_cache` with revalidation tags on the API-driven data fetching layer (e.g., `/api/teachers?subject=math` is cached, `/tutors` page is dynamic but calls the cached API).
+
+**Applied in M012/S02:** `/tutors/[category]` became ISR. `/tutors` with dynamic filters remains `ƒ (Dynamic)`. This is the correct outcome given the Next.js constraint — not a bug or data-fetching error.
+
+**Also:** This constraint is documented in Next.js, but it's often discovered through build output surprises (route marked `ƒ` when expected to be `●`). Future agents: if a cacheable page is marked dynamic despite removing cookies() and other dynamic APIs, check if `searchParams` is being accessed server-side.
+

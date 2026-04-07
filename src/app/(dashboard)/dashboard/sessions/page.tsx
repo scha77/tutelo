@@ -1,35 +1,50 @@
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { getTeacher } from '@/lib/supabase/auth-cache'
 import { format } from 'date-fns'
 import { ConfirmedSessionCard } from '@/components/dashboard/ConfirmedSessionCard'
 import { AnimatedList, AnimatedListItem } from '@/components/dashboard/AnimatedList'
 import { markSessionComplete, cancelSession, cancelSingleRecurringSession, cancelRecurringSeries } from '@/actions/bookings'
 
+/** Upcoming + past sessions cached for 30 s. */
+function getCachedSessionsData(teacherId: string) {
+  return unstable_cache(
+    async () => {
+      const { supabaseAdmin: supabase } = await import('@/lib/supabase/service')
+
+      const [upcomingResult, pastResult] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id, student_name, subject, booking_date, start_time, parent_email, recurring_schedule_id, status')
+          .eq('teacher_id', teacherId)
+          .in('status', ['confirmed', 'payment_failed'])
+          .order('booking_date', { ascending: true }),
+
+        supabase
+          .from('bookings')
+          .select('id, student_name, subject, booking_date, amount_cents, reviews(rating)')
+          .eq('teacher_id', teacherId)
+          .eq('status', 'completed')
+          .order('booking_date', { ascending: false }),
+      ])
+
+      return {
+        upcomingBookings: upcomingResult.data ?? [],
+        pastBookings: pastResult.data ?? [],
+      }
+    },
+    [`sessions-${teacherId}`],
+    { revalidate: 30, tags: [`sessions-${teacherId}`] },
+  )()
+}
+
 export default async function SessionsPage() {
-  const { teacher, supabase } = await getTeacher()
+  const { teacher } = await getTeacher()
   if (!teacher) redirect('/login')
 
   const teacherTimezone = teacher.timezone ?? 'America/New_York'
 
-  // Two parallel queries
-  const [upcomingResult, pastResult] = await Promise.all([
-    supabase
-      .from('bookings')
-      .select('id, student_name, subject, booking_date, start_time, parent_email, recurring_schedule_id, status')
-      .eq('teacher_id', teacher.id)
-      .in('status', ['confirmed', 'payment_failed'])
-      .order('booking_date', { ascending: true }),
-
-    supabase
-      .from('bookings')
-      .select('id, student_name, subject, booking_date, amount_cents, reviews(rating)')
-      .eq('teacher_id', teacher.id)
-      .eq('status', 'completed')
-      .order('booking_date', { ascending: false }),
-  ])
-
-  const upcomingBookings = upcomingResult.data ?? []
-  const pastBookings = pastResult.data ?? []
+  const { upcomingBookings, pastBookings } = await getCachedSessionsData(teacher.id)
 
   return (
     <div className="p-6 max-w-3xl space-y-10">

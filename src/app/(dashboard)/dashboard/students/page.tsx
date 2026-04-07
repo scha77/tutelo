@@ -1,42 +1,55 @@
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { getTeacher } from '@/lib/supabase/auth-cache'
 
+/** Grouped students derived from completed bookings, cached for 30 s. */
+function getCachedStudentsData(teacherId: string) {
+  return unstable_cache(
+    async () => {
+      const { supabaseAdmin: supabase } = await import('@/lib/supabase/service')
+
+      const { data: completedBookings } = await supabase
+        .from('bookings')
+        .select('student_name, parent_email, subject')
+        .eq('teacher_id', teacherId)
+        .eq('status', 'completed')
+
+      // Group by (student_name, parent_email)
+      const studentMap = new Map<
+        string,
+        { name: string; email: string; subjects: Set<string>; count: number }
+      >()
+
+      for (const b of completedBookings ?? []) {
+        const key = `${b.student_name}|${b.parent_email}`
+        const existing = studentMap.get(key)
+        if (existing) {
+          existing.subjects.add(b.subject)
+          existing.count++
+        } else {
+          studentMap.set(key, {
+            name: b.student_name,
+            email: b.parent_email,
+            subjects: new Set([b.subject]),
+            count: 1,
+          })
+        }
+      }
+
+      return Array.from(studentMap.values())
+        .map((v) => ({ name: v.name, email: v.email, subjects: Array.from(v.subjects), count: v.count }))
+        .sort((a, b) => b.count - a.count)
+    },
+    [`students-${teacherId}`],
+    { revalidate: 30, tags: [`students-${teacherId}`] },
+  )()
+}
+
 export default async function StudentsPage() {
-  const { teacher, supabase } = await getTeacher()
+  const { teacher } = await getTeacher()
   if (!teacher) redirect('/login')
 
-  // Fetch all completed bookings for student grouping
-  const { data: completedBookings } = await supabase
-    .from('bookings')
-    .select('student_name, parent_email, subject')
-    .eq('teacher_id', teacher.id)
-    .eq('status', 'completed')
-
-  // Group by (student_name, parent_email) client-side
-  const studentMap = new Map<
-    string,
-    { name: string; email: string; subjects: Set<string>; count: number }
-  >()
-
-  for (const b of completedBookings ?? []) {
-    const key = `${b.student_name}|${b.parent_email}`
-    const existing = studentMap.get(key)
-    if (existing) {
-      existing.subjects.add(b.subject)
-      existing.count++
-    } else {
-      studentMap.set(key, {
-        name: b.student_name,
-        email: b.parent_email,
-        subjects: new Set([b.subject]),
-        count: 1,
-      })
-    }
-  }
-
-  const students = Array.from(studentMap.values())
-    .map((v) => ({ ...v, subjects: Array.from(v.subjects) }))
-    .sort((a, b) => b.count - a.count)
+  const students = await getCachedStudentsData(teacher.id)
 
   return (
     <div className="p-6 max-w-3xl space-y-6">
