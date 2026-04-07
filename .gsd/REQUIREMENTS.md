@@ -12,7 +12,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: execution
 - Primary owning slice: M013/S01
 - Supporting slices: M013/S03
-- Validation: 48 test files pass, 470 tests pass, 0 failures. All 14 failures across 4 files (admin-dashboard, messaging, parent-phone-storage, recurring-charges) resolved via mock realignment. Verified by `npx vitest run` on 2026-04-07.
+- Validation: npx vitest run: 52 files, 490 tests, 0 failures. All 14 mock-drift failures resolved in M013/S01.
 - Notes: Root causes were mock drift from M010-M012 code changes: (1) admin layout switched auth import chain, (2) conversations route refactored to batch query, (3) parent-phone-storage added slug revalidation, (4) recurring-charges idempotencyKey format changed.
 
 ### R002 — Sentry SDK captures client-side and server-side errors with stack traces, breadcrumbs, and source maps. Error boundaries report to Sentry before rendering fallback UI.
@@ -23,7 +23,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: user
 - Primary owning slice: M013/S02
 - Supporting slices: none
-- Validation: Sentry SDK installed and initialized on client, server, and edge runtimes. Error boundaries (error.tsx, global-error.tsx) call Sentry.captureException in useEffect. Source maps configured with graceful fallback (errorHandler). sendDefaultPii: false for student data protection. tunnelRoute /monitoring for ad-blocker bypass. Build passes clean without SENTRY_AUTH_TOKEN. 470 tests pass with Sentry mocked.
+- Validation: Sentry SDK initialized on client/server/edge. Error boundaries call captureException. Source maps configured with errorHandler fallback. sendDefaultPii: false. 44 catch blocks instrumented in M013/S02.
 - Notes: Free tier sufficient for current traffic. No PII in error payloads.
 
 ### R003 — Every catch block in production code either re-throws, reports to Sentry, or logs with structured context. No empty catch blocks, no catch-and-ignore patterns.
@@ -34,7 +34,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: inferred
 - Primary owning slice: M013/S02
 - Supporting slices: none
-- Validation: 44 catch blocks across 18 production files instrumented with Sentry.captureException. Fire-and-forget .catch(console.error) patterns upgraded to include Sentry. Known-safe catches (JSON parse guards, timezone fallbacks, cookie read-only, redirect throws) correctly left untouched. Catch block audit confirmed full coverage — no silent catch-and-ignore patterns remain.
+- Validation: 44 catch blocks instrumented across 18 files. Catch block audit confirms no silent catch-and-ignore patterns. Fire-and-forget patterns upgraded. Validated in M013/S02.
 - Notes: 46 catch blocks in production code. Audit each for appropriate error handling.
 
 ### R004 — All 45 it.todo() stubs in tests/ directory resolved — either deleted (if covered by src/__tests__/) or converted to real passing tests.
@@ -1488,9 +1488,9 @@ This file is the explicit capability and coverage contract for the project.
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
 | PERF-02 |  | partially-advanced | M012 | none | Partial: /tutors/[category] confirmed ISR in build output (● 1h). /tutors correctly dynamic (searchParams Next.js constraint, D059). supabaseAdmin in place, revalidation wiring complete, ready for client-side filtering pivot. M012 complete. |
-| R001 | quality-attribute | validated | M013/S01 | M013/S03 | 48 test files pass, 470 tests pass, 0 failures. All 14 failures across 4 files (admin-dashboard, messaging, parent-phone-storage, recurring-charges) resolved via mock realignment. Verified by `npx vitest run` on 2026-04-07. |
-| R002 | operability | validated | M013/S02 | none | Sentry SDK installed and initialized on client, server, and edge runtimes. Error boundaries (error.tsx, global-error.tsx) call Sentry.captureException in useEffect. Source maps configured with graceful fallback (errorHandler). sendDefaultPii: false for student data protection. tunnelRoute /monitoring for ad-blocker bypass. Build passes clean without SENTRY_AUTH_TOKEN. 470 tests pass with Sentry mocked. |
-| R003 | failure-visibility | validated | M013/S02 | none | 44 catch blocks across 18 production files instrumented with Sentry.captureException. Fire-and-forget .catch(console.error) patterns upgraded to include Sentry. Known-safe catches (JSON parse guards, timezone fallbacks, cookie read-only, redirect throws) correctly left untouched. Catch block audit confirmed full coverage — no silent catch-and-ignore patterns remain. |
+| R001 | quality-attribute | validated | M013/S01 | M013/S03 | npx vitest run: 52 files, 490 tests, 0 failures. All 14 mock-drift failures resolved in M013/S01. |
+| R002 | operability | validated | M013/S02 | none | Sentry SDK initialized on client/server/edge. Error boundaries call captureException. Source maps configured with errorHandler fallback. sendDefaultPii: false. 44 catch blocks instrumented in M013/S02. |
+| R003 | failure-visibility | validated | M013/S02 | none | 44 catch blocks instrumented across 18 files. Catch block audit confirms no silent catch-and-ignore patterns. Fire-and-forget patterns upgraded. Validated in M013/S02. |
 | R004 | quality-attribute | validated | M013/S03 | none | 52 test files, 490 tests pass, 0 it.todo(), 0 it.skip(), 0 failures. Verified by `npx vitest run` and `rg 'it\.(todo|skip)\('` on 2026-04-07. 7 pure-stub files deleted, 6 stubs removed from mixed files, 16 stubs converted to real passing tests, 4 skipped tests fixed. |
 | R005 | operability | validated | M013/S04 | none | REQUIREMENTS.md contains 151 entries with stable IDs, ownership traceability, and coverage summary. All M001–M012 capabilities documented. |
 | R006 | functional | validated | M001 | none | Auth signup/login + session persistence — verified via test suite and browser |

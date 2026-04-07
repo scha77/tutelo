@@ -935,3 +935,43 @@ Pair each cached page with `updateTag(\`data-\${teacherId}\`)` calls in the corr
 
 The `getTeacher()` auth call must remain OUTSIDE the cache callback — it's the redirect/auth gate and should run on every request.
 
+---
+
+## Mock Drift Is the #1 Cause of Test Rot (M013)
+
+When production code changes an import path (e.g., `createClient` → `getAuthUser`) or a query shape (e.g., per-row `.maybeSingle()` → batch `.select().or()`), the test mock **must** update in the same commit. If it doesn't, the test fails with a misleading error (usually `TypeError: .X is not a function`) that looks like a code bug but is actually a stale mock.
+
+M013/S01 resolved 14 failures — every single one was mock drift, not a code bug. Establish a habit: when refactoring a data-fetching pattern, search `tests/` and `src/__tests__/` for the old pattern and update all mocks before committing.
+
+---
+
+## Sentry Test Mock: Uniform vi.mock Factory Across All Test Files (M013)
+
+When @sentry/nextjs is imported in production code, every test file that transitively touches that code must add:
+
+```ts
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+```
+
+Export all three functions — `captureException` is used in catch blocks, `init` is called at module scope by sentry configs, and `captureRequestError` is used in instrumentation.ts. Missing any one causes cryptic import failures in seemingly unrelated test files.
+
+---
+
+## Call-Order Tracking Array for Async Sequencing Tests (M013)
+
+When testing that async operations happen in a specific order (e.g., DB update before email send in a cron job), use a shared mutable array that each mock pushes to:
+
+```ts
+const callOrder: string[] = []
+mockUpdate.mockImplementation(() => { callOrder.push('update'); return ... })
+mockSendEmail.mockImplementation(() => { callOrder.push('email'); return ... })
+// after handler call:
+expect(callOrder).toEqual(['update', 'email'])
+```
+
+This is cleaner and more reliable than inspecting `mock.calls` indices or using `toHaveBeenCalledBefore` (which doesn't exist in Vitest).
+
