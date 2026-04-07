@@ -18,8 +18,8 @@ vi.mock('next/navigation', () => ({
   },
 }))
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
+vi.mock('@/lib/supabase/auth-cache', () => ({
+  getAuthUser: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/service', () => ({
@@ -39,14 +39,23 @@ const NON_ADMIN_USER_ID = 'bbb00000-0000-0000-0000-000000000002'
 
 // ── Helpers ──
 
+/**
+ * Configure the getAuthUser mock to return the given user (or null for no-session).
+ * The returned supabase stub includes auth.getUser() for the email fetch in the layout.
+ */
 function setupAuth(user: { id: string; email?: string } | null, error?: boolean) {
-  return {
+  const supabaseStub = {
     auth: {
       getUser: vi.fn().mockResolvedValue({
-        data: { user },
+        data: { user: user ? { ...user, email: user.email } : null },
         error: error ? { message: 'No session' } : null,
       }),
     },
+  }
+  return {
+    user: user ? { id: user.id } : null,
+    error: error ? { message: 'No session' } : null,
+    supabase: supabaseStub,
   }
 }
 
@@ -73,8 +82,8 @@ describe('Admin Layout — access gate', () => {
         throw new Error('NEXT_NOT_FOUND')
       },
     }))
-    vi.mock('@/lib/supabase/server', () => ({
-      createClient: vi.fn(),
+    vi.mock('@/lib/supabase/auth-cache', () => ({
+      getAuthUser: vi.fn(),
     }))
     vi.mock('@/lib/supabase/service', () => ({
       supabaseAdmin: { from: vi.fn() },
@@ -96,8 +105,8 @@ describe('Admin Layout — access gate', () => {
   it('redirects to /login when no user session', async () => {
     process.env.ADMIN_USER_IDS = ADMIN_USER_ID
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(setupAuth(null, true) as never)
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(setupAuth(null, true) as never)
 
     const { default: AdminLayout } = await import('@/app/(admin)/layout')
 
@@ -112,8 +121,8 @@ describe('Admin Layout — access gate', () => {
   it('returns 404 when user is not in ADMIN_USER_IDS', async () => {
     process.env.ADMIN_USER_IDS = ADMIN_USER_ID
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(
       setupAuth({ id: NON_ADMIN_USER_ID, email: 'nonadmin@test.com' }) as never
     )
 
@@ -130,8 +139,8 @@ describe('Admin Layout — access gate', () => {
   it('returns 404 when ADMIN_USER_IDS is empty string', async () => {
     process.env.ADMIN_USER_IDS = ''
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(
       setupAuth({ id: ADMIN_USER_ID, email: 'admin@test.com' }) as never
     )
 
@@ -147,8 +156,8 @@ describe('Admin Layout — access gate', () => {
   it('returns 404 when ADMIN_USER_IDS is undefined', async () => {
     delete process.env.ADMIN_USER_IDS
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(
       setupAuth({ id: ADMIN_USER_ID, email: 'admin@test.com' }) as never
     )
 
@@ -164,8 +173,8 @@ describe('Admin Layout — access gate', () => {
   it('renders children when user is admin (no redirect, no notFound)', async () => {
     process.env.ADMIN_USER_IDS = ADMIN_USER_ID
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(
       setupAuth({ id: ADMIN_USER_ID, email: 'admin@test.com' }) as never
     )
 
@@ -184,8 +193,8 @@ describe('Admin Layout — access gate', () => {
   it('allows admin when ADMIN_USER_IDS has multiple IDs with whitespace', async () => {
     process.env.ADMIN_USER_IDS = `  other-id , ${ADMIN_USER_ID} , another-id  `
 
-    const { createClient } = await import('@/lib/supabase/server')
-    vi.mocked(createClient).mockResolvedValue(
+    const { getAuthUser } = await import('@/lib/supabase/auth-cache')
+    vi.mocked(getAuthUser).mockResolvedValue(
       setupAuth({ id: ADMIN_USER_ID, email: 'admin@test.com' }) as never
     )
 

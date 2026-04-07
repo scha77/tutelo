@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T06:51:48.589Z",
+  "exported_at": "2026-04-07T13:55:22.493Z",
   "milestones": [
     {
       "id": "M001",
@@ -547,6 +547,61 @@
       "definition_of_done": [],
       "requirement_coverage": "Not provided.",
       "boundary_map_markdown": "Not provided."
+    },
+    {
+      "id": "M013",
+      "title": "Codebase Cohesion & Observability",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-04-07T12:42:31.319Z",
+      "completed_at": null,
+      "vision": "Bring the codebase from 'features work' to 'codebase is maintainable and observable.' Fix all broken tests, integrate Sentry error tracking, audit and resolve all test stubs, and rebuild the full capability contract. No new features, no UI changes, no schema migrations.",
+      "success_criteria": [
+        "npx vitest run → 0 failures, 0 orphaned todo stubs",
+        "npx tsc --noEmit → clean",
+        "npx next build → succeeds",
+        "Sentry captures errors from both client error boundaries and server-side catch blocks",
+        "REQUIREMENTS.md documents all 124+ validated capabilities from M001–M012"
+      ],
+      "key_risks": [
+        {
+          "risk": "Test stub audit effort is variable",
+          "whyItMatters": "Some stubs may represent real coverage gaps needing non-trivial mocking (onboarding wizard, mark-complete flow). May need to timebox."
+        },
+        {
+          "risk": "Sentry + Next.js 16 SDK compatibility",
+          "whyItMatters": "Sentry's Next.js SDK may have quirks with Next.js 16.1.6. Need to verify instrumentation wizard works with current setup."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Test stub audit effort",
+          "retireIn": "S03",
+          "whatWillBeProven": "Each stub audited and resolved — deleted if redundant, converted if gap. Any stubs too expensive to convert are documented and tracked."
+        },
+        {
+          "riskOrUnknown": "Sentry + Next.js 16 compatibility",
+          "retireIn": "S02",
+          "whatWillBeProven": "Sentry SDK initializes, captures a test error, and source maps resolve in dev. No build regressions."
+        }
+      ],
+      "verification_contract": "All tests pass (npx vitest run → 0 failures, 0 todos), tsc clean, build succeeds",
+      "verification_integration": "Sentry receives errors from both client React error boundaries and server-side catch blocks in dev environment",
+      "verification_operational": "Sentry dashboard shows captured errors with stack traces and source maps after deliberate error trigger",
+      "verification_uat": "Trigger a test error in production and confirm it appears in Sentry dashboard with full context",
+      "definition_of_done": [
+        "All 14 broken tests fixed and passing",
+        "Sentry SDK integrated — client + server + source maps",
+        "Error boundaries report to Sentry before rendering fallback",
+        "All 46 catch blocks audited — none silently swallow errors",
+        "All 45 todo stubs resolved (deleted or converted)",
+        "REQUIREMENTS.md contains full 124+ validated capabilities with traceability",
+        "npx vitest run → 0 failures, 0 todos",
+        "npx tsc --noEmit → clean",
+        "npx next build → succeeds"
+      ],
+      "requirement_coverage": "Covers: R001, R002, R003, R004, R005. Leaves for later: none. Orphan risks: none.",
+      "boundary_map_markdown": "### S01 → S03\\n\\nProduces:\\n- All 14 broken tests fixed with corrected mocks\\n- Established mock patterns for getUser() auth, supabaseAdmin.from().select().or() chains, createClient shape\\n\\nConsumes:\\n- nothing (first slice, reads production code only)\\n\\n### S02 (independent)\\n\\nProduces:\\n- `sentry.client.config.ts` — Sentry client initialization\\n- `sentry.server.config.ts` — Sentry server initialization\\n- `sentry.edge.config.ts` — Sentry edge initialization (if needed)\\n- `next.config.ts` changes — Sentry webpack plugin + source maps\\n- Updated `error.tsx` and `global-error.tsx` — Sentry-wrapped error boundaries\\n- Catch block audit results — all 46 blocks verified\\n\\nConsumes:\\n- nothing (independent of test work)\\n\\n### S03 → (terminal)\\n\\nProduces:\\n- Clean test directory — all stubs resolved\\n- Audit log of each stub resolution (deleted/converted/reason)\\n\\nConsumes from S01:\\n- Green test suite as baseline (S03 must not start with a red suite)\\n- Mock patterns established in S01 fixes\\n\\n### S04 (independent)\\n\\nProduces:\\n- Complete REQUIREMENTS.md with 124+ validated entries\\n- Stable requirement IDs (R100+) for all historical capabilities\\n\\nConsumes:\\n- nothing (reads PROJECT.md and milestone summaries only)"
     }
   ],
   "slices": [
@@ -1520,6 +1575,88 @@
       "proof_level": "Not provided.",
       "integration_closure": "Not provided.",
       "observability_impact": "Not provided.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S01",
+      "title": "Fix Broken Tests",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "npx vitest run shows 0 failures across all test files.",
+      "created_at": "2026-04-07T12:44:16.744Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "All 14 test failures across 4 test files are resolved. `npx vitest run` reports 0 failures.",
+      "success_criteria": "- All 6 failures in `admin-dashboard.test.ts` fixed (mock `getAuthUser` instead of `createClient`)\n- All 3 failures in `messaging.test.ts` fixed (update conversations mock chain for `.or()` batch pattern)\n- All 4 failures in `parent-phone-storage.test.ts` fixed (add `.from()` to supabase mock)\n- 1 failure in `recurring-charges.test.ts` fixed (correct idempotency key assertion)\n- No production code changes — only test files modified\n- All 44 previously passing test files remain green",
+      "proof_level": "npx vitest run — 0 failures across all test files",
+      "integration_closure": "Full test suite passes with no regressions",
+      "observability_impact": "None — test-only changes",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S02",
+      "title": "Sentry Integration & Error Handling Audit",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Trigger a deliberate error in dev → appears in Sentry dashboard with stack trace and request context. All catch blocks either re-throw, report to Sentry, or log with structured context.",
+      "created_at": "2026-04-07T12:44:16.744Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Integrate Sentry SDK for client + server error tracking. Audit all 46 catch blocks to ensure none silently swallow errors.",
+      "success_criteria": "Sentry SDK initialized in next.config. Error boundaries wrapped with Sentry. Catch block audit complete — no silent swallowing. Build still succeeds. No bundle size regression beyond Sentry SDK.",
+      "proof_level": "integration: Sentry dashboard receives test error from dev server",
+      "integration_closure": "Sentry must capture errors from: (1) React error boundaries, (2) API route handlers, (3) server actions, (4) cron routes. Source maps must resolve.",
+      "observability_impact": "Production errors become visible for the first time. Error spikes detectable via Sentry alerts.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S03",
+      "title": "Test Stub Audit & Cleanup",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "npx vitest run shows 0 todo stubs. Every test either passes or was deliberately removed with justification.",
+      "created_at": "2026-04-07T12:44:16.745Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Resolve all 45 it.todo() stubs in tests/ — delete if already covered by src/__tests__/, convert to real tests if gap exists.",
+      "success_criteria": "All 45 todo stubs resolved. Each resolution documented (deleted: reason, converted: what it tests). Suite stays green. No coverage regressions.",
+      "proof_level": "command: npx vitest run → 0 todos, 0 failures",
+      "integration_closure": "Any new tests written must use the established mock patterns from src/__tests__/ — not introduce new mock approaches.",
+      "observability_impact": "Test report becomes a clean signal — every line is either passing or skipped-with-reason.",
+      "sequence": 0,
+      "replan_triggered_at": null
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S04",
+      "title": "Requirements Rebuild",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "REQUIREMENTS.md contains 124+ validated requirements with stable IDs, ownership traceability, and coverage summary.",
+      "created_at": "2026-04-07T12:44:16.745Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Reconstruct the full capability contract in REQUIREMENTS.md from M001–M012 milestone summaries and PROJECT.md.",
+      "success_criteria": "Every capability described in PROJECT.md and milestone summaries has a corresponding requirement entry. Traceability table is complete. Coverage summary is accurate.",
+      "proof_level": "static: REQUIREMENTS.md exists with correct structure and complete entries",
+      "integration_closure": "Requirement IDs must be stable — future milestones reference them. Use R001–R005 for M013 active requirements, R100+ for historical validated requirements to avoid ID collisions.",
+      "observability_impact": "The project's capability surface is explicitly documented for the first time since M010.",
       "sequence": 0,
       "replan_triggered_at": null
     }
@@ -6246,6 +6383,112 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Replaced stale createClient mock with getAuthUser mock in admin layout access gate tests — all 9 tests pass",
+      "status": "complete",
+      "one_liner": "Replaced stale createClient mock with getAuthUser mock in admin layout access gate tests — all 9 tests pass",
+      "narrative": "The admin layout was importing getAuthUser from @/lib/supabase/auth-cache, but the test file was mocking createClient from @/lib/supabase/server. This caused getClaims() to be called on an incomplete mock, producing 6 failures. Fixed by: (1) replacing the vi.mock target from supabase/server to auth-cache, (2) restructuring setupAuth to return the { user, error, supabase } shape getAuthUser produces, (3) updating all 6 test cases to import and mock getAuthUser. The 3 metrics tests were already passing and untouched.",
+      "verification_result": "npx vitest run src/__tests__/admin-dashboard.test.ts — 9/9 tests passed, 0 failures.",
+      "duration": "",
+      "completed_at": "2026-04-07T13:55:22.472Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/__tests__/admin-dashboard.test.ts"
+      ],
+      "key_decisions": [
+        "Mock getAuthUser from auth-cache directly instead of mocking createClient — matches the admin layout's actual import chain"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M013\nkey_files:\n  - src/__tests__/admin-dashboard.test.ts\nkey_decisions:\n  - Mock getAuthUser from auth-cache directly instead of mocking createClient — matches the admin layout's actual import chain\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T13:55:22.471Z\nblocker_discovered: false\n---\n\n# T01: Replaced stale createClient mock with getAuthUser mock in admin layout access gate tests — all 9 tests pass\n\n**Replaced stale createClient mock with getAuthUser mock in admin layout access gate tests — all 9 tests pass**\n\n## What Happened\n\nThe admin layout was importing getAuthUser from @/lib/supabase/auth-cache, but the test file was mocking createClient from @/lib/supabase/server. This caused getClaims() to be called on an incomplete mock, producing 6 failures. Fixed by: (1) replacing the vi.mock target from supabase/server to auth-cache, (2) restructuring setupAuth to return the { user, error, supabase } shape getAuthUser produces, (3) updating all 6 test cases to import and mock getAuthUser. The 3 metrics tests were already passing and untouched.\n\n## Verification\n\nnpx vitest run src/__tests__/admin-dashboard.test.ts — 9/9 tests passed, 0 failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run src/__tests__/admin-dashboard.test.ts` | 0 | ✅ pass | 6100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/__tests__/admin-dashboard.test.ts`\n",
+      "description": "Replace the `@/lib/supabase/server` mock with a `@/lib/supabase/auth-cache` mock. Mock `getAuthUser` to return `{ user, supabase, error }` where `supabase` has `auth.getUser()` for the email fetch. Restructure the `setupAuth` helper. Re-register the `auth-cache` mock in `beforeEach` after `resetModules()`. The admin page metrics tests (3 tests) are already passing — do not change them.",
+      "estimate": "30m",
+      "files": [
+        "src/__tests__/admin-dashboard.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/admin-dashboard.test.ts — 0 failures",
+      "inputs": [
+        "src/lib/supabase/auth-cache.ts",
+        "src/app/(admin)/layout.tsx"
+      ],
+      "expected_output": [
+        "src/__tests__/admin-dashboard.test.ts (fixed mocks)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Fix messaging.test.ts — update conversations mock chain for batch .or() pattern",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In the 'GET /api/conversations' describe block, replace the 3rd `fromMock.mockReturnValueOnce(...)` in each of the 3 failing tests with the new `.select().or()` chain shape. The `.or()` call returns an array of `{ conversation_id, body, sender_id, created_at }` objects (one per conversation). All other test blocks (POST /api/messages, email rate-limiting, GET /api/messages) are already passing — do not change them.",
+      "estimate": "25m",
+      "files": [
+        "src/__tests__/messaging.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/messaging.test.ts — 0 failures",
+      "inputs": [
+        "src/app/api/conversations/route.ts"
+      ],
+      "expected_output": [
+        "src/__tests__/messaging.test.ts (fixed mock chains)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M013",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Fix parent-phone-storage and recurring-charges tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "(1) In `parent-phone-storage.test.ts`, add `.from()` to the mock supabase returned by `setupDeferredMocks` — it needs to handle `.from('teachers').select('slug').eq('id', teacherId).single()`. Also fix the 2 'skips phone UPDATE' tests that incorrectly assert `supabaseAdmin.from` was not called — the slug revalidation uses the SSR `supabase` client, not `supabaseAdmin`. (2) In `recurring-charges.test.ts`, fix the `idempotencyKey` assertion to exact match `'recurring-charge-booking-recurring-1'` and use plain object match instead of `expect.objectContaining`.",
+      "estimate": "20m",
+      "files": [
+        "src/__tests__/parent-phone-storage.test.ts",
+        "src/__tests__/recurring-charges.test.ts"
+      ],
+      "verify": "npx vitest run src/__tests__/parent-phone-storage.test.ts src/__tests__/recurring-charges.test.ts — 0 failures",
+      "inputs": [
+        "src/actions/bookings.ts"
+      ],
+      "expected_output": [
+        "src/__tests__/parent-phone-storage.test.ts (fixed mocks)",
+        "src/__tests__/recurring-charges.test.ts (fixed assertion)"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -6955,6 +7198,30 @@
       "rationale": "searchParams in Next.js App Router unconditionally opts routes out of static generation, independent of data-fetching strategy. This is a Next.js architectural constraint, not a supabaseAdmin or cookies() issue. /tutors/[category] successfully became ISR. /tutors cannot be ISR while maintaining server-side filtering UX. Three resolution paths available for reassess-roadmap agent to evaluate.\"",
       "revisable": "Yes",
       "made_by": "agent",
+      "superseded_by": null
+    },
+    {
+      "seq": 78,
+      "id": "D060",
+      "when_context": "M013 planning",
+      "scope": "scope",
+      "decision": "M013 scope fence — internal quality only",
+      "choice": "No UI changes, no new features, no schema migrations. Strictly internal: fix tests, Sentry, stubs, requirements doc. Sentry error boundaries are the only user-visible addition.",
+      "rationale": "Feature velocity across M001–M012 outpaced maintenance. This milestone addresses the debt before adding more features. Stripe live mode and Twilio A2P punted to a separate launch-readiness milestone.",
+      "revisable": "Yes",
+      "made_by": "collaborative",
+      "superseded_by": null
+    },
+    {
+      "seq": 79,
+      "id": "D061",
+      "when_context": "M013 planning",
+      "scope": "library",
+      "decision": "Error tracking service for production observability",
+      "choice": "Sentry (free tier — 50K errors/month, 1GB attachments)",
+      "rationale": "Industry standard, first-class Next.js SDK, free tier covers MVP traffic. Alternatives (LogRocket, Datadog) are more expensive or less focused on error tracking. Console.error is not monitoring.",
+      "revisable": "Yes",
+      "made_by": "collaborative",
       "superseded_by": null
     }
   ],
@@ -8652,6 +8919,17 @@
       "verdict": "✅ pass",
       "duration_ms": 14500,
       "created_at": "2026-04-07T06:40:09.557Z"
+    },
+    {
+      "id": 155,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M013",
+      "command": "npx vitest run src/__tests__/admin-dashboard.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6100,
+      "created_at": "2026-04-07T13:55:22.472Z"
     }
   ]
 }

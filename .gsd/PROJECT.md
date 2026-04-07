@@ -92,5 +92,7 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
   - S03 ✅ Dashboard Query Caching — unstable_cache with revalidateTag across dashboard pages, 30s staleTime
   - S04 ✅ Asset & Bundle Audit — motion library eliminated from 8 dashboard/parent components, CSS-only transitions, PageTransition deleted, HeroSection confirmed next/image, build clean
 
+- [ ] **M013:** Codebase Cohesion & Observability — Fix broken tests, Sentry integration, test stub audit, requirements rebuild
+
 ---
-*Last updated: 2026-04-07 — M012 complete (all 4 slices done). Profile/directory pages served from CDN via ISR, dashboard queries cached with revalidateTag, motion library stripped from all dashboard/parent routes (~135KB bundle savings). 72 static pages, tsc clean, build green.*
+*Last updated: 2026-04-07 — M013 planned. M012 complete. 14 test failures from mock drift, 45 orphaned todo stubs, production error visibility at zero. M013 addresses all internal quality debt without touching user-facing features.*
