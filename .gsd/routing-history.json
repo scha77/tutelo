@@ -25,7 +25,7 @@
         "fail": 0
       },
       "heavy": {
-        "success": 1,
+        "success": 2,
         "fail": 0
       }
     },
@@ -35,7 +35,21 @@
         "fail": 0
       },
       "standard": {
-        "success": 3,
+        "success": 4,
+        "fail": 0
+      },
+      "heavy": {
+        "success": 0,
+        "fail": 0
+      }
+    },
+    "complete-slice": {
+      "light": {
+        "success": 1,
+        "fail": 0
+      },
+      "standard": {
+        "success": 0,
         "fail": 0
       },
       "heavy": {
@@ -45,5 +59,5 @@
     }
   },
   "feedback": [],
-  "updatedAt": "2026-04-07T04:02:22.044Z"
+  "updatedAt": "2026-04-07T05:38:54.384Z"
 }

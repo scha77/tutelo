@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/service'
 import { TeacherCard } from '@/components/directory/TeacherCard'
 import { DirectoryFilters } from '@/components/directory/DirectoryFilters'
 import { PRICE_RANGES } from '@/lib/constants/directory'
 import { Search } from 'lucide-react'
+
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Find a Tutor | Tutelo',
@@ -41,9 +43,7 @@ export default async function TutorsPage({ searchParams }: PageProps) {
     ? PRICE_RANGES.find((r) => `${r.min ?? '0'}-${r.max ?? 'inf'}` === priceKey) ?? null
     : null
 
-  const supabase = await createClient()
-
-  let query = supabase
+  let query = supabaseAdmin
     .from('teachers')
     .select(
       'id, slug, full_name, photo_url, subjects, grade_levels, city, state, hourly_rate, school, headline, verified_at'

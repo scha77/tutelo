@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M012/S01/T03",
+  "timestamp": 1775534542290,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "durationMs": 30692,
+      "verdict": "pass"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0,
+      "durationMs": 2764,
+      "verdict": "pass"
+    },
+    {
+      "command": "grep -c teacherRow src/actions/profile.ts src/actions/bookings.ts src/actions/availability.ts",
+      "exitCode": 0,
+      "durationMs": 7,
+      "verdict": "pass"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/service'
 import { TeacherCard } from '@/components/directory/TeacherCard'
 import { SUBJECT_LIST } from '@/lib/constants/directory'
 
@@ -80,9 +80,7 @@ export default async function CategoryPage({ params }: PageProps) {
   const { category } = await params
   const resolved = resolveCategory(category)
 
-  const supabase = await createClient()
-
-  let query = supabase
+  let query = supabaseAdmin
     .from('teachers')
     .select(
       'id, slug, full_name, photo_url, subjects, grade_levels, city, state, hourly_rate, school, headline, verified_at'

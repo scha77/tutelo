@@ -84,6 +84,10 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
   - S04 ✅ Dashboard Polish — Premium headers, tinted icon pills, avatar circles, card elevation, empty states across all 11 teacher + 5 parent pages
   - S05 ✅ Landing Page & Global Consistency — Proper footer with nav links, hero pill badge, card wrappers on auth/booking-confirmed/tutors directory
 - [ ] **M012:** Performance & Delivery Efficiency — Serve public pages from CDN cache (ISR), extend query caching across dashboard, audit and trim JS bundle weight. Zero Vercel Hobby plan limits exceeded.
+  - S01 ✅ Profile Page ISR + On-Demand Revalidation — ViewTracker client component for page view tracking, draft mode API endpoint with token validation, profile page converted to ISR (`●` with 1h revalidation), slug-specific revalidatePath in profile/booking/availability actions. Build output confirms ISR. PERF-01 and PERF-07 validated.
+  - S02 ⬜ Directory Pages ISR — `/tutors` and `/tutors/[category]` ISR caching
+  - S03 ⬜ Dashboard Query Caching — unstable_cache with revalidateTag across all dashboard pages
+  - S04 ⬜ Asset & Bundle Audit — motion library code-split, next/image audit, build size verification
 
 ---
-*Last updated: 2026-04-06 — M011 complete. M011 UI requirements (UI-01 through UI-09) marked validated. Post-M011 perf work (auth dedup, parallel queries, loading skeletons, proxy optimization, pre-deploy hardening) committed outside GSD. M012 planned: performance & delivery efficiency.*
+*Last updated: 2026-04-07 — M011 complete, M012/S01 complete. S01 validates PERF-01 (profile page ISR) and PERF-07 (on-demand revalidation). Critical discovery: createClient() blocks ISR (it calls cookies() which is dynamic); all ISR routes must use supabaseAdmin. Also: useSearchParams() components on ISR pages require Suspense wrapper. See DECISIONS.md D057, D058 and KNOWLEDGE.md.*

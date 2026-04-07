@@ -1,10 +1,12 @@
-# S02: Directory Pages ISR
+---
+estimated_steps: 37
+estimated_files: 3
+skills_used: []
+---
 
-**Goal:** Convert /tutors and /tutors/[category] from dynamic SSR to ISR-cached pages by replacing createClient() with supabaseAdmin, and wire on-demand revalidation for directory pages into profile-mutating server actions.
-**Demo:** After this: After this: /tutors base page and all /tutors/[category] pages are served from CDN cache; filter UX still works; new published teachers appear in directory within the revalidation window.
+# T01: Apply supabaseAdmin + revalidate to directory pages, wire on-demand revalidation in profile.ts
 
-## Tasks
-- [x] **T01: Swapped createClient→supabaseAdmin in both directory pages and wired directory revalidatePath into profile actions; /tutors/[category] is now ISR ●, but /tutors remains Dynamic because searchParams is an independent Next.js dynamic API incompatible with ISR** — This single task converts both directory pages from dynamic SSR to ISR and wires on-demand revalidation into profile-mutating server actions.
+This single task converts both directory pages from dynamic SSR to ISR and wires on-demand revalidation into profile-mutating server actions.
 
 ## Context
 
@@ -53,7 +55,20 @@ Profile-mutating server actions (`updateProfile`, `updatePublishStatus`) current
 - `revalidatePath('/tutors/[category]', 'page')` in `updatePublishStatus`
 - `npx tsc --noEmit` exits 0
 - `npm run build` shows both directory routes as `●` ISR (not `ƒ` Dynamic)
-  - Estimate: 20m
-  - Files: src/app/tutors/page.tsx, src/app/tutors/[category]/page.tsx, src/actions/profile.ts
-  - Verify: npx tsc --noEmit && npm run build 2>&1 | grep -E '/tutors' && grep -r 'createClient' src/app/tutors/ | grep -v node_modules; test $? -eq 1 && grep -c 'revalidatePath.*tutors' src/actions/profile.ts
-  - Blocker: /tutors remains ƒ Dynamic. Resolution options: (1) move filtering to client-side with API route, (2) static shell + client filtering, (3) accept /tutors as dynamic and scope ISR goal to /tutors/[category] only.
+
+## Inputs
+
+- ``src/app/tutors/page.tsx` — current directory page using createClient (must swap to supabaseAdmin)`
+- ``src/app/tutors/[category]/page.tsx` — current category page using createClient (must swap to supabaseAdmin)`
+- ``src/actions/profile.ts` — server actions that need directory revalidation calls added`
+- ``src/lib/supabase/service.ts` — exports supabaseAdmin (the ISR-safe Supabase client)`
+
+## Expected Output
+
+- ``src/app/tutors/page.tsx` — ISR-enabled with supabaseAdmin and revalidate=300`
+- ``src/app/tutors/[category]/page.tsx` — ISR-enabled with supabaseAdmin (revalidate=3600 preserved)`
+- ``src/actions/profile.ts` — directory revalidation calls added to updateProfile and updatePublishStatus`
+
+## Verification
+
+npx tsc --noEmit && npm run build 2>&1 | grep -E '/tutors' && grep -r 'createClient' src/app/tutors/ | grep -v node_modules; test $? -eq 1 && grep -c 'revalidatePath.*tutors' src/actions/profile.ts

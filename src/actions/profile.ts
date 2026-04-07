@@ -70,6 +70,8 @@ export async function updateProfile(
   } else {
     revalidatePath('/[slug]', 'page')
   }
+  // Revalidate directory — teacher card data (name, photo, headline, rate, etc.) appears there
+  revalidatePath('/tutors')
 
   return {}
 }
@@ -102,6 +104,9 @@ export async function updatePublishStatus(
   } else {
     revalidatePath('/[slug]', 'page')
   }
+  // Revalidate directory pages — publish/unpublish changes which teachers appear in listings
+  revalidatePath('/tutors')
+  revalidatePath('/tutors/[category]', 'page')
 
   return {}
 }
