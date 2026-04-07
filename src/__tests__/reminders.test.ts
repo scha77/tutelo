@@ -28,7 +28,7 @@ vi.mock('@/lib/sms', () => ({
 // Chainable Supabase mock factory
 function makeChain(finalValue: unknown) {
   const chain: Record<string, unknown> = {}
-  const methods = ['select', 'eq', 'is', 'update', 'single', 'maybeSingle']
+  const methods = ['select', 'eq', 'is', 'update', 'single', 'maybeSingle', 'gte', 'lte', 'in']
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnValue(chain)
   }

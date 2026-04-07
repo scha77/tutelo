@@ -3,19 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogOut } from 'lucide-react'
-import * as m from 'motion/react-client'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/actions/auth'
 import { parentNavItems, isParentActivePath } from '@/lib/parent-nav'
-import { slideFromBottom } from '@/lib/animation'
 
 export function ParentMobileNav() {
   const pathname = usePathname()
 
   return (
-    <m.nav
-      {...slideFromBottom}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden"
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden animate-list-item"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left)',
@@ -56,6 +53,6 @@ export function ParentMobileNav() {
           </button>
         </form>
       </div>
-    </m.nav>
+    </nav>
   )
 }

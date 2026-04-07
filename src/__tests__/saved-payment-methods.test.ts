@@ -428,6 +428,7 @@ describe('Webhook — PM upsert to parent_profiles (S03)', () => {
     vi.mock('@/lib/email', () => ({
       sendBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
       sendCheckoutLinkEmail: vi.fn().mockResolvedValue(undefined),
+      sendRecurringBookingConfirmationEmail: vi.fn().mockResolvedValue(undefined),
     }))
 
     stripePaymentMethodsRetrieveMock.mockResolvedValue({

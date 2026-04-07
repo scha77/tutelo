@@ -123,10 +123,12 @@ describe('createCheckoutSessionsForTeacher (account.updated handler)', () => {
       }),
     }
 
-    // Booking update chain (stores checkout URL)
+    // Booking update chain (stores checkout URL and confirms booking)
     const bookingUpdateChain = {
       update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ error: null }),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      select: vi.fn().mockResolvedValue({ data: [{ id: 'booking-pending-1' }], error: null }),
     }
 
     let fromCallCount = 0
@@ -236,7 +238,8 @@ describe('checkout.session.completed handler', () => {
     const bookingUpdateChain = {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockResolvedValue({ error: null }),
+      in: vi.fn().mockReturnThis(),
+      select: vi.fn().mockResolvedValue({ data: [{ id: 'booking-pending-2' }], error: null }),
     }
 
     vi.mocked(supabaseAdmin.from).mockReturnValue(bookingUpdateChain as never)
@@ -263,19 +266,19 @@ describe('checkout.session.completed handler', () => {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       // Supabase returns { error: null } even when 0 rows matched
-      in: vi.fn().mockResolvedValue({ error: null }),
+      in: vi.fn().mockReturnThis(),
+      select: vi.fn().mockResolvedValue({ data: [], error: null }),  // 0 rows matched
     }
 
     vi.mocked(supabaseAdmin.from).mockReturnValue(bookingUpdateChain as never)
 
     const response = await POST(makeRequest())
     expect(response.status).toBe(200)
-    // sendBookingConfirmationEmail IS called because the webhook handler calls it
-    // whenever there is no error — the idempotency guard is at the DB level (filter matches 0 rows)
-    // The email is still sent but the booking row is not updated (no-op at DB level)
-    // This is acceptable: the parent already received their confirmation on first delivery
-    // To validate idempotency: the update was called with the .in() filter (not .eq('status','confirmed'))
+    // sendBookingConfirmationEmail is NOT called when the update matches zero rows
+    // (booking was already confirmed on a previous delivery)
+    // The idempotency guard is at the DB level: .in('status', ['requested', 'pending']) matches 0 rows
+    // The webhook is idempotent: same result regardless of re-delivery
     expect(bookingUpdateChain.in).toHaveBeenCalledWith('status', ['requested', 'pending'])
-    expect(sendBookingConfirmationEmail).toHaveBeenCalledWith('booking-confirmed-1')
+    expect(sendBookingConfirmationEmail).not.toHaveBeenCalled()
   })
 })

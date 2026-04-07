@@ -79,7 +79,7 @@ function makeMockSession(overrides: Record<string, unknown> = {}) {
 // Chainable Supabase mock factory
 function makeChain(finalValue: unknown) {
   const chain: Record<string, unknown> = {}
-  const methods = ['select', 'eq', 'is', 'not', 'update', 'single', 'maybeSingle']
+  const methods = ['select', 'eq', 'is', 'not', 'update', 'single', 'maybeSingle', 'gte', 'lte', 'in']
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnValue(chain)
   }
