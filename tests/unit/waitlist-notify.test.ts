@@ -19,6 +19,12 @@ const mockWaitlistSelect = vi.fn()
 const mockWaitlistUpdate = vi.fn()
 const mockTeacherSelect = vi.fn()
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 vi.mock('@/lib/supabase/service', () => ({
   supabaseAdmin: {
     from: (table: string) => {

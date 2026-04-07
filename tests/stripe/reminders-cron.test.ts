@@ -20,6 +20,12 @@ vi.mock('@/lib/supabase/service', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 describe('GET /api/cron/stripe-reminders', () => {
   it.todo('returns 401 when Authorization header is missing or has wrong CRON_SECRET')
 

@@ -28,6 +28,12 @@ vi.mock('@/emails/NewMessageEmail', () => ({
   NewMessageEmail: vi.fn().mockReturnValue('mocked-email-html'),
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 const USER_ID = '550e8400-e29b-41d4-a716-446655440001'
 const TEACHER_USER_ID = '660e8400-e29b-41d4-a716-446655440002'
 const TEACHER_ID = '770e8400-e29b-41d4-a716-446655440003'

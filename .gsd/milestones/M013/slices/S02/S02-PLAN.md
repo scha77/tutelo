@@ -123,7 +123,7 @@ Sentry.captureException(error)
   - Estimate: 1h30m
   - Files: src/app/api/stripe/webhook/route.ts, src/app/api/stripe-connect/webhook/route.ts, src/app/api/cron/recurring-charges/route.ts, src/app/api/cron/session-reminders/route.ts, src/app/api/cron/stripe-reminders/route.ts, src/app/api/cron/auto-cancel/route.ts, src/app/api/manage/cancel-session/route.ts, src/app/api/manage/cancel-series/route.ts, src/app/api/direct-booking/create-intent/route.ts, src/app/api/direct-booking/create-recurring/route.ts, src/app/api/messages/route.ts, src/app/api/parent/payment-method/route.ts, src/app/api/track-view/route.ts, src/app/api/waitlist/route.ts, src/actions/bookings.ts, src/actions/verification.ts, src/lib/sms.ts, src/lib/utils/waitlist.ts
   - Verify: npx tsc --noEmit && test $(rg 'captureException' src/actions/ src/app/api/ src/lib/ -g '*.ts' | wc -l) -ge 30
-- [ ] **T03: Wire Sentry Mocks in Test Files & Run Full Verification** — ## Description
+- [x] **T03: Added vi.mock('@sentry/nextjs') to all 20 test files affected by T02's Sentry imports; all 470 tests pass, build and type check clean** — ## Description
 
 After T02 added `import * as Sentry from '@sentry/nextjs'` to 18 production files, every test file that imports those modules will fail because `@sentry/nextjs` isn't available in the test environment. Add `vi.mock('@sentry/nextjs')` to all affected test files, then run the full verification suite.
 

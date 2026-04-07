@@ -58,6 +58,12 @@ vi.mock('@/lib/supabase/service', () => ({
 const mockPICreate = vi.fn()
 const mockCustomersCreate = vi.fn().mockResolvedValue({ id: 'cus_test' })
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 vi.mock('stripe', () => {
   const StripeMock = vi.fn().mockImplementation(function (this: Record<string, unknown>) {
     this.customers = { create: mockCustomersCreate }

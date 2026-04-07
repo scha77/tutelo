@@ -32,6 +32,12 @@ vi.mock('stripe', () => ({
   default: MockStripeClass,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 function makeWebhookRequest(body: string, sig = 'sig_valid') {
   return new NextRequest('http://localhost/api/stripe/webhook', {
     method: 'POST',

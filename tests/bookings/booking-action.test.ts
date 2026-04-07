@@ -49,6 +49,12 @@ function buildUpdateChain(result: unknown) {
 
 const mockFrom = vi.fn()
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockImplementation(async () => ({
     auth: {

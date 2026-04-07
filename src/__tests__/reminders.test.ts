@@ -47,6 +47,12 @@ vi.mock('@/lib/supabase/service', () => ({
   },
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 describe('GET /api/cron/session-reminders', () => {
   beforeEach(() => {
     vi.clearAllMocks()

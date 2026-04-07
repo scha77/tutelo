@@ -38,6 +38,12 @@ vi.mock('stripe', () => ({
   default: MockStripeClass,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 // --- Helpers ---
 
 function makeRequest(url: string, body: Record<string, unknown>) {

@@ -32,6 +32,12 @@ vi.mock('@/lib/email', () => ({
   sendCancellationEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 // Helper: build a fake Stripe event for testing
 function makeFakeAccountUpdatedEvent(chargesEnabled = true) {
   return {

@@ -14,6 +14,12 @@ vi.mock('resend', () => ({
 }))
 
 // Mock the email template to avoid JSX rendering issues in tests
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 vi.mock('@/emails/SchoolVerificationEmail', () => ({
   SchoolVerificationEmail: vi.fn((props: { verificationUrl: string }) => ({
     type: 'SchoolVerificationEmail',

@@ -39,6 +39,12 @@ vi.mock('stripe', () => ({
   default: MockStripeClass,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 const TEACHER_ID = '550e8400-e29b-41d4-a716-446655440001'
 const STRIPE_ACCOUNT_ID = 'acct_test_recurring'
 const USER_ID = 'user-recurring-1'

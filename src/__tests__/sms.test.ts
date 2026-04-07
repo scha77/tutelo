@@ -13,6 +13,12 @@ vi.mock('twilio', () => ({
   default: mockTwilioFn,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 // Supabase admin mock
 vi.mock('@/lib/supabase/service', () => ({
   supabaseAdmin: {

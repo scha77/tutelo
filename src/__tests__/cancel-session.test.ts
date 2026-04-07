@@ -44,6 +44,12 @@ vi.mock('stripe', () => ({
   default: MockStripeClass,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 const TEACHER_ID = 'teacher-uuid-001'
 const BOOKING_ID = 'booking-uuid-001'
 const PI_ID = 'pi_test_cancel'

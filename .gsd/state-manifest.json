@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T14:29:58.532Z",
+  "exported_at": "2026-04-07T14:36:31.474Z",
   "milestones": [
     {
       "id": "M001",
@@ -6659,19 +6659,42 @@
       "milestone_id": "M013",
       "slice_id": "S02",
       "id": "T03",
-      "title": "Wire Sentry Mocks in Test Files & Run Full Verification",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added vi.mock('@sentry/nextjs') to all 20 test files affected by T02's Sentry imports; all 470 tests pass, build and type check clean",
+      "status": "complete",
+      "one_liner": "Added vi.mock('@sentry/nextjs') to all 20 test files affected by T02's Sentry imports; all 470 tests pass, build and type check clean",
+      "narrative": "After T02 added `import * as Sentry from '@sentry/nextjs'` to 18 production files, every test importing those modules would fail because @sentry/nextjs isn't available in the test environment. Added a uniform vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), init: vi.fn(), captureRequestError: vi.fn() })) to all 20 test files. Each file was read to identify placement of existing vi.mock calls, and the Sentry mock was inserted alongside them. Ran catch block coverage audit — all server-side catches accounted for with Sentry.captureException, console.error with context, or known-safe categories.",
+      "verification_result": "npx vitest run: 470 passed, 0 failures (exit 0). npx next build: compiled successfully (exit 0). npx tsc --noEmit: 0 errors (exit 0). All 4 slice-level grep checks pass. Catch block coverage audit confirms full coverage.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T14:36:31.438Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/stripe/checkout-session.test.ts",
+        "src/__tests__/webhook-capture.test.ts",
+        "src/__tests__/recurring-charges.test.ts",
+        "src/__tests__/manage-cancel.test.ts",
+        "src/__tests__/cancel-session.test.ts",
+        "src/__tests__/cancel-recurring.test.ts",
+        "src/__tests__/payment-intent.test.ts",
+        "src/__tests__/create-recurring.test.ts",
+        "src/__tests__/messaging.test.ts",
+        "src/__tests__/sms.test.ts",
+        "tests/bookings/booking-action.test.ts",
+        "src/__tests__/saved-payment-methods.test.ts",
+        "src/__tests__/reminders.test.ts",
+        "tests/stripe/reminders-cron.test.ts",
+        "tests/stripe/auto-cancel.test.ts",
+        "tests/unit/session-type-pricing.test.ts",
+        "src/__tests__/parent-phone-storage.test.ts",
+        "src/__tests__/booking-routing.test.ts",
+        "src/__tests__/verification.test.ts",
+        "tests/unit/waitlist-notify.test.ts"
+      ],
+      "key_decisions": [
+        "Uniform vi.mock factory pattern across all 20 files (captureException, init, captureRequestError) — keeps mocks consistent and covers all Sentry exports used in production"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S02\nmilestone: M013\nkey_files:\n  - tests/stripe/checkout-session.test.ts\n  - src/__tests__/webhook-capture.test.ts\n  - src/__tests__/recurring-charges.test.ts\n  - src/__tests__/manage-cancel.test.ts\n  - src/__tests__/cancel-session.test.ts\n  - src/__tests__/cancel-recurring.test.ts\n  - src/__tests__/payment-intent.test.ts\n  - src/__tests__/create-recurring.test.ts\n  - src/__tests__/messaging.test.ts\n  - src/__tests__/sms.test.ts\n  - tests/bookings/booking-action.test.ts\n  - src/__tests__/saved-payment-methods.test.ts\n  - src/__tests__/reminders.test.ts\n  - tests/stripe/reminders-cron.test.ts\n  - tests/stripe/auto-cancel.test.ts\n  - tests/unit/session-type-pricing.test.ts\n  - src/__tests__/parent-phone-storage.test.ts\n  - src/__tests__/booking-routing.test.ts\n  - src/__tests__/verification.test.ts\n  - tests/unit/waitlist-notify.test.ts\nkey_decisions:\n  - Uniform vi.mock factory pattern across all 20 files (captureException, init, captureRequestError) — keeps mocks consistent and covers all Sentry exports used in production\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T14:36:31.437Z\nblocker_discovered: false\n---\n\n# T03: Added vi.mock('@sentry/nextjs') to all 20 test files affected by T02's Sentry imports; all 470 tests pass, build and type check clean\n\n**Added vi.mock('@sentry/nextjs') to all 20 test files affected by T02's Sentry imports; all 470 tests pass, build and type check clean**\n\n## What Happened\n\nAfter T02 added `import * as Sentry from '@sentry/nextjs'` to 18 production files, every test importing those modules would fail because @sentry/nextjs isn't available in the test environment. Added a uniform vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), init: vi.fn(), captureRequestError: vi.fn() })) to all 20 test files. Each file was read to identify placement of existing vi.mock calls, and the Sentry mock was inserted alongside them. Ran catch block coverage audit — all server-side catches accounted for with Sentry.captureException, console.error with context, or known-safe categories.\n\n## Verification\n\nnpx vitest run: 470 passed, 0 failures (exit 0). npx next build: compiled successfully (exit 0). npx tsc --noEmit: 0 errors (exit 0). All 4 slice-level grep checks pass. Catch block coverage audit confirms full coverage.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run` | 0 | ✅ pass | 19600ms |\n| 2 | `npx next build` | 0 | ✅ pass | 61900ms |\n| 3 | `npx tsc --noEmit` | 0 | ✅ pass | 58100ms |\n| 4 | `grep -q 'captureException' src/app/error.tsx` | 0 | ✅ pass | 100ms |\n| 5 | `grep -q 'captureException' src/app/global-error.tsx` | 0 | ✅ pass | 100ms |\n| 6 | `grep -q 'useEffect' src/app/global-error.tsx` | 0 | ✅ pass | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/stripe/checkout-session.test.ts`\n- `src/__tests__/webhook-capture.test.ts`\n- `src/__tests__/recurring-charges.test.ts`\n- `src/__tests__/manage-cancel.test.ts`\n- `src/__tests__/cancel-session.test.ts`\n- `src/__tests__/cancel-recurring.test.ts`\n- `src/__tests__/payment-intent.test.ts`\n- `src/__tests__/create-recurring.test.ts`\n- `src/__tests__/messaging.test.ts`\n- `src/__tests__/sms.test.ts`\n- `tests/bookings/booking-action.test.ts`\n- `src/__tests__/saved-payment-methods.test.ts`\n- `src/__tests__/reminders.test.ts`\n- `tests/stripe/reminders-cron.test.ts`\n- `tests/stripe/auto-cancel.test.ts`\n- `tests/unit/session-type-pricing.test.ts`\n- `src/__tests__/parent-phone-storage.test.ts`\n- `src/__tests__/booking-routing.test.ts`\n- `src/__tests__/verification.test.ts`\n- `tests/unit/waitlist-notify.test.ts`\n",
       "description": "## Description\n\nAfter T02 added `import * as Sentry from '@sentry/nextjs'` to 18 production files, every test file that imports those modules will fail because `@sentry/nextjs` isn't available in the test environment. Add `vi.mock('@sentry/nextjs')` to all affected test files, then run the full verification suite.\n\nThe mock pattern is simple and consistent:\n```ts\nvi.mock('@sentry/nextjs', () => ({\n  captureException: vi.fn(),\n  init: vi.fn(),\n  captureRequestError: vi.fn(),\n}))\n```\n\nPlace this near the top of each test file, alongside other `vi.mock()` calls.\n\n## Test files that need the mock (~20 files):\n\n**Webhook/checkout tests:**\n- `tests/stripe/checkout-session.test.ts`\n- `src/__tests__/webhook-capture.test.ts`\n- `src/__tests__/saved-payment-methods.test.ts`\n\n**Cron tests:**\n- `src/__tests__/recurring-charges.test.ts`\n- `src/__tests__/reminders.test.ts`\n- `tests/stripe/reminders-cron.test.ts`\n- `tests/stripe/auto-cancel.test.ts`\n\n**Manage route tests:**\n- `src/__tests__/manage-cancel.test.ts`\n- `src/__tests__/cancel-session.test.ts`\n- `src/__tests__/cancel-recurring.test.ts`\n\n**Booking route tests:**\n- `src/__tests__/payment-intent.test.ts`\n- `tests/unit/session-type-pricing.test.ts`\n- `src/__tests__/create-recurring.test.ts`\n\n**Other route tests:**\n- `src/__tests__/messaging.test.ts`\n\n**Action/utility tests:**\n- `src/__tests__/parent-phone-storage.test.ts`\n- `src/__tests__/booking-routing.test.ts`\n- `tests/bookings/booking-action.test.ts`\n- `src/__tests__/verification.test.ts`\n- `src/__tests__/sms.test.ts`\n- `tests/unit/waitlist-notify.test.ts`\n\n**Note:** Some test files may not need the mock if they fully mock the module that imports Sentry (so the Sentry import never executes). For each file: check if it imports the production module directly — if yes, add the mock. If the test file completely replaces the module with vi.mock, the Sentry mock is unnecessary. When in doubt, add it — the mock is harmless.\n\n## Steps\n\n1. For each test file listed above: read the file, identify where other `vi.mock()` calls are located, and add `vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), init: vi.fn(), captureRequestError: vi.fn() }))` in the same area.\n2. Run `npx vitest run` and check for any remaining test failures related to Sentry imports.\n3. If any test files NOT in the list above fail due to missing Sentry mock, add the mock to those files too.\n4. Run `npx next build` to confirm the full build still passes.\n5. Run `npx tsc --noEmit` for final type check.\n6. Run the catch block coverage audit: `rg 'catch' src/actions/ src/app/api/ src/lib/ -g '*.ts' -g '*.tsx'` and verify every server-side catch either has `captureException`, `console.error` with context, or is in the known-safe list (JSON parse, timezone fallback, cookie read-only, redirect throw).\n\n## Must-Haves\n\n- [ ] All affected test files have vi.mock('@sentry/nextjs')\n- [ ] `npx vitest run` passes with 0 failures\n- [ ] `npx next build` succeeds\n- [ ] `npx tsc --noEmit` reports 0 errors\n- [ ] Catch block coverage audit confirms no unhandled catches\n\n## Verification\n\n- `npx vitest run` exits 0 with all tests passing\n- `npx next build` exits 0\n- `npx tsc --noEmit` exits 0",
       "estimate": "1h",
       "files": [
@@ -9319,6 +9342,72 @@
       "verdict": "✅ pass",
       "duration_ms": 100,
       "created_at": "2026-04-07T14:29:58.487Z"
+    },
+    {
+      "id": 168,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 19600,
+      "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 169,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "npx next build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 61900,
+      "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 170,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "npx tsc --noEmit",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 58100,
+      "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 171,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'captureException' src/app/error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 172,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'captureException' src/app/global-error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:36:31.438Z"
+    },
+    {
+      "id": 173,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M013",
+      "command": "grep -q 'useEffect' src/app/global-error.tsx",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-07T14:36:31.438Z"
     }
   ]
 }

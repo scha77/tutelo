@@ -46,6 +46,12 @@ vi.mock('@/lib/utils/booking', () => ({
   computeSessionAmount: mockComputeSessionAmount,
 }))
 
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  init: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
+
 // --- Helpers ---
 
 function makeRequest(authHeader?: string) {
