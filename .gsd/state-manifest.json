@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T14:56:32.787Z",
+  "exported_at": "2026-04-07T15:07:49.793Z",
   "milestones": [
     {
       "id": "M001",
@@ -6827,19 +6827,21 @@
       "milestone_id": "M013",
       "slice_id": "S03",
       "id": "T02",
-      "title": "Convert mark-complete stubs to real tests",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Converted all 6 it.todo() stubs in mark-complete.test.ts to real passing tests for markSessionComplete server action",
+      "status": "complete",
+      "one_liner": "Converted all 6 it.todo() stubs in mark-complete.test.ts to real passing tests for markSessionComplete server action",
+      "narrative": "Replaced 6 it.todo() stubs with fully implemented tests covering PI retrieve+capture, 7% fee calculation, booking status update, email dispatch, auth guard, and booking-not-found error path. Added Supabase chain mocking (teachers + bookings queries), supabaseAdmin mock for review insert, and Sentry/next-cache mocks. Full suite: 476 passed (+6), 10 todo (−6), 0 failures.",
+      "verification_result": "Targeted: npx vitest run tests/stripe/mark-complete.test.ts — 6 passed, 0 todo, 0 skip. Full suite: npx vitest run — 476 passed, 10 todo, 4 skipped, 0 failures.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-07T15:07:49.697Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/stripe/mark-complete.test.ts"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M013\nkey_files:\n  - tests/stripe/mark-complete.test.ts\nkey_decisions:\n  - (none)\nduration: \nverification_result: passed\ncompleted_at: 2026-04-07T15:07:49.696Z\nblocker_discovered: false\n---\n\n# T02: Converted all 6 it.todo() stubs in mark-complete.test.ts to real passing tests for markSessionComplete server action\n\n**Converted all 6 it.todo() stubs in mark-complete.test.ts to real passing tests for markSessionComplete server action**\n\n## What Happened\n\nReplaced 6 it.todo() stubs with fully implemented tests covering PI retrieve+capture, 7% fee calculation, booking status update, email dispatch, auth guard, and booking-not-found error path. Added Supabase chain mocking (teachers + bookings queries), supabaseAdmin mock for review insert, and Sentry/next-cache mocks. Full suite: 476 passed (+6), 10 todo (−6), 0 failures.\n\n## Verification\n\nTargeted: npx vitest run tests/stripe/mark-complete.test.ts — 6 passed, 0 todo, 0 skip. Full suite: npx vitest run — 476 passed, 10 todo, 4 skipped, 0 failures.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/stripe/mark-complete.test.ts` | 0 | ✅ pass | 6130ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 14330ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/stripe/mark-complete.test.ts`\n",
       "description": "Convert 6 it.todo() stubs in `tests/stripe/mark-complete.test.ts` into real passing tests for the `markSessionComplete` server action from `src/actions/bookings.ts`.\n\nThe test file already has mock scaffolding for Stripe (class-based MockStripe with paymentIntents.retrieve/capture), createClient, @/lib/email, and next/cache. What's missing: the test bodies.\n\n**Production code behavior** (from `src/actions/bookings.ts` lines 117-186):\n1. Auth: `createClient() → auth.getClaims() → claims.sub` — returns 'Not authenticated' if no claims\n2. Teacher lookup: `from('teachers').select('id').eq('user_id', userId).single()` — returns 'Teacher not found' if no teacher\n3. Booking lookup: `from('bookings').select('id, stripe_payment_intent').eq('id', bookingId).eq('teacher_id', teacher.id).eq('status', 'confirmed').maybeSingle()` — returns error if not found or not confirmed\n4. Stripe retrieve: `stripe.paymentIntents.retrieve(pi_id)` — gets amount_capturable\n5. Fee calc: `applicationFee = Math.round(amountToCapture * 0.07)` — 7% platform fee\n6. Stripe capture: `stripe.paymentIntents.capture(pi_id, { amount_to_capture, application_fee_amount })` \n7. DB update: booking status → 'completed', amount_cents set\n8. Review insert: supabaseAdmin inserts review stub with token\n9. Email: fire-and-forget `sendSessionCompleteEmail(bookingId, reviewToken)`\n\n**6 tests to implement:**\n1. Retrieves PI and calls capture with correct amount\n2. application_fee_amount is exactly 7% of amount_capturable\n3. Booking status updated to 'completed'\n4. sendSessionCompleteEmail called with bookingId\n5. Returns error if booking not found or not confirmed\n6. Returns 'Not authenticated' if no user session\n\n**Mock setup needed:**\n- `createClient` → returns supabase with `auth.getClaims` mock and `from` mock\n- `from('teachers')` chain: `.select().eq().single()` → teacher\n- `from('bookings')` chain: `.select().eq().eq().eq().maybeSingle()` → booking; `.update().eq()` for status update\n- Stripe `paymentIntents.retrieve` → returns `{ amount_capturable: 5000, amount: 5000 }`\n- Stripe `paymentIntents.capture` → resolves\n- `supabaseAdmin.from('reviews').insert()` → resolves\n- `sendSessionCompleteEmail` → mock already in place\n- `@sentry/nextjs` → mock captureException\n\n**Import pattern:** Use `const { markSessionComplete } = await import('@/actions/bookings')` inside each test (dynamic import after mocks are set up).\n\n**Known pattern from KNOWLEDGE.md:** Vitest mock.calls index access needs casting through `unknown[]` to avoid TS2493.",
       "estimate": "1h30m",
       "files": [
@@ -9581,6 +9583,28 @@
       "verdict": "✅ pass",
       "duration_ms": 8200,
       "created_at": "2026-04-07T14:56:32.741Z"
+    },
+    {
+      "id": 175,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run tests/stripe/mark-complete.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6130,
+      "created_at": "2026-04-07T15:07:49.697Z"
+    },
+    {
+      "id": 176,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M013",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 14330,
+      "created_at": "2026-04-07T15:07:49.697Z"
     }
   ]
 }

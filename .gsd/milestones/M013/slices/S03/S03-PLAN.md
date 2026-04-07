@@ -23,7 +23,7 @@ Total: 29 stubs removed.
   - Estimate: 20m
   - Files: tests/auth/session.test.ts, tests/onboarding/wizard.test.ts, tests/bookings/booking-calendar.test.tsx, tests/bookings/booking-action.test.ts, tests/stripe/email-confirmation.test.ts, tests/stripe/email-complete.test.ts, tests/stripe/email-cancellation.test.ts, tests/stripe/connect-stripe.test.ts, tests/stripe/checkout-session.test.ts
   - Verify: npx vitest run 2>&1 | tail -5 — expect 470 passed, 16 todo, 4 skipped, 0 failures. Total test files should be 52 (59 - 7 deleted).
-- [ ] **T02: Convert mark-complete stubs to real tests** — Convert 6 it.todo() stubs in `tests/stripe/mark-complete.test.ts` into real passing tests for the `markSessionComplete` server action from `src/actions/bookings.ts`.
+- [x] **T02: Converted all 6 it.todo() stubs in mark-complete.test.ts to real passing tests for markSessionComplete server action** — Convert 6 it.todo() stubs in `tests/stripe/mark-complete.test.ts` into real passing tests for the `markSessionComplete` server action from `src/actions/bookings.ts`.
 
 The test file already has mock scaffolding for Stripe (class-based MockStripe with paymentIntents.retrieve/capture), createClient, @/lib/email, and next/cache. What's missing: the test bodies.
 
