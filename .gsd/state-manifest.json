@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-10T06:36:24.438Z",
+  "exported_at": "2026-04-10T06:47:20.962Z",
   "milestones": [
     {
       "id": "M001",
@@ -8043,19 +8043,25 @@
       "milestone_id": "M015",
       "slice_id": "S05",
       "id": "T03",
-      "title": "Teacher cancellation flow and full suite green run",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added teacher cancellation flow — full E2E suite 10 passed, 1 skipped (Stripe card fill)",
+      "status": "complete",
+      "one_liner": "Added teacher cancellation flow — full E2E suite 10 passed, 1 skipped (Stripe card fill)",
+      "narrative": "Added a second test.describe.serial('Teacher Cancellation') block with 4 serial tests: teacher login, find-and-cancel booking on /dashboard/sessions, DB status verification, and soft cancellation email check. Used a fresh browser page for teacher auth, moved data cleanup from Booking Flow to Cancellation afterAll so the booking survives between blocks, added cache-aware reload pattern for unstable_cache, and set up dialog handler for window.confirm(). Fixed strict mode violation by using h1 locator for sessions heading.",
+      "verification_result": "Full suite: E2E_STRIPE_CONNECTED_ACCOUNT_ID=acct_1T9GPSIvlkImC13E npx playwright test booking-e2e --reporter=list — 10 passed, 1 skipped, 0 failed in 48.8s",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-10T06:47:20.865Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "Used h1 locator instead of getByText for sessions heading; no seed.ts changes needed (teacher auth already existed from T01)",
+      "known_issues": "Resend API returns 401 — email verification is soft-asserted. Stripe card fill remains skipped (T02 known issue).",
+      "key_files": [
+        "tests/e2e/booking-e2e.spec.ts"
+      ],
+      "key_decisions": [
+        "Used h1 locator for sessions heading to avoid strict mode violation",
+        "Moved cleanup to Teacher Cancellation afterAll so booking survives between describe blocks",
+        "Separate browser page for teacher login to avoid parent session cookie conflicts"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S05\nmilestone: M015\nkey_files:\n  - tests/e2e/booking-e2e.spec.ts\nkey_decisions:\n  - Used h1 locator for sessions heading to avoid strict mode violation\n  - Moved cleanup to Teacher Cancellation afterAll so booking survives between describe blocks\n  - Separate browser page for teacher login to avoid parent session cookie conflicts\nduration: \nverification_result: passed\ncompleted_at: 2026-04-10T06:47:20.864Z\nblocker_discovered: false\n---\n\n# T03: Added teacher cancellation flow — full E2E suite 10 passed, 1 skipped (Stripe card fill)\n\n**Added teacher cancellation flow — full E2E suite 10 passed, 1 skipped (Stripe card fill)**\n\n## What Happened\n\nAdded a second test.describe.serial('Teacher Cancellation') block with 4 serial tests: teacher login, find-and-cancel booking on /dashboard/sessions, DB status verification, and soft cancellation email check. Used a fresh browser page for teacher auth, moved data cleanup from Booking Flow to Cancellation afterAll so the booking survives between blocks, added cache-aware reload pattern for unstable_cache, and set up dialog handler for window.confirm(). Fixed strict mode violation by using h1 locator for sessions heading.\n\n## Verification\n\nFull suite: E2E_STRIPE_CONNECTED_ACCOUNT_ID=acct_1T9GPSIvlkImC13E npx playwright test booking-e2e --reporter=list — 10 passed, 1 skipped, 0 failed in 48.8s\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `E2E_STRIPE_CONNECTED_ACCOUNT_ID=acct_1T9GPSIvlkImC13E npx playwright test booking-e2e --reporter=list` | 0 | ✅ pass (10 passed, 1 skipped) | 48800ms |\n\n## Deviations\n\nUsed h1 locator instead of getByText for sessions heading; no seed.ts changes needed (teacher auth already existed from T01)\n\n## Known Issues\n\nResend API returns 401 — email verification is soft-asserted. Stripe card fill remains skipped (T02 known issue).\n\n## Files Created/Modified\n\n- `tests/e2e/booking-e2e.spec.ts`\n",
       "description": "Add the cancellation test block to the E2E spec: sign in as the test teacher, navigate to sessions dashboard, find and cancel the booking, verify cancellation email. Run the full suite end-to-end and ensure all tests pass.\n\n## Why\nThe roadmap demo requires both booking AND cancellation to be tested. Cancellation exercises a different auth context (teacher) and UI surface (dashboard sessions page with ConfirmedSessionCard). This also runs the full suite to verify everything works together.\n\n## Steps\n1. Read `src/components/dashboard/ConfirmedSessionCard.tsx` and `src/app/(dashboard)/dashboard/sessions/page.tsx` to understand the cancel button selector and dialog pattern.\n2. In `booking-e2e.spec.ts`, add a new test block after the booking tests: 'Teacher cancellation flow'.\n3. Write test: 'sign in as teacher and navigate to sessions'\n   - Navigate to `/login`\n   - Fill email and password with the test teacher's credentials (seeded in T01 — the teacher needs an auth user too, or create one in beforeAll). Note: the seed helper from T01 creates a teacher row but may not create an auth user. If needed, add `seedTestTeacherAuth(email, password)` to create a Supabase auth user linked to the teacher ID.\n   - Submit the login form\n   - Wait for redirect to `/dashboard`\n   - Navigate to `/dashboard/sessions`\n   - Wait for the sessions page to load\n4. Write test: 'cancel the booking'\n   - Find the ConfirmedSessionCard containing 'E2E Test Student' (the student name from T02)\n   - Set up dialog handler: `page.on('dialog', d => d.accept())` before clicking cancel\n   - Click the 'Cancel Session' button on that card\n   - Wait for the card to disappear or show cancelled state\n5. Write test: 'verify cancellation email'\n   - Call `waitForEmail({ subject containing 'cancel', timeoutMs: 30000 })` from email helper\n   - Assert the email was found (soft assertion)\n6. Update `test.afterAll` to clean up all test data:\n   - Delete test bookings via supabaseAdmin\n   - Delete test parent auth user\n   - Delete test teacher auth user (if created)\n   - Delete test availability slots\n   - Optionally delete the test teacher row (or leave it for next run — upsert handles it)\n7. Run the full suite: `npx playwright test booking-e2e` — all tests must pass.\n8. If any test fails, debug using Playwright trace and screenshots, fix the spec or helpers as needed.\n\n## Must-Haves\n- Teacher signs in via login page and reaches dashboard\n- Teacher navigates to sessions page and finds the E2E booking\n- Cancel button clicked, window.confirm auto-accepted\n- Cancellation email verified via Resend API (soft assertion)\n- Full `npx playwright test booking-e2e` passes green\n- All test data cleaned up in afterAll\n\n## Failure Modes\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Teacher auth (login page) | Fail — need valid teacher credentials | Fail with screenshot | N/A |\n| Sessions page (unstable_cache) | Booking may not appear for 30s due to cache | Retry with page reload after delay | N/A |\n| window.confirm dialog | If dialog handler misses, page hangs | 10s timeout on dialog | N/A |\n| Cancellation email (Resend) | Soft-fail with warning | Return null, log | N/A |",
       "estimate": "1.5h",
       "files": [
@@ -11246,6 +11252,17 @@
       "verdict": "✅ pass (7 tests listed)",
       "duration_ms": 2000,
       "created_at": "2026-04-10T06:36:24.387Z"
+    },
+    {
+      "id": 222,
+      "task_id": "T03",
+      "slice_id": "S05",
+      "milestone_id": "M015",
+      "command": "E2E_STRIPE_CONNECTED_ACCOUNT_ID=acct_1T9GPSIvlkImC13E npx playwright test booking-e2e --reporter=list",
+      "exit_code": 0,
+      "verdict": "✅ pass (10 passed, 1 skipped)",
+      "duration_ms": 48800,
+      "created_at": "2026-04-10T06:47:20.865Z"
     }
   ]
 }

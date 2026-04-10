@@ -4,6 +4,8 @@ import {
   seedAvailability,
   cleanupTestData,
   TEST_TEACHER_SLUG,
+  TEST_TEACHER_EMAIL,
+  TEST_TEACHER_PASSWORD,
 } from './helpers/seed'
 import { cleanupTestUser } from './helpers/auth'
 import { waitForEmail } from './helpers/email'
@@ -65,13 +67,9 @@ test.describe.serial('Booking Flow', () => {
   })
 
   test.afterAll(async () => {
+    // Only close the page here — data cleanup happens in Teacher Cancellation afterAll
+    // so the booking remains available for the cancellation flow
     await page?.close()
-    await cleanupTestUser(testParentEmail).catch((err) =>
-      console.warn(`[cleanup] parent user: ${err.message}`)
-    )
-    await cleanupTestData(TEST_TEACHER_SLUG).catch((err) =>
-      console.warn(`[cleanup] test data: ${err.message}`)
-    )
   })
 
   test('navigate to teacher profile and select a time slot', async () => {
@@ -325,6 +323,148 @@ test.describe.serial('Booking Flow', () => {
       console.warn(
         '[e2e] Confirmation email not found via Resend API — ' +
         'this may be expected in test mode. The booking flow itself passed.'
+      )
+    }
+  })
+})
+
+/**
+ * Teacher cancellation flow.
+ *
+ * Signs in as the test teacher, navigates to sessions dashboard,
+ * finds the booking created by the Booking Flow tests, cancels it,
+ * and verifies the cancellation email.
+ *
+ * Runs after the Booking Flow block. Uses a fresh browser page so
+ * the teacher's session cookie doesn't conflict with the parent's.
+ */
+test.describe.serial('Teacher Cancellation', () => {
+  let teacherPage: Page
+
+  test.beforeAll(async ({ browser }: { browser: Browser }) => {
+    teacherPage = await browser.newPage()
+  })
+
+  test.afterAll(async () => {
+    await teacherPage?.close()
+
+    // Final cleanup — delete bookings, availability, auth users
+    const supabase = getSupabaseAdmin()
+    await supabase
+      .from('bookings')
+      .delete()
+      .eq('parent_email', testParentEmail)
+      .then(({ error }) => {
+        if (error) console.warn(`[cleanup] bookings: ${error.message}`)
+      })
+
+    await cleanupTestData(TEST_TEACHER_SLUG).catch((err) =>
+      console.warn(`[cleanup] test data: ${err.message}`)
+    )
+    await cleanupTestUser(testParentEmail).catch((err) =>
+      console.warn(`[cleanup] parent user: ${err.message}`)
+    )
+    await cleanupTestUser(TEST_TEACHER_EMAIL).catch((err) =>
+      console.warn(`[cleanup] teacher user: ${err.message}`)
+    )
+  })
+
+  test('sign in as teacher and navigate to sessions', async () => {
+    // Navigate to login page
+    await teacherPage.goto('/login')
+    await expect(teacherPage.getByLabel('Email')).toBeVisible({ timeout: 10_000 })
+
+    // Fill teacher credentials
+    await teacherPage.getByLabel('Email').fill(TEST_TEACHER_EMAIL)
+    await teacherPage.getByLabel('Password').fill(TEST_TEACHER_PASSWORD)
+
+    // Submit login form
+    await teacherPage.getByRole('button', { name: 'Sign in' }).click()
+
+    // Wait for redirect to /dashboard
+    await teacherPage.waitForURL('**/dashboard**', { timeout: 15_000 })
+
+    // Navigate to sessions page
+    await teacherPage.goto('/dashboard/sessions')
+    await expect(teacherPage.locator('h1', { hasText: 'Sessions' })).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('find and cancel the E2E booking', async () => {
+    // The sessions page has unstable_cache with 30s TTL. The booking
+    // was confirmed in the previous test block. We may need to reload
+    // if the cache hasn't refreshed yet.
+    let studentCard = teacherPage.locator('text=E2E Test Student')
+    let visible = await studentCard.isVisible({ timeout: 5_000 }).catch(() => false)
+
+    if (!visible) {
+      // Cache may be stale — wait and reload
+      await teacherPage.waitForTimeout(5_000)
+      await teacherPage.reload()
+      await teacherPage.waitForTimeout(2_000)
+      visible = await studentCard.isVisible({ timeout: 10_000 }).catch(() => false)
+    }
+
+    if (!visible) {
+      // Second reload attempt after additional delay
+      await teacherPage.waitForTimeout(10_000)
+      await teacherPage.reload()
+      await expect(studentCard).toBeVisible({ timeout: 15_000 })
+    }
+
+    // Set up dialog handler BEFORE clicking cancel — window.confirm()
+    teacherPage.on('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm')
+      await dialog.accept()
+    })
+
+    // Find the "Cancel Session" button within the card containing our student
+    // ConfirmedSessionCard renders student name + "Cancel Session" button
+    const cancelButton = teacherPage
+      .locator('div')
+      .filter({ hasText: 'E2E Test Student' })
+      .getByRole('button', { name: 'Cancel Session' })
+
+    await expect(cancelButton.first()).toBeVisible({ timeout: 5_000 })
+    await cancelButton.first().click()
+
+    // Wait for toast confirmation or card to disappear
+    // The cancelSession action calls revalidatePath, so the card should vanish
+    // after a moment. Also check for toast message.
+    await expect(
+      teacherPage.getByText('Session cancelled').or(
+        teacherPage.getByText('No upcoming sessions')
+      )
+    ).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('booking status is cancelled in database', async () => {
+    const supabase = getSupabaseAdmin()
+
+    const { data: bookings, error } = await supabase
+      .from('bookings')
+      .select('status')
+      .eq('parent_email', testParentEmail)
+
+    expect(error).toBeNull()
+    expect(bookings).toBeTruthy()
+    expect(bookings!.length).toBeGreaterThanOrEqual(1)
+    expect(bookings![0].status).toBe('cancelled')
+  })
+
+  test('verify cancellation email', async () => {
+    // Soft assertion — cancellation email may not arrive in test mode
+    const email = await waitForEmail({
+      to: testParentEmail,
+      subject: 'cancel',
+      timeoutMs: 15_000,
+    })
+
+    if (email) {
+      expect(email.subject).toBeTruthy()
+    } else {
+      console.warn(
+        '[e2e] Cancellation email not found via Resend API — ' +
+        'this may be expected in test mode. The cancellation itself passed.'
       )
     }
   })

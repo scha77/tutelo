@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M015/S05/T02",
+  "timestamp": 1775802996703,
+  "passed": false,
+  "discoverySource": "package-json",
+  "checks": [
+    {
+      "command": "npm run lint",
+      "exitCode": 1,
+      "durationMs": 5102,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2,
+  "runtimeErrors": [
+    {
+      "source": "bg-shell",
+      "severity": "error",
+      "message": "[next-dev] recent errors: [direct-booking/create-intent] Stripe PI creation failed: Error: No such destination: 'acct_1R4JulDRibxWqIzE'; doc_url: 'https://stripe.com/docs/error-codes/resource-missing',; [direct-booking/create-intent] Stripe PI creation failed: Error: No such destination: 'acct_1R4JulDRibxWqIzE'",
+      "blocking": false
+    }
+  ]
+}

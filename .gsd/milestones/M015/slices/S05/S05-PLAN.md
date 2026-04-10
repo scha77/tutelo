@@ -104,7 +104,7 @@ This is the highest-risk, highest-value part of the E2E suite. The Stripe Elemen
   - Estimate: 2h
   - Files: tests/e2e/booking-e2e.spec.ts
   - Verify: E2E_STRIPE_CONNECTED_ACCOUNT_ID=$E2E_STRIPE_CONNECTED_ACCOUNT_ID npx playwright test booking-e2e --grep 'Booking Flow' 2>&1 | tail -5
-- [ ] **T03: Teacher cancellation flow and full suite green run** — Add the cancellation test block to the E2E spec: sign in as the test teacher, navigate to sessions dashboard, find and cancel the booking, verify cancellation email. Run the full suite end-to-end and ensure all tests pass.
+- [x] **T03: Added teacher cancellation flow — full E2E suite 10 passed, 1 skipped (Stripe card fill)** — Add the cancellation test block to the E2E spec: sign in as the test teacher, navigate to sessions dashboard, find and cancel the booking, verify cancellation email. Run the full suite end-to-end and ensure all tests pass.
 
 ## Why
 The roadmap demo requires both booking AND cancellation to be tested. Cancellation exercises a different auth context (teacher) and UI surface (dashboard sessions page with ConfirmedSessionCard). This also runs the full suite to verify everything works together.
