@@ -98,6 +98,16 @@ describe('signIn server action routing', () => {
       },
     }))
 
+    // Mock next/headers — needed since rate limiting reads x-forwarded-for
+    vi.doMock('next/headers', () => ({
+      headers: vi.fn().mockResolvedValue(new Map([['x-forwarded-for', '127.0.0.1']])),
+    }))
+
+    // Mock rate limiter — always allow in auth routing tests
+    vi.doMock('@/lib/rate-limit', () => ({
+      checkLimit: vi.fn().mockResolvedValue({ allowed: true }),
+    }))
+
     vi.doMock('@/lib/supabase/server', () => ({
       createClient: vi.fn().mockResolvedValue({
         auth: {

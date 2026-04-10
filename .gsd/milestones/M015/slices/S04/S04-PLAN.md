@@ -15,7 +15,7 @@ Steps:
   - Estimate: 20m
   - Files: src/app/api/waitlist/route.ts, src/app/api/track-view/route.ts, src/app/api/verify-email/route.ts, src/actions/auth.ts
   - Verify: npm run build exits 0. grep -q 'checkLimit' src/app/api/waitlist/route.ts && grep -q 'checkLimit' src/app/api/track-view/route.ts && grep -q 'checkLimit' src/app/api/verify-email/route.ts && grep -q 'checkLimit' src/actions/auth.ts
-- [ ] **T02: Add unit tests for rate-limited endpoints** — Create a single test file covering all four endpoints' rate-limit wiring. Mock `checkLimit` via `vi.mock('@/lib/rate-limit')` and verify that each endpoint returns 429 when blocked and succeeds when allowed.
+- [x] **T02: Add 10 rate-limit wiring tests for all four endpoints and fix 9 pre-existing mock-drift failures in auth tests** — Create a single test file covering all four endpoints' rate-limit wiring. Mock `checkLimit` via `vi.mock('@/lib/rate-limit')` and verify that each endpoint returns 429 when blocked and succeeds when allowed.
 
 Steps:
 1. Create `tests/unit/rate-limit-wiring.test.ts` with four `describe` blocks (one per endpoint).

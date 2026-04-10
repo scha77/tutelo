@@ -10,6 +10,16 @@ vi.mock('next/navigation', () => ({
   },
 }))
 
+// Mock next/headers — needed since rate limiting reads x-forwarded-for
+vi.mock('next/headers', () => ({
+  headers: vi.fn().mockResolvedValue(new Map([['x-forwarded-for', '127.0.0.1']])),
+}))
+
+// Mock rate limiter — always allow in auth tests
+vi.mock('@/lib/rate-limit', () => ({
+  checkLimit: vi.fn().mockResolvedValue({ allowed: true }),
+}))
+
 // Mock Supabase server client
 const mockSignUp = vi.fn()
 const mockSignInWithPassword = vi.fn()

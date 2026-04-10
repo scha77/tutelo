@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-10T05:13:52.264Z",
+  "exported_at": "2026-04-10T05:18:37.391Z",
   "milestones": [
     {
       "id": "M001",
@@ -7897,19 +7897,25 @@
       "milestone_id": "M015",
       "slice_id": "S04",
       "id": "T02",
-      "title": "Add unit tests for rate-limited endpoints",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Add 10 rate-limit wiring tests for all four endpoints and fix 9 pre-existing mock-drift failures in auth tests",
+      "status": "complete",
+      "one_liner": "Add 10 rate-limit wiring tests for all four endpoints and fix 9 pre-existing mock-drift failures in auth tests",
+      "narrative": "Created tests/unit/rate-limit-wiring.test.ts with four describe blocks covering waitlist (2 tests), track-view (2 tests), verify-email (2 tests), and auth actions (4 tests). Each block verifies allowed → normal response and blocked → 429. Auth action tests also confirm that supabase auth methods are never called when rate-limited. Fixed 9 pre-existing test failures in signup.test.ts and parent-dashboard.test.ts caused by T01 adding headers() and checkLimit() without updating dependent test mocks.",
+      "verification_result": "npx vitest run tests/unit/rate-limit-wiring.test.ts: 10/10 pass. npx vitest run: 55 files, 514 tests, all pass. npm run build: exits 0. grep -q checkLimit in waitlist route: confirmed.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-10T05:18:37.357Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/unit/rate-limit-wiring.test.ts",
+        "tests/auth/signup.test.ts",
+        "src/__tests__/parent-dashboard.test.ts"
+      ],
+      "key_decisions": [
+        "Fixed mock drift in 2 pre-existing test files caused by T01 adding next/headers and @/lib/rate-limit imports to auth actions"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M015\nkey_files:\n  - tests/unit/rate-limit-wiring.test.ts\n  - tests/auth/signup.test.ts\n  - src/__tests__/parent-dashboard.test.ts\nkey_decisions:\n  - Fixed mock drift in 2 pre-existing test files caused by T01 adding next/headers and @/lib/rate-limit imports to auth actions\nduration: \nverification_result: passed\ncompleted_at: 2026-04-10T05:18:37.356Z\nblocker_discovered: false\n---\n\n# T02: Add 10 rate-limit wiring tests for all four endpoints and fix 9 pre-existing mock-drift failures in auth tests\n\n**Add 10 rate-limit wiring tests for all four endpoints and fix 9 pre-existing mock-drift failures in auth tests**\n\n## What Happened\n\nCreated tests/unit/rate-limit-wiring.test.ts with four describe blocks covering waitlist (2 tests), track-view (2 tests), verify-email (2 tests), and auth actions (4 tests). Each block verifies allowed → normal response and blocked → 429. Auth action tests also confirm that supabase auth methods are never called when rate-limited. Fixed 9 pre-existing test failures in signup.test.ts and parent-dashboard.test.ts caused by T01 adding headers() and checkLimit() without updating dependent test mocks.\n\n## Verification\n\nnpx vitest run tests/unit/rate-limit-wiring.test.ts: 10/10 pass. npx vitest run: 55 files, 514 tests, all pass. npm run build: exits 0. grep -q checkLimit in waitlist route: confirmed.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/unit/rate-limit-wiring.test.ts` | 0 | ✅ pass | 6200ms |\n| 2 | `npx vitest run` | 0 | ✅ pass | 9500ms |\n| 3 | `npm run build` | 0 | ✅ pass | 28000ms |\n| 4 | `grep -q 'checkLimit' src/app/api/waitlist/route.ts` | 0 | ✅ pass | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/unit/rate-limit-wiring.test.ts`\n- `tests/auth/signup.test.ts`\n- `src/__tests__/parent-dashboard.test.ts`\n",
       "description": "Create a single test file covering all four endpoints' rate-limit wiring. Mock `checkLimit` via `vi.mock('@/lib/rate-limit')` and verify that each endpoint returns 429 when blocked and succeeds when allowed.\n\nSteps:\n1. Create `tests/unit/rate-limit-wiring.test.ts` with four `describe` blocks (one per endpoint).\n2. Mock dependencies shared by all tests:\n   - `vi.mock('@/lib/rate-limit')` — mock `checkLimit` to control allowed/blocked\n   - `vi.mock('@sentry/nextjs')` — standard Sentry mock\n   - `vi.mock('@/lib/supabase/service')` — mock `supabaseAdmin` with `.from().insert()` returning `{ error: null }` and `.from().select().eq().maybeSingle()` returning `{ data: null }`\n   - `vi.mock('@/lib/supabase/server')` — mock `createClient` for auth actions\n   - `vi.mock('next/headers')` — mock `headers()` returning a Map with `x-forwarded-for`\n   - `vi.mock('next/navigation')` — mock `redirect` (throws to prevent real redirects)\n3. For **waitlist** describe block (2 tests):\n   - 'returns 201 when rate limit allows': set `checkLimit` to return `{ allowed: true }`, POST with valid body, assert status 201\n   - 'returns 429 when rate limited': set `checkLimit` to return `{ allowed: false }`, POST with valid body, assert status 429\n4. For **track-view** describe block (2 tests):\n   - 'returns 201 when rate limit allows': same pattern, POST with `{ teacherId: 'test-id' }`, assert 201\n   - 'returns 429 when rate limited': assert 429\n5. For **verify-email** describe block (2 tests):\n   - 'processes normally when rate limit allows': set `checkLimit` to `{ allowed: true }`, GET with `?token=test-token`, assert response is a redirect (status 307/308) or a JSON response (depending on token validity)\n   - 'returns 429 when rate limited': set `checkLimit` to `{ allowed: false }`, GET request, assert status 429\n6. For **auth actions** describe block (4 tests):\n   - 'signIn succeeds when rate limit allows': set `checkLimit` to `{ allowed: true }`, call signIn with FormData, assert no error returned (or redirect thrown)\n   - 'signIn returns error when rate limited': set `checkLimit` to `{ allowed: false }`, call signIn, assert returned error message contains 'Too many requests'\n   - 'signUp succeeds when rate limit allows': same pattern for signUp\n   - 'signUp returns error when rate limited': assert error message\n7. Run `npx vitest run tests/unit/rate-limit-wiring.test.ts` to verify all tests pass.\n8. Run `npx vitest run` to verify no regressions in other test files (existing tests that import waitlist/track-view routes may need the `@/lib/rate-limit` mock added if they break).",
       "estimate": "30m",
       "files": [
@@ -11008,6 +11014,50 @@
       "verdict": "✅ pass",
       "duration_ms": 48100,
       "created_at": "2026-04-10T05:13:52.212Z"
+    },
+    {
+      "id": 214,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M015",
+      "command": "npx vitest run tests/unit/rate-limit-wiring.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 6200,
+      "created_at": "2026-04-10T05:18:37.357Z"
+    },
+    {
+      "id": 215,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M015",
+      "command": "npx vitest run",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 9500,
+      "created_at": "2026-04-10T05:18:37.357Z"
+    },
+    {
+      "id": 216,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M015",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 28000,
+      "created_at": "2026-04-10T05:18:37.357Z"
+    },
+    {
+      "id": 217,
+      "task_id": "T02",
+      "slice_id": "S04",
+      "milestone_id": "M015",
+      "command": "grep -q 'checkLimit' src/app/api/waitlist/route.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-10T05:18:37.357Z"
     }
   ]
 }
