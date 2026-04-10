@@ -1015,3 +1015,25 @@ Turbopack may place server-only code (Supabase server client, Resend, server Sen
 
 The 200K "Sentry" chunk that appeared in M013's analysis was actually a server chunk containing `createServerClient`, `Resend`, and `BrowserClient` (misleading name — it's the Sentry transport, not a browser-only class). Actual client Sentry footprint: 12K.
 
+---
+
+## Sentry.withMonitor Pattern for Cron Route Heartbeats (M015/S02)
+
+Wrap cron route business logic in `Sentry.withMonitor(slug, handler, monitorConfig)` for heartbeat monitoring. Critical invariant: the auth check (CRON_SECRET bearer token validation, 500/401 returns) MUST remain **outside** the wrapper — unauthorized requests are not cron failures and should not trigger check-ins or false alerts.
+
+```ts
+export async function GET(request: NextRequest) {
+  // Auth check OUTSIDE withMonitor
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+  // Business logic INSIDE withMonitor
+  return Sentry.withMonitor('cron-slug', async () => {
+    // ... actual cron work
+    return Response.json({ ok: true })
+  }, { schedule: { type: 'crontab', value: '0 9 * * *' }, checkinMargin: 5, maxRuntime: 5, timezone: 'UTC', failureIssueThreshold: 2, recoveryThreshold: 1 })
+}
+```
+
+Test mock: `withMonitor: vi.fn((_slug: string, fn: () => unknown) => fn())` — passes the callback through so handler logic executes normally during tests. Add this to the existing `vi.mock('@sentry/nextjs', ...)` factory in every cron test file.
+

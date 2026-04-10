@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-10T04:36:42.431Z",
+  "exported_at": "2026-04-10T04:51:03.620Z",
   "milestones": [
     {
       "id": "M001",
@@ -1851,14 +1851,14 @@
       "milestone_id": "M015",
       "id": "S02",
       "title": "Cron Job Verification & Monitoring",
-      "status": "pending",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "After this: Each cron route (session-reminders, auto-cancel, stripe-reminders, recurring-charges) has been verified as scheduled in Vercel, manually triggered once with a 200 response in logs, and has an explicit heartbeat mechanism so future silent failures are detectable.",
       "created_at": "2026-04-10T03:57:14.219Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
+      "completed_at": "2026-04-10T04:38:45.191Z",
+      "full_summary_md": "---\nid: S02\nparent: M015\nmilestone: M015\nprovides:\n  - Sentry Crons heartbeat monitoring for all 4 cron routes\n  - Cron verification runbook for production operations\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - src/app/api/cron/auto-cancel/route.ts\n  - src/app/api/cron/stripe-reminders/route.ts\n  - src/app/api/cron/session-reminders/route.ts\n  - src/app/api/cron/recurring-charges/route.ts\n  - tests/stripe/auto-cancel.test.ts\n  - tests/stripe/reminders-cron.test.ts\n  - src/__tests__/recurring-charges.test.ts\n  - src/__tests__/reminders.test.ts\n  - .gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md\nkey_decisions:\n  - Auth checks (CRON_SECRET validation) remain outside Sentry.withMonitor — unauthorized requests are not cron failures\n  - Monitor config uses failureIssueThreshold:2 / recoveryThreshold:1 to avoid noisy alerts from transient one-off errors\npatterns_established:\n  - Sentry.withMonitor wrapping pattern for cron routes: auth outside, business logic inside\n  - Consistent monitor config across all cron routes for uniform alerting behavior\n  - withMonitor test mock pattern: vi.fn((_slug, fn) => fn()) passes callback through\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-04-10T04:38:45.192Z\nblocker_discovered: false\n---\n\n# S02: Cron Job Verification & Monitoring\n\n**Wrapped all 4 cron routes in Sentry.withMonitor heartbeat monitoring, fixed 3 stale schedule comments, updated test mocks, and wrote a production cron verification runbook.**\n\n## What Happened\n\nAll four cron routes (auto-cancel, stripe-reminders, recurring-charges, session-reminders) now report heartbeat check-ins to Sentry Crons on every execution via `Sentry.withMonitor()`. Each route uses a unique slug and crontab schedule matching vercel.json. The auth gate (CRON_SECRET bearer token validation) remains outside the monitor wrapper — unauthorized requests should not register as cron failures or trigger false-positive alerts.\n\nMonitor config is consistent across all 4 routes: `checkinMargin: 5` (5-min late tolerance), `maxRuntime: 5` (5-min max), `failureIssueThreshold: 2` (alert after 2 consecutive failures), `recoveryThreshold: 1` (clear after 1 success). This avoids noisy alerts from one-off transient errors.\n\nThree stale comments were corrected: auto-cancel referenced \"hourly cron (0 * * * *)\" and \"Vercel Pro\" (both wrong — it's daily on Hobby), stripe-reminders referenced \"hourly cron (30 * * * *)\", and session-reminders said \"9 AM UTC\" when the actual schedule is 2 PM UTC.\n\nAll 4 test files had their Sentry mock updated to include `withMonitor: vi.fn((_slug, fn) => fn())` — the mock passes the callback through so existing test logic executes normally while mocking away the Sentry side effects.\n\nA cron verification runbook was written covering manual curl triggers with expected response shapes, Sentry Crons dashboard verification steps, vercel.json schedule cross-reference, and troubleshooting for common failure modes (missing CRON_SECRET, Sentry DSN, DB connection issues).\n\n## Verification\n\nAll 23 cron tests pass across 4 test files (auto-cancel: 5, reminders-cron: 5, recurring-charges: 8, reminders: 5). `grep -c withMonitor` confirms exactly 1 call per route file. Runbook exists at expected path. Auth checks verified to remain outside the withMonitor wrapper via code inspection.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Deviations\n\nSession-reminders JSDoc comment also updated to say '2 PM UTC' instead of '9 AM UTC' to match the actual vercel.json schedule — the task plan only mentioned the top-line comment.\n\n## Known Limitations\n\nSentry.withMonitor only reports heartbeats — it does not alert on business-logic errors within the handler (e.g., a cron that returns 200 but processes 0 bookings due to a query bug). Business-logic anomaly detection would require separate metric-based monitoring.\n\n## Follow-ups\n\nAfter deploying to production: manually trigger each cron route once to confirm Sentry Crons dashboard shows the first check-in. Then monitor over 48 hours to verify heartbeats arrive on schedule.\n\n## Files Created/Modified\n\n- `src/app/api/cron/auto-cancel/route.ts` — Wrapped in Sentry.withMonitor('cron-auto-cancel'), fixed stale hourly/Pro comment\n- `src/app/api/cron/stripe-reminders/route.ts` — Wrapped in Sentry.withMonitor('cron-stripe-reminders'), fixed stale hourly comment\n- `src/app/api/cron/session-reminders/route.ts` — Wrapped in Sentry.withMonitor('cron-session-reminders'), fixed stale schedule comment\n- `src/app/api/cron/recurring-charges/route.ts` — Wrapped in Sentry.withMonitor('cron-recurring-charges')\n- `tests/stripe/auto-cancel.test.ts` — Added withMonitor to Sentry mock\n- `tests/stripe/reminders-cron.test.ts` — Added withMonitor to Sentry mock\n- `src/__tests__/recurring-charges.test.ts` — Added withMonitor to Sentry mock\n- `src/__tests__/reminders.test.ts` — Added withMonitor to Sentry mock\n- `.gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md` — New file — production cron verification runbook\n",
+      "full_uat_md": "# S02: Cron Job Verification & Monitoring — UAT\n\n**Milestone:** M015\n**Written:** 2026-04-10T04:38:45.192Z\n\n## UAT: Cron Job Verification & Monitoring\n\n### Preconditions\n- Access to the Vercel project dashboard\n- Access to the Sentry project with Crons feature enabled\n- `CRON_SECRET` env var available\n- All 4 cron routes deployed\n\n---\n\n### Test 1: Verify withMonitor wrapping in source code\n**Steps:**\n1. Run `grep -A2 'withMonitor' src/app/api/cron/auto-cancel/route.ts`\n2. Confirm the line reads `Sentry.withMonitor('cron-auto-cancel', async () => {`\n3. Confirm the auth check (`authHeader !== Bearer...`) appears BEFORE the withMonitor call\n4. Repeat for stripe-reminders (slug: `cron-stripe-reminders`), recurring-charges (slug: `cron-recurring-charges`), session-reminders (slug: `cron-session-reminders`)\n\n**Expected:** Each route has exactly 1 withMonitor call with a unique slug. Auth check is outside the wrapper in all 4 routes.\n\n---\n\n### Test 2: Verify stale comments are fixed\n**Steps:**\n1. `head -1 src/app/api/cron/auto-cancel/route.ts` → should say \"Daily cron — auto-cancels requested bookings older than 48h where teacher hasn't connected Stripe\"\n2. `head -1 src/app/api/cron/stripe-reminders/route.ts` → should say \"Daily cron — sends Stripe setup reminders to teachers with pending bookings\"\n3. `head -1 src/app/api/cron/session-reminders/route.ts` → should say \"Daily cron — sends session reminder emails and SMS to parents with upcoming bookings\"\n4. Verify no route mentions \"hourly\", \"Vercel Pro\", or \"(0 * * * *)\"\n\n**Expected:** All 3 comments are accurate. No stale references remain.\n\n---\n\n### Test 3: Cron tests pass with updated mocks\n**Steps:**\n1. Run `npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts src/__tests__/recurring-charges.test.ts src/__tests__/reminders.test.ts`\n2. Confirm 23 tests pass (auto-cancel: 5, reminders-cron: 5, recurring-charges: 8, reminders: 5)\n\n**Expected:** All 23 tests pass. No test references missing `withMonitor` mock.\n\n---\n\n### Test 4: Monitor config matches vercel.json schedules\n**Steps:**\n1. Run `cat vercel.json | grep -A2 cron`\n2. For each route, confirm the `schedule.value` in the `monitorConfig` matches the vercel.json crontab:\n   - auto-cancel: `0 9 * * *`\n   - stripe-reminders: `0 10 * * *`\n   - recurring-charges: `0 12 * * *`\n   - session-reminders: `0 14 * * *`\n\n**Expected:** All 4 schedules match between vercel.json and route monitorConfig.\n\n---\n\n### Test 5: Runbook completeness\n**Steps:**\n1. Open `.gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md`\n2. Confirm it contains:\n   - Schedule reference table with all 4 routes\n   - Manual trigger curl commands with Bearer token auth\n   - Expected 200 response shapes for each route\n   - Sentry Crons dashboard verification steps\n   - Troubleshooting section for common failures\n\n**Expected:** All sections present with accurate, actionable content.\n\n---\n\n### Test 6: Production heartbeat (post-deploy)\n**Steps:**\n1. Deploy code to Vercel\n2. Manually trigger each cron: `curl -s -H \"Authorization: Bearer $CRON_SECRET\" https://tutelo.app/api/cron/auto-cancel`\n3. Confirm 200 response with expected JSON shape\n4. Check Sentry → Crons dashboard → verify `cron-auto-cancel` shows a check-in\n5. Repeat for remaining 3 routes\n6. Wait 24 hours and verify Sentry shows scheduled check-ins arriving on time\n\n**Expected:** All 4 routes respond 200 on manual trigger. Sentry Crons dashboard shows check-ins. After 24h, heartbeats arrive at the scheduled times.\n",
       "goal": "All four cron routes are wrapped in Sentry withMonitor for heartbeat monitoring, stale comments are fixed, and a verification runbook documents how to confirm cron health in production.",
       "success_criteria": "- All 4 cron routes wrap core logic in `Sentry.withMonitor()` with correct monitor slugs and schedule config\n- Auth checks (CRON_SECRET validation) remain OUTSIDE the withMonitor wrapper\n- Stale comments on 3 routes are corrected\n- All 4 test files updated with `withMonitor` mock that passes through to callback\n- All existing cron tests pass (23 tests)\n- Verification runbook exists at `.gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md`",
       "proof_level": "Contract-level — withMonitor wrapping is verified by existing unit tests passing with updated mocks. Actual Sentry check-in delivery requires production execution (documented in runbook).",
@@ -1879,11 +1879,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Build the rate-limit primitive without wiring it to any endpoints yet. Isolates the decision of which store to use (Upstash vs Vercel KV vs header-based) and lets us unit-test it in isolation.",
-      "success_criteria": "- Decision documented in DECISIONS.md on store choice (Upstash free tier recommended: free tier = 10k commands/day, sliding window algo built-in)\n- `src/lib/rate-limit.ts` exports `checkLimit(key, identifier, { max, window })` returning `{ allowed: boolean, remaining: number, resetAt: Date }`\n- Graceful degradation: if the store is unreachable, fail OPEN (allow the request) and log to Sentry\n- Unit tests cover: under-limit allow, at-limit block, window reset, store failure fail-open\n- Env vars collected and set in both .env.local and Vercel production",
-      "proof_level": "unit test + integration smoke",
-      "integration_closure": "Provides checkLimit primitive for S04 to consume.",
-      "observability_impact": "Rate-limit triggers logged to Sentry with endpoint tag; store health visible via error rate.",
+      "goal": "A distributed rate-limiting helper at `src/lib/rate-limit.ts` backed by Upstash Redis, with `checkLimit(ip, endpointKey, { max, window })` API, factory pattern for per-config instances, and fail-open error handling.",
+      "success_criteria": "- `src/lib/rate-limit.ts` exports `checkLimit()` backed by Upstash sliding window\n- Factory pattern caches `Ratelimit` instances per `{max, window}` config tuple\n- Fail-open on Redis error or missing env vars (never blocks users due to infra failure)\n- Sentry `captureException` on Redis failure for observability\n- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` documented in `.env.example`\n- Unit tests with mocked Upstash cover: allowed, blocked, independent keys, fail-open on error, missing env vars\n- `npm run build` passes clean",
+      "proof_level": "Contract — unit tests with mocked Upstash prove API shape, factory caching, and fail-open behavior. No live Redis required for verification.",
+      "integration_closure": "- Upstream: None (first in dependency chain)\n- New wiring: `src/lib/rate-limit.ts` module created alongside existing `src/lib/utils/rate-limit.ts` (old module untouched)\n- Remaining: S04 wires `checkLimit` into public endpoints and migrates callers off the old module",
+      "observability_impact": "- Runtime signals: Sentry `captureException` on Redis connection failure or unexpected errors\n- Inspection: `console.warn` when `UPSTASH_REDIS_REST_URL` or `UPSTASH_REDIS_REST_TOKEN` missing — detectable in Vercel function logs\n- Failure visibility: fail-open means rate limiting silently degrades to \"allow all\" — Sentry alert is the detection surface",
       "sequence": 0,
       "replan_triggered_at": null
     },
@@ -7758,6 +7758,86 @@
       "observability_impact": "",
       "full_plan_md": "",
       "sequence": 0
+    },
+    {
+      "milestone_id": "M015",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Installed @upstash/redis and @upstash/ratelimit, created src/lib/rate-limit.ts with checkLimit export using factory-cached sliding window limiter and fail-open error handling",
+      "status": "complete",
+      "one_liner": "Installed @upstash/redis and @upstash/ratelimit, created src/lib/rate-limit.ts with checkLimit export using factory-cached sliding window limiter and fail-open error handling",
+      "narrative": "Installed @upstash/redis (v1.37.0) and @upstash/ratelimit (v2.0.8). Created src/lib/rate-limit.ts with the checkLimit(ip, endpointKey, { max, window }) API. The module caches Ratelimit instances in a Map keyed by \"max:window\" to avoid redundant Redis clients. Fixed a type error where slidingWindow expects Upstash's Duration template literal type, not plain string — imported and re-exported Duration for downstream callers. Created .env.example with Upstash env var placeholders. Old src/lib/utils/rate-limit.ts left untouched.",
+      "verification_result": "npm run build exits 0 (26.5s), grep confirms checkLimit export exists, grep confirms UPSTASH_REDIS_REST_URL in .env.example, git diff confirms old rate-limit.ts unchanged.",
+      "duration": "",
+      "completed_at": "2026-04-10T04:51:03.570Z",
+      "blocker_discovered": false,
+      "deviations": "Used Duration type from @upstash/ratelimit instead of plain string for the window parameter — task plan specified string but slidingWindow requires the template literal Duration type.",
+      "known_issues": "None.",
+      "key_files": [
+        "src/lib/rate-limit.ts",
+        ".env.example",
+        "package.json",
+        "package-lock.json"
+      ],
+      "key_decisions": [
+        "Used Upstash Duration type instead of plain string for window param",
+        "Re-exported Duration type from rate-limit.ts so callers don't import @upstash/ratelimit directly"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M015\nkey_files:\n  - src/lib/rate-limit.ts\n  - .env.example\n  - package.json\n  - package-lock.json\nkey_decisions:\n  - Used Upstash Duration type instead of plain string for window param\n  - Re-exported Duration type from rate-limit.ts so callers don't import @upstash/ratelimit directly\nduration: \nverification_result: passed\ncompleted_at: 2026-04-10T04:51:03.569Z\nblocker_discovered: false\n---\n\n# T01: Installed @upstash/redis and @upstash/ratelimit, created src/lib/rate-limit.ts with checkLimit export using factory-cached sliding window limiter and fail-open error handling\n\n**Installed @upstash/redis and @upstash/ratelimit, created src/lib/rate-limit.ts with checkLimit export using factory-cached sliding window limiter and fail-open error handling**\n\n## What Happened\n\nInstalled @upstash/redis (v1.37.0) and @upstash/ratelimit (v2.0.8). Created src/lib/rate-limit.ts with the checkLimit(ip, endpointKey, { max, window }) API. The module caches Ratelimit instances in a Map keyed by \"max:window\" to avoid redundant Redis clients. Fixed a type error where slidingWindow expects Upstash's Duration template literal type, not plain string — imported and re-exported Duration for downstream callers. Created .env.example with Upstash env var placeholders. Old src/lib/utils/rate-limit.ts left untouched.\n\n## Verification\n\nnpm run build exits 0 (26.5s), grep confirms checkLimit export exists, grep confirms UPSTASH_REDIS_REST_URL in .env.example, git diff confirms old rate-limit.ts unchanged.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npm run build` | 0 | ✅ pass | 26500ms |\n| 2 | `grep -q 'checkLimit' src/lib/rate-limit.ts` | 0 | ✅ pass | 100ms |\n| 3 | `grep -q 'UPSTASH_REDIS_REST_URL' .env.example` | 0 | ✅ pass | 100ms |\n| 4 | `git diff src/lib/utils/rate-limit.ts` | 0 | ✅ pass | 100ms |\n\n## Deviations\n\nUsed Duration type from @upstash/ratelimit instead of plain string for the window parameter — task plan specified string but slidingWindow requires the template literal Duration type.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `src/lib/rate-limit.ts`\n- `.env.example`\n- `package.json`\n- `package-lock.json`\n",
+      "description": "## Description\n\nInstall `@upstash/redis` and `@upstash/ratelimit`, then create `src/lib/rate-limit.ts` with the `checkLimit()` export. The module uses a factory pattern — caching `Ratelimit` instances in a `Map` keyed by `${max}:${window}` so different endpoints can have different limits without creating redundant instances.\n\nThe module must fail open: if Upstash env vars are missing, log a warning and return `{ allowed: true }`. If a Redis call throws at runtime, catch it, report to Sentry, and return `{ allowed: true }`. This matches the project's safe-default-on-error pattern (see KNOWLEDGE.md).\n\nThe old `src/lib/utils/rate-limit.ts` stays untouched — S04 migrates callers.\n\n## Steps\n\n1. Run `npm install @upstash/redis @upstash/ratelimit`\n2. Create `src/lib/rate-limit.ts` with:\n   - Import `Ratelimit` from `@upstash/ratelimit` and `Redis` from `@upstash/redis`\n   - Import `captureException` from `@sentry/nextjs`\n   - A module-level `Map<string, Ratelimit>` for instance caching\n   - A `getOrCreateLimiter(max, window)` helper that looks up or creates a `new Ratelimit({ redis: Redis.fromEnv(), limiter: Ratelimit.slidingWindow(max, window) })`\n   - Export `async function checkLimit(ip: string, endpointKey: string, opts: { max: number; window: string }): Promise<{ allowed: boolean; remaining?: number; reset?: number }>`\n   - `checkLimit` builds a composite key `${endpointKey}:${ip}`, calls `limiter.limit(key)`, and returns `{ allowed: result.success, remaining: result.remaining, reset: result.reset }`\n   - Wrap the entire body in try/catch. On error: `captureException(error)`, return `{ allowed: true }`\n   - Before any Redis call, check `process.env.UPSTASH_REDIS_REST_URL` and `process.env.UPSTASH_REDIS_REST_TOKEN`. If either is missing, `console.warn('Rate limiting disabled: missing UPSTASH env vars')` and return `{ allowed: true }`\n3. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.example` with placeholder comments\n4. Run `npm run build` to verify TypeScript compiles clean\n\n## Failure Modes\n\n| Dependency | On error | On timeout | On malformed response |\n|------------|----------|-----------|----------------------|\n| Upstash Redis | catch → Sentry + return allowed:true | same (HTTP timeout = error) | same |\n| Env vars | missing → warn + return allowed:true | N/A | N/A |\n\n## Must-Haves\n\n- [ ] `@upstash/redis` and `@upstash/ratelimit` installed in package.json\n- [ ] `src/lib/rate-limit.ts` exports `checkLimit` with correct signature\n- [ ] Factory pattern caches Ratelimit instances per `{max, window}` tuple\n- [ ] Fail-open on missing env vars (console.warn + allowed:true)\n- [ ] Fail-open on Redis error (Sentry + allowed:true)\n- [ ] Env vars documented in `.env.example`\n- [ ] `npm run build` passes\n\n## Verification\n\n- `npm run build` exits 0\n- `grep -q 'checkLimit' src/lib/rate-limit.ts` confirms export exists\n- `grep -q 'UPSTASH_REDIS_REST_URL' .env.example` confirms env var documented\n- Old `src/lib/utils/rate-limit.ts` unchanged: `git diff src/lib/utils/rate-limit.ts` shows no changes",
+      "estimate": "30m",
+      "files": [
+        "src/lib/rate-limit.ts",
+        ".env.example",
+        "package.json",
+        "package-lock.json"
+      ],
+      "verify": "npm run build && grep -q 'checkLimit' src/lib/rate-limit.ts && grep -q 'UPSTASH_REDIS_REST_URL' .env.example",
+      "inputs": [
+        "`src/lib/utils/rate-limit.ts` — existing in-memory rate limiter (reference for API shape, DO NOT modify)",
+        "`.env.example` — add Upstash env var placeholders"
+      ],
+      "expected_output": [
+        "`src/lib/rate-limit.ts` — new distributed rate limiter module",
+        "`.env.example` — updated with UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
+        "`package.json` — @upstash/redis and @upstash/ratelimit added"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
+    },
+    {
+      "milestone_id": "M015",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Unit tests for checkLimit with mocked Upstash",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "## Description\n\nWrite `tests/unit/rate-limit.test.ts` to validate the `checkLimit` contract with fully mocked Upstash. No live Redis connection needed.\n\nThe mock pattern must handle `@upstash/ratelimit` exporting a class (`new Ratelimit(...)`) — use a class-based mock similar to the Resend mock pattern established in KNOWLEDGE.md. The `Ratelimit.slidingWindow` static method must also be mocked.\n\nAlso mock `@sentry/nextjs` to verify `captureException` is called on failure.\n\n## Steps\n\n1. Create `tests/unit/rate-limit.test.ts`\n2. Use `vi.hoisted()` to define mock variables:\n   - `limitMock = vi.fn()` — the `.limit()` method\n   - A `MockRatelimit` class with a `limit` method that delegates to `limitMock`\n   - Add a static `slidingWindow` method on `MockRatelimit` that returns a dummy value\n   - `captureExceptionMock = vi.fn()`\n3. `vi.mock('@upstash/ratelimit', ...)` returning `{ Ratelimit: MockRatelimit }`\n4. `vi.mock('@upstash/redis', ...)` returning `{ Redis: { fromEnv: vi.fn(() => ({})) } }`\n5. `vi.mock('@sentry/nextjs', ...)` returning `{ captureException: captureExceptionMock }`\n6. Set `process.env.UPSTASH_REDIS_REST_URL` and `process.env.UPSTASH_REDIS_REST_TOKEN` in `beforeEach`, clean up in `afterEach`\n7. Write test cases:\n   - **'allows requests under the limit'**: `limitMock` returns `{ success: true, remaining: 9, reset: Date.now() + 60000 }` → expect `{ allowed: true, remaining: 9 }`\n   - **'blocks requests over the limit'**: `limitMock` returns `{ success: false, remaining: 0, reset: ... }` → expect `{ allowed: false, remaining: 0 }`\n   - **'uses composite key (endpointKey:ip)'**: call `checkLimit('1.2.3.4', 'waitlist', ...)` → assert `limitMock` was called with `'waitlist:1.2.3.4'`\n   - **'independent endpoint keys'**: two calls with different endpointKeys → `limitMock` called with different composite keys\n   - **'fails open on Redis error'**: `limitMock` throws `new Error('connection refused')` → expect `{ allowed: true }` + `captureExceptionMock` called\n   - **'fails open when env vars missing'**: delete `process.env.UPSTASH_REDIS_REST_URL` → expect `{ allowed: true }` + no `captureException` call (just console.warn)\n8. Run `npx vitest run tests/unit/rate-limit.test.ts` — all pass\n\n## Negative Tests\n\n- **Error paths**: Redis `limit()` throws → fail-open, Sentry called\n- **Missing config**: env vars deleted → graceful skip, no crash\n- **Boundary**: verify composite key format is deterministic\n\n## Must-Haves\n\n- [ ] All 6 test cases pass\n- [ ] Mock pattern uses class-based mock (not vi.fn() — Ratelimit is instantiated with `new`)\n- [ ] No real Redis connection attempted\n- [ ] Sentry captureException verified on failure path\n- [ ] Console.warn verified on missing env vars\n\n## Verification\n\n- `npx vitest run tests/unit/rate-limit.test.ts` exits 0 with all tests passing\n- `npm run build` still passes (no type errors introduced)",
+      "estimate": "25m",
+      "files": [
+        "tests/unit/rate-limit.test.ts"
+      ],
+      "verify": "npx vitest run tests/unit/rate-limit.test.ts && npm run build",
+      "inputs": [
+        "`src/lib/rate-limit.ts` — the module under test (created in T01)"
+      ],
+      "expected_output": [
+        "`tests/unit/rate-limit.test.ts` — unit test file for checkLimit"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0
     }
   ],
   "decisions": [
@@ -10716,6 +10796,50 @@
       "verdict": "✅ pass",
       "duration_ms": 50,
       "created_at": "2026-04-10T04:36:42.300Z"
+    },
+    {
+      "id": 203,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 26500,
+      "created_at": "2026-04-10T04:51:03.570Z"
+    },
+    {
+      "id": 204,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "grep -q 'checkLimit' src/lib/rate-limit.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-10T04:51:03.570Z"
+    },
+    {
+      "id": 205,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "grep -q 'UPSTASH_REDIS_REST_URL' .env.example",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-10T04:51:03.570Z"
+    },
+    {
+      "id": 206,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "git diff src/lib/utils/rate-limit.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 100,
+      "created_at": "2026-04-10T04:51:03.570Z"
     }
   ]
 }
