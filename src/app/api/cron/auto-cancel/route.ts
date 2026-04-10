@@ -1,5 +1,4 @@
-// REQUIRES Vercel Pro plan — hourly cron (0 * * * *) is not available on the Hobby plan.
-// Upgrade to Pro ($20/mo) before enabling in production.
+// Daily cron — auto-cancels requested bookings older than 48h where teacher hasn't connected Stripe
 import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -28,42 +27,51 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+  return Sentry.withMonitor('cron-auto-cancel', async () => {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
 
-  // Fetch expired requested bookings — joined with teacher to check Stripe status
-  const { data: expired } = await supabaseAdmin
-    .from('bookings')
-    .select('id, parent_email, teacher_id')
-    .eq('status', 'requested')
-    .lt('created_at', cutoff)
+    // Fetch expired requested bookings — joined with teacher to check Stripe status
+    const { data: expired } = await supabaseAdmin
+      .from('bookings')
+      .select('id, parent_email, teacher_id')
+      .eq('status', 'requested')
+      .lt('created_at', cutoff)
 
-  let cancelled = 0
-  for (const booking of expired ?? []) {
-    // Verify teacher still hasn't connected Stripe — guards against race where teacher
-    // connects Stripe between our query and this check
-    const { data: teacher } = await supabaseAdmin
-      .from('teachers')
-      .select('stripe_charges_enabled, social_email, full_name')
-      .eq('id', booking.teacher_id)
-      .maybeSingle()
+    let cancelled = 0
+    for (const booking of expired ?? []) {
+      // Verify teacher still hasn't connected Stripe — guards against race where teacher
+      // connects Stripe between our query and this check
+      const { data: teacher } = await supabaseAdmin
+        .from('teachers')
+        .select('stripe_charges_enabled, social_email, full_name')
+        .eq('id', booking.teacher_id)
+        .maybeSingle()
 
-    if (!teacher?.stripe_charges_enabled) {
-      // Idempotent update — .eq('status', 'requested') prevents double-cancel on re-run
-      const { data: updated } = await supabaseAdmin
-        .from('bookings')
-        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-        .eq('id', booking.id)
-        .eq('status', 'requested')
-        .select('id')
+      if (!teacher?.stripe_charges_enabled) {
+        // Idempotent update — .eq('status', 'requested') prevents double-cancel on re-run
+        const { data: updated } = await supabaseAdmin
+          .from('bookings')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', booking.id)
+          .eq('status', 'requested')
+          .select('id')
 
-      if (updated && updated.length > 0) {
-        // Only email if update actually changed a row — updated is [] on re-run because
-        // .eq('status', 'requested') no longer matches the already-cancelled booking
-        await sendCancellationEmail(booking.id).catch((err) => { Sentry.captureException(err); console.error('[cron/auto-cancel] Cancellation email failed:', err) })
-        cancelled++
+        if (updated && updated.length > 0) {
+          // Only email if update actually changed a row — updated is [] on re-run because
+          // .eq('status', 'requested') no longer matches the already-cancelled booking
+          await sendCancellationEmail(booking.id).catch((err) => { Sentry.captureException(err); console.error('[cron/auto-cancel] Cancellation email failed:', err) })
+          cancelled++
+        }
       }
     }
-  }
 
-  return Response.json({ cancelled, total_checked: expired?.length ?? 0 })
+    return Response.json({ cancelled, total_checked: expired?.length ?? 0 })
+  }, {
+    schedule: { type: 'crontab', value: '0 9 * * *' },
+    checkinMargin: 5,
+    maxRuntime: 5,
+    timezone: 'UTC',
+    failureIssueThreshold: 2,
+    recoveryThreshold: 1,
+  })
 }

@@ -1,5 +1,4 @@
-// REQUIRES Vercel Pro plan — hourly cron (30 * * * *) is not available on the Hobby plan.
-// Upgrade to Pro ($20/mo) before enabling in production.
+// Daily cron — sends Stripe setup reminders to teachers with pending bookings
 import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -30,6 +29,7 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  return Sentry.withMonitor('cron-stripe-reminders', async () => {
   const now = Date.now()
   const hr24 = new Date(now - 24 * 60 * 60 * 1000).toISOString()
   const hr48 = new Date(now - 48 * 60 * 60 * 1000).toISOString()
@@ -96,4 +96,12 @@ export async function GET(request: NextRequest) {
   }
 
   return Response.json({ sent_24hr: sent24, sent_48hr: sent48 })
+  }, {
+    schedule: { type: 'crontab', value: '0 10 * * *' },
+    checkinMargin: 5,
+    maxRuntime: 5,
+    timezone: 'UTC',
+    failureIssueThreshold: 2,
+    recoveryThreshold: 1,
+  })
 }

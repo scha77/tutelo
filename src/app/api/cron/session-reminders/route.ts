@@ -1,4 +1,4 @@
-// REQUIRES Vercel Pro plan — daily cron (0 9 * * *) is not available on Hobby plan.
+// Daily cron — sends session reminder emails and SMS to parents with upcoming bookings
 import * as Sentry from '@sentry/nextjs'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
@@ -9,7 +9,7 @@ import { sendSmsReminder } from '@/lib/sms'
  * GET /api/cron/session-reminders
  *
  * Sends 24-hour reminder emails to teachers and parents for confirmed sessions
- * scheduled for tomorrow (UTC date). Runs daily at 9 AM UTC.
+ * scheduled for tomorrow (UTC date). Runs daily at 2 PM UTC.
  *
  * Idempotency: The update is gated on .is('reminder_sent_at', null) — a second run
  * finds 0 rows to update because reminder_sent_at was already set on first run.
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  return Sentry.withMonitor('cron-session-reminders', async () => {
   // Use a 12–36 hour window from now to cover all timezones (UTC-12 to UTC+14).
   // A PST teacher with a 9 AM session on April 5 won't be missed when the cron
   // runs at 9 AM UTC on April 4 (still April 4 in PST).
@@ -63,4 +64,12 @@ export async function GET(request: NextRequest) {
   }
 
   return Response.json({ sent, checked: sessions?.length ?? 0 })
+  }, {
+    schedule: { type: 'crontab', value: '0 14 * * *' },
+    checkinMargin: 5,
+    maxRuntime: 5,
+    timezone: 'UTC',
+    failureIssueThreshold: 2,
+    recoveryThreshold: 1,
+  })
 }

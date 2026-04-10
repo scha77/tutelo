@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  return Sentry.withMonitor('cron-recurring-charges', async () => {
   // Use a 12–36 hour window from now to cover all timezones (UTC-12 to UTC+14).
   const now = new Date()
   const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -155,5 +156,13 @@ export async function GET(request: NextRequest) {
     failed,
     skipped,
     checked: sessions?.length ?? 0,
+  })
+  }, {
+    schedule: { type: 'crontab', value: '0 12 * * *' },
+    checkinMargin: 5,
+    maxRuntime: 5,
+    timezone: 'UTC',
+    failureIssueThreshold: 2,
+    recoveryThreshold: 1,
   })
 }

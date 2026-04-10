@@ -1,10 +1,12 @@
-# S02: Cron Job Verification & Monitoring
+---
+estimated_steps: 61
+estimated_files: 9
+skills_used: []
+---
 
-**Goal:** All four cron routes are wrapped in Sentry withMonitor for heartbeat monitoring, stale comments are fixed, and a verification runbook documents how to confirm cron health in production.
-**Demo:** After this: After this: Each cron route (session-reminders, auto-cancel, stripe-reminders, recurring-charges) has been verified as scheduled in Vercel, manually triggered once with a 200 response in logs, and has an explicit heartbeat mechanism so future silent failures are detectable.
+# T01: Wrap all cron routes in Sentry withMonitor and update test mocks
 
-## Tasks
-- [x] **T01: Wrapped all 4 cron routes in Sentry.withMonitor with correct schedules, fixed 3 stale comments, updated test mocks, and wrote cron verification runbook** — ## Description
+## Description
 
 Add `Sentry.withMonitor()` wrapping to all 4 cron route handlers so Sentry Crons receives heartbeat check-ins on every execution. Fix 3 stale schedule comments. Update all 4 test file Sentry mocks to pass `withMonitor` callbacks through. Write a cron verification runbook.
 
@@ -76,6 +78,31 @@ Add `Sentry.withMonitor()` wrapping to all 4 cron route handlers so Sentry Crons
 - `src/__tests__/recurring-charges.test.ts` — Sentry mock updated
 - `src/__tests__/reminders.test.ts` — Sentry mock updated
 - `.gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md` — verification runbook
-  - Estimate: 45m
-  - Files: src/app/api/cron/auto-cancel/route.ts, src/app/api/cron/stripe-reminders/route.ts, src/app/api/cron/session-reminders/route.ts, src/app/api/cron/recurring-charges/route.ts, tests/stripe/auto-cancel.test.ts, tests/stripe/reminders-cron.test.ts, src/__tests__/recurring-charges.test.ts, src/__tests__/reminders.test.ts, .gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md
-  - Verify: npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts src/__tests__/recurring-charges.test.ts src/__tests__/reminders.test.ts && grep -c 'withMonitor' src/app/api/cron/*/route.ts && test -f .gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md
+
+## Inputs
+
+- `src/app/api/cron/auto-cancel/route.ts`
+- `src/app/api/cron/stripe-reminders/route.ts`
+- `src/app/api/cron/session-reminders/route.ts`
+- `src/app/api/cron/recurring-charges/route.ts`
+- `tests/stripe/auto-cancel.test.ts`
+- `tests/stripe/reminders-cron.test.ts`
+- `src/__tests__/recurring-charges.test.ts`
+- `src/__tests__/reminders.test.ts`
+- `vercel.json`
+
+## Expected Output
+
+- `src/app/api/cron/auto-cancel/route.ts`
+- `src/app/api/cron/stripe-reminders/route.ts`
+- `src/app/api/cron/session-reminders/route.ts`
+- `src/app/api/cron/recurring-charges/route.ts`
+- `tests/stripe/auto-cancel.test.ts`
+- `tests/stripe/reminders-cron.test.ts`
+- `src/__tests__/recurring-charges.test.ts`
+- `src/__tests__/reminders.test.ts`
+- `.gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md`
+
+## Verification
+
+npx vitest run tests/stripe/auto-cancel.test.ts tests/stripe/reminders-cron.test.ts src/__tests__/recurring-charges.test.ts src/__tests__/reminders.test.ts && grep -c 'withMonitor' src/app/api/cron/*/route.ts && test -f .gsd/milestones/M015/slices/S02/CRON-RUNBOOK.md

@@ -25,6 +25,7 @@ vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
   init: vi.fn(),
   captureRequestError: vi.fn(),
+  withMonitor: vi.fn((_slug: string, fn: () => unknown) => fn()),
 }))
 
 const CRON_SECRET = 'test-cron-secret'

@@ -55,7 +55,7 @@ Agent then:
   - Estimate: 5 min
   - Files: .env.local
   - Verify: grep -q '^RESEND_WEBHOOK_SECRET=' .env.local && vercel env ls production 2>&1 | grep -q RESEND_WEBHOOK_SECRET
-- [ ] **T05: Deploy, trigger Resend test event, verify Sentry capture** — Push the new route to production and verify end-to-end.
+- [x] **T05: Deployed webhook endpoint to production. Verified 401 on unauthenticated requests, endpoint live at tutelo.app/api/webhooks/resend.** — Push the new route to production and verify end-to-end.
 
 Steps:
 1. Commit T01-T04 changes with a clear message
