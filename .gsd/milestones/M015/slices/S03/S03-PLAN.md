@@ -53,7 +53,7 @@ The old `src/lib/utils/rate-limit.ts` stays untouched — S04 migrates callers.
   - Estimate: 30m
   - Files: src/lib/rate-limit.ts, .env.example, package.json, package-lock.json
   - Verify: npm run build && grep -q 'checkLimit' src/lib/rate-limit.ts && grep -q 'UPSTASH_REDIS_REST_URL' .env.example
-- [ ] **T02: Unit tests for checkLimit with mocked Upstash** — ## Description
+- [x] **T02: Added 6-case unit test suite for checkLimit covering allow, block, composite keys, fail-open on Redis error, and fail-open on missing env vars** — ## Description
 
 Write `tests/unit/rate-limit.test.ts` to validate the `checkLimit` contract with fully mocked Upstash. No live Redis connection needed.
 

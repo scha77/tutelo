@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-04-10T04:51:03.620Z",
+  "exported_at": "2026-04-10T04:55:57.203Z",
   "milestones": [
     {
       "id": "M001",
@@ -7810,19 +7810,23 @@
       "milestone_id": "M015",
       "slice_id": "S03",
       "id": "T02",
-      "title": "Unit tests for checkLimit with mocked Upstash",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 6-case unit test suite for checkLimit covering allow, block, composite keys, fail-open on Redis error, and fail-open on missing env vars",
+      "status": "complete",
+      "one_liner": "Added 6-case unit test suite for checkLimit covering allow, block, composite keys, fail-open on Redis error, and fail-open on missing env vars",
+      "narrative": "Created tests/unit/rate-limit.test.ts with fully mocked Upstash dependencies. Used vi.hoisted() class-based mock for @upstash/ratelimit (since it's instantiated with new), plain object mock for @upstash/redis, and function mock for @sentry/nextjs. Six test cases cover: requests allowed under limit, requests blocked over limit, composite key format (endpointKey:ip), independent endpoint keys, fail-open on Redis errors with Sentry reporting, and fail-open on missing env vars with console.warn (no Sentry). All tests pass with no real Redis connection.",
+      "verification_result": "All 6 tests pass via npx vitest run tests/unit/rate-limit.test.ts. npm run build exits 0 with no type errors. Slice-level checks (checkLimit export, env var docs, old rate-limit unchanged) all pass.",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-04-10T04:55:57.160Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
-      "key_decisions": [],
-      "full_summary_md": "",
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/unit/rate-limit.test.ts"
+      ],
+      "key_decisions": [
+        "Used class-based mock for Ratelimit (matches Resend pattern from KNOWLEDGE.md)"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M015\nkey_files:\n  - tests/unit/rate-limit.test.ts\nkey_decisions:\n  - Used class-based mock for Ratelimit (matches Resend pattern from KNOWLEDGE.md)\nduration: \nverification_result: passed\ncompleted_at: 2026-04-10T04:55:57.160Z\nblocker_discovered: false\n---\n\n# T02: Added 6-case unit test suite for checkLimit covering allow, block, composite keys, fail-open on Redis error, and fail-open on missing env vars\n\n**Added 6-case unit test suite for checkLimit covering allow, block, composite keys, fail-open on Redis error, and fail-open on missing env vars**\n\n## What Happened\n\nCreated tests/unit/rate-limit.test.ts with fully mocked Upstash dependencies. Used vi.hoisted() class-based mock for @upstash/ratelimit (since it's instantiated with new), plain object mock for @upstash/redis, and function mock for @sentry/nextjs. Six test cases cover: requests allowed under limit, requests blocked over limit, composite key format (endpointKey:ip), independent endpoint keys, fail-open on Redis errors with Sentry reporting, and fail-open on missing env vars with console.warn (no Sentry). All tests pass with no real Redis connection.\n\n## Verification\n\nAll 6 tests pass via npx vitest run tests/unit/rate-limit.test.ts. npm run build exits 0 with no type errors. Slice-level checks (checkLimit export, env var docs, old rate-limit unchanged) all pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `npx vitest run tests/unit/rate-limit.test.ts` | 0 | ✅ pass | 3000ms |\n| 2 | `npm run build` | 0 | ✅ pass | 23700ms |\n| 3 | `grep -q 'checkLimit' src/lib/rate-limit.ts` | 0 | ✅ pass | 50ms |\n| 4 | `grep -q 'UPSTASH_REDIS_REST_URL' .env.example` | 0 | ✅ pass | 50ms |\n| 5 | `git diff src/lib/utils/rate-limit.ts` | 0 | ✅ pass | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/unit/rate-limit.test.ts`\n",
       "description": "## Description\n\nWrite `tests/unit/rate-limit.test.ts` to validate the `checkLimit` contract with fully mocked Upstash. No live Redis connection needed.\n\nThe mock pattern must handle `@upstash/ratelimit` exporting a class (`new Ratelimit(...)`) — use a class-based mock similar to the Resend mock pattern established in KNOWLEDGE.md. The `Ratelimit.slidingWindow` static method must also be mocked.\n\nAlso mock `@sentry/nextjs` to verify `captureException` is called on failure.\n\n## Steps\n\n1. Create `tests/unit/rate-limit.test.ts`\n2. Use `vi.hoisted()` to define mock variables:\n   - `limitMock = vi.fn()` — the `.limit()` method\n   - A `MockRatelimit` class with a `limit` method that delegates to `limitMock`\n   - Add a static `slidingWindow` method on `MockRatelimit` that returns a dummy value\n   - `captureExceptionMock = vi.fn()`\n3. `vi.mock('@upstash/ratelimit', ...)` returning `{ Ratelimit: MockRatelimit }`\n4. `vi.mock('@upstash/redis', ...)` returning `{ Redis: { fromEnv: vi.fn(() => ({})) } }`\n5. `vi.mock('@sentry/nextjs', ...)` returning `{ captureException: captureExceptionMock }`\n6. Set `process.env.UPSTASH_REDIS_REST_URL` and `process.env.UPSTASH_REDIS_REST_TOKEN` in `beforeEach`, clean up in `afterEach`\n7. Write test cases:\n   - **'allows requests under the limit'**: `limitMock` returns `{ success: true, remaining: 9, reset: Date.now() + 60000 }` → expect `{ allowed: true, remaining: 9 }`\n   - **'blocks requests over the limit'**: `limitMock` returns `{ success: false, remaining: 0, reset: ... }` → expect `{ allowed: false, remaining: 0 }`\n   - **'uses composite key (endpointKey:ip)'**: call `checkLimit('1.2.3.4', 'waitlist', ...)` → assert `limitMock` was called with `'waitlist:1.2.3.4'`\n   - **'independent endpoint keys'**: two calls with different endpointKeys → `limitMock` called with different composite keys\n   - **'fails open on Redis error'**: `limitMock` throws `new Error('connection refused')` → expect `{ allowed: true }` + `captureExceptionMock` called\n   - **'fails open when env vars missing'**: delete `process.env.UPSTASH_REDIS_REST_URL` → expect `{ allowed: true }` + no `captureException` call (just console.warn)\n8. Run `npx vitest run tests/unit/rate-limit.test.ts` — all pass\n\n## Negative Tests\n\n- **Error paths**: Redis `limit()` throws → fail-open, Sentry called\n- **Missing config**: env vars deleted → graceful skip, no crash\n- **Boundary**: verify composite key format is deterministic\n\n## Must-Haves\n\n- [ ] All 6 test cases pass\n- [ ] Mock pattern uses class-based mock (not vi.fn() — Ratelimit is instantiated with `new`)\n- [ ] No real Redis connection attempted\n- [ ] Sentry captureException verified on failure path\n- [ ] Console.warn verified on missing env vars\n\n## Verification\n\n- `npx vitest run tests/unit/rate-limit.test.ts` exits 0 with all tests passing\n- `npm run build` still passes (no type errors introduced)",
       "estimate": "25m",
       "files": [
@@ -10840,6 +10844,61 @@
       "verdict": "✅ pass",
       "duration_ms": 100,
       "created_at": "2026-04-10T04:51:03.570Z"
+    },
+    {
+      "id": 207,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "npx vitest run tests/unit/rate-limit.test.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 3000,
+      "created_at": "2026-04-10T04:55:57.160Z"
+    },
+    {
+      "id": 208,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "npm run build",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 23700,
+      "created_at": "2026-04-10T04:55:57.160Z"
+    },
+    {
+      "id": 209,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "grep -q 'checkLimit' src/lib/rate-limit.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-10T04:55:57.161Z"
+    },
+    {
+      "id": 210,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "grep -q 'UPSTASH_REDIS_REST_URL' .env.example",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-10T04:55:57.161Z"
+    },
+    {
+      "id": 211,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M015",
+      "command": "git diff src/lib/utils/rate-limit.ts",
+      "exit_code": 0,
+      "verdict": "✅ pass",
+      "duration_ms": 50,
+      "created_at": "2026-04-10T04:55:57.161Z"
     }
   ]
 }
