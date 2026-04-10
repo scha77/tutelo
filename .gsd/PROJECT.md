@@ -15,11 +15,16 @@ Tagline: "Shopify for teacher side hustles."
 **Live in production at https://tutelo.app** (deployed March 11, 2026)
 
 - **151 requirements validated** across M001–M012 with stable IDs, ownership traceability, and coverage summary
+- **Pre-Launch Hardening (M015 — complete ✅):**
+  - DMARC record at `_dmarc.tutelo.app` (p=none monitor mode) with Resend webhook endpoint for bounce/complaint observability
+  - All 4 cron routes (auto-cancel, stripe-reminders, session-reminders, recurring-charges) wrapped in Sentry.withMonitor heartbeat monitoring
+  - Distributed rate limiting via Upstash Redis on all public endpoints: waitlist (5/min), track-view (30/min), verify-email (5/min), auth actions (10/min)
+  - Playwright E2E test suite: 11 tests covering full booking lifecycle (profile → calendar → form → auth → payment → DB verify → webhook → cancellation). 10 pass, 1 skipped (Stripe iframe)
+  - 55 test files, 514 tests passing, 0 failures
 - **Dashboard Mobile Performance (M014 — complete ✅):**
   - Auth proxy redirects for /dashboard, /parent, /admin — unauthenticated users redirect before layout renders
   - Dashboard layout streams shell instantly via Suspense (sidebar/nav skeletons while data loads)
   - Zod (296K) removed from shared client bundle — only loads on /onboarding
-  - 52 test files, 490 tests passing, 0 failures
 - **Codebase Cohesion & Observability (M013 — complete ✅):**
   - Sentry integrated across client/server/edge runtimes, 44 catch blocks instrumented
   - All test failures fixed, all stubs resolved, full capability contract rebuilt
@@ -45,9 +50,11 @@ See `LAUNCH.md` for production environment documentation.
 - **ISR & Caching:** Profile pages (`/[slug]`) and directory category pages (`/tutors/[category]`) served via ISR with 1h revalidation. On-demand revalidation via `revalidatePath` in profile/booking/availability actions. Dashboard queries cached with `unstable_cache` + `revalidateTag`. ISR routes must use `supabaseAdmin` (not `createClient()` which calls `cookies()` and forces dynamic).
 - **Motion library boundary:** motion is used ONLY on landing page, profile page, and onboarding routes. All dashboard (`/dashboard/*`) and parent (`/parent/*`) routes use CSS-only transitions (data-state pattern, animate-list/animate-list-item, Tailwind transition-transform). AnimatedButton.tsx and animation.ts are preserved for public-facing routes.
 - **Availability:** `TIME` columns in `availability` table, interpreted relative to `teachers.timezone`. Recurring weekly with 5-min granularity. Per-date overrides with override-wins-recurring precedence. 30-min booking slots. Duration-prorated payments.
-- **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`.
+- **Email:** Resend with React Email templates in `src/emails/`. Gated on `social_email != null`. DMARC record at `_dmarc.tutelo.app` (p=none monitor mode). Resend bounce/complaint events routed to Sentry via `/api/webhooks/resend` with Svix signature verification.
 - **SMS:** Twilio SDK in `src/lib/sms.ts`. All sends gated on `phone IS NOT NULL AND sms_opt_in = true`. A2P 10DLC registration required for production delivery.
+- **Rate Limiting:** Distributed Upstash Redis sliding window via `src/lib/rate-limit.ts`. Fail-open: missing env vars → warn, Redis error → Sentry + allow. Wired to waitlist (5/min), track-view (30/min), verify-email (5/min), auth actions (10/min).
 - **Verification:** School email verification via custom token flow. Token gen + Resend email + public callback route stamps `verified_at`.
 - **UI:** shadcn/ui components, `tw-animate-css` for CSS animations, `motion` v12.36.0 for complex animations on public pages only. Design follows 4pt grid system, one sans-serif font family, semantic colors. Premium card standard: `rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow`. Tinted icon pills: `color-mix(in srgb, var(--primary) 12%, transparent)` in dashboards, `var(--accent)` on teacher profile only. Page headers: `text-2xl font-bold tracking-tight` + muted subtitle.
 - **OG Images & Flyers:** File-based `opengraph-image.tsx` (edge runtime) for OG tags on teacher pages. `/api/flyer/[slug]/route.tsx` (Node.js runtime) for printable flyer PNG — uses Node runtime for `qrcode.toDataURL()` canvas compatibility.
-- **Observability:** Sentry integrated for error tracking (M013/S02). Client/server/edge runtimes initialized. 44 catch blocks report to Sentry with stack traces. Error boundaries capture exceptions. tunnelRoute '/monitoring' bypasses ad-blockers. sendDefaultPii: false for student data protection. Sentry Crons heartbeat monitoring on all 4 cron routes (M015/S02) — silent failures are now detectable. DSN configuration needed in production.
+- **Observability:** Sentry integrated for error tracking (M013/S02). Client/server/edge runtimes initialized. 44 catch blocks report to Sentry with stack traces. Error boundaries capture exceptions. tunnelRoute '/monitoring' bypasses ad-blockers. sendDefaultPii: false for student data protection. Sentry Crons heartbeat monitoring on all 4 cron routes (M015/S02) — silent failures are now detectable.
+- **E2E Testing:** Playwright with Chromium. 11-test booking lifecycle suite (profile → calendar → form → auth → payment → DB → webhook → cancellation). Helpers: seed.ts, email.ts, auth.ts. Pre-created auth users with email_confirm:true. Separate browser pages per user role.

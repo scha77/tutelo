@@ -1037,3 +1037,64 @@ export async function GET(request: NextRequest) {
 
 Test mock: `withMonitor: vi.fn((_slug: string, fn: () => unknown) => fn())` — passes the callback through so handler logic executes normally during tests. Add this to the existing `vi.mock('@sentry/nextjs', ...)` factory in every cron test file.
 
+---
+
+## E2E Test Auth: Pre-Create Users, Don't Sign Up in Browser (M015/S05)
+
+Supabase projects typically require email confirmation on signup. Using `signUp()` in the browser during an E2E test triggers a confirmation email that blocks the flow. Instead, pre-create auth users in `test.beforeAll` via `supabase.auth.admin.createUser({ email_confirm: true })`, then have the test sign in normally. This keeps the E2E flow realistic (real sign-in page interaction) while bypassing the email verification gate.
+
+---
+
+## Stripe PaymentElement Iframe: Not Fully Automatable via Playwright (M015/S05)
+
+Stripe PaymentElement renders card inputs inside deeply nested cross-origin iframes within an outer "easel" iframe. `page.frames()` can enumerate them and `page.frameLocator()` can chain into the easel, but the card input fields (`#Field-numberInput`, etc.) live in sub-iframes that are not reliably traversable. The E2E test attempts a best-effort fill via `page.frames()` iteration but gracefully skips via `test.skip()` when inputs aren't reachable. The remaining tests verify the booking flow via direct DB assertions (booking row exists with correct data) and webhook simulation (status update + email check).
+
+---
+
+## E2E Teacher Login: Use Separate Browser Page to Avoid Cookie Conflicts (M015/S05)
+
+When E2E tests sign in as multiple users (parent in one describe block, teacher in another), use `browser.newPage()` for the second user. Sharing the same page means the second login overwrites the first user's session cookie. The `test.describe.serial` blocks share the same browser context but each gets its own `Page` instance, which isolates cookies at the page level.
+
+---
+
+## E2E Cache-Aware Pattern for Dashboard Pages with unstable_cache (M015/S05)
+
+Dashboard pages using `unstable_cache` with 30s TTL may not show freshly-created data immediately. Pattern for E2E tests:
+1. First check: `isVisible({ timeout: 5_000 })`
+2. If not visible: `waitForTimeout(5_000)` → `reload()` → re-check
+3. If still not visible: `waitForTimeout(10_000)` → `reload()` → final assert with longer timeout
+
+This handles the worst case where the cache was populated just before the data was created. The 10s wait exceeds the 30s TTL if combined with initial navigation time.
+
+---
+
+## Exclude Playwright E2E Specs from Vitest Config (M015)
+
+Playwright's `test.describe.serial` is not compatible with Vitest's runtime. If Vitest auto-discovers `tests/e2e/*.spec.ts` files, it fails with a cryptic `test.describe.serial is not a function` error. Add `'tests/e2e/**'` to the `exclude` array in `vitest.config.ts`:
+
+```ts
+exclude: ['**/node_modules/**', '**/dist/**', '.gsd/**', 'tests/e2e/**'],
+```
+
+This is separate from the `.gsd/**` exclusion (which prevents worktree test pollution) — both are needed.
+
+---
+
+## Sentry.withMonitor Auth Gate Placement (M015)
+
+When wrapping cron routes in `Sentry.withMonitor()`, keep the auth check (CRON_SECRET bearer token validation) **outside** the monitor wrapper. If auth is inside, every unauthorized probe (bot, scanner) would register as a cron failure and trigger false-positive alerts. Only the business logic should execute inside the monitor callback.
+
+---
+
+## Server Action Rate Limiting: Use headers() Not Request Object (M015)
+
+Server actions (`signIn`, `signUp`) don't receive a `Request` object — they're called as RPC functions, not HTTP handlers. To extract the client IP for rate limiting, use `headers()` from `next/headers`:
+
+```ts
+import { headers } from 'next/headers'
+const headersList = await headers()
+const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
+```
+
+API route handlers receive `request: NextRequest` and should use `request.headers.get('x-forwarded-for')` instead.
+
