@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
 import { isTokenExpired } from '@/lib/verification'
+import { checkLimit } from '@/lib/rate-limit'
 
 /**
  * GET /api/verify-email?token=<uuid>
@@ -13,6 +14,12 @@ import { isTokenExpired } from '@/lib/verification'
  * On failure: redirects to settings with ?error=invalid or ?error=expired
  */
 export async function GET(request: Request) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { allowed } = await checkLimit(ip, 'verify-email', { max: 5, window: '1 m' })
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
 

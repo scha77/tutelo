@@ -1,12 +1,13 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/service'
-import { rateLimit } from '@/lib/utils/rate-limit'
+import { checkLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-    if (!rateLimit(`waitlist:${ip}`, { maxRequests: 5, windowMs: 60_000 })) {
+    const { allowed } = await checkLimit(ip, 'waitlist', { max: 5, window: '1 m' })
+    if (!allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
