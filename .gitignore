@@ -76,6 +76,12 @@ tmp/
 .gsd/forensics/
 .gsd/completed-units.json
 .gsd/gsd.db
+.gsd/gsd.db-shm
+.gsd/gsd.db-wal
+.gsd/doctor-history.jsonl
+.gsd/event-log.jsonl
+.gsd/journal/
+.gsd/state-manifest.json
 .gsd/DISCUSSION-MANIFEST.json
 .gsd/milestones/**/*-CONTINUE.md
 .gsd/milestones/**/continue.md

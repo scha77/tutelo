@@ -3,12 +3,20 @@ import Twilio from 'twilio'
 import { parsePhoneNumber } from 'libphonenumber-js'
 import { supabaseAdmin } from '@/lib/supabase/service'
 
-const twilio = Twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-)
+/**
+ * Twilio is optional. If credentials are not set (e.g. pre-A2P 10DLC launch),
+ * all SMS calls become silent no-ops rather than crashing at module import.
+ * This keeps the booking/cron flows unaffected when SMS is disabled.
+ */
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
+const FROM_NUMBER = process.env.TWILIO_PHONE_NUMBER
 
-const FROM_NUMBER = process.env.TWILIO_PHONE_NUMBER!
+const SMS_ENABLED = Boolean(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && FROM_NUMBER)
+
+const twilio = SMS_ENABLED
+  ? Twilio(TWILIO_ACCOUNT_SID!, TWILIO_AUTH_TOKEN!)
+  : null
 
 /**
  * Format a phone number to E.164. Returns null if invalid.
@@ -24,8 +32,13 @@ function toE164(phone: string): string | null {
 
 /**
  * Send an SMS message. Logs errors but never throws.
+ * No-op when Twilio credentials are not configured.
  */
 async function sendSms(to: string, body: string): Promise<void> {
+  if (!twilio || !FROM_NUMBER) {
+    console.info(`[sms] Skipped (Twilio not configured): to=${to}`)
+    return
+  }
   try {
     await twilio.messages.create({ to, from: FROM_NUMBER, body })
   } catch (err) {
@@ -39,6 +52,10 @@ async function sendSms(to: string, body: string): Promise<void> {
  * Called by the session-reminders cron after email dispatch.
  */
 export async function sendSmsReminder(bookingId: string): Promise<void> {
+  if (!SMS_ENABLED) {
+    console.info(`[sms] sendSmsReminder skipped for ${bookingId} — Twilio not configured`)
+    return
+  }
   const { data } = await supabaseAdmin
     .from('bookings')
     .select(
@@ -92,6 +109,10 @@ export async function sendSmsReminder(bookingId: string): Promise<void> {
  * Called by cancelSession action after email dispatch. Fire-and-forget.
  */
 export async function sendSmsCancellation(bookingId: string): Promise<void> {
+  if (!SMS_ENABLED) {
+    console.info(`[sms] sendSmsCancellation skipped for ${bookingId} — Twilio not configured`)
+    return
+  }
   const { data } = await supabaseAdmin
     .from('bookings')
     .select(
